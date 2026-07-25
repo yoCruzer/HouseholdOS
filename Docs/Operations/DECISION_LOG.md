@@ -50,3 +50,10 @@ Date: 2026-07-25
 Status: ACCEPTED
 
 Codex may autonomously complete implementation details inside an approved Stage, but cannot advance to an unapproved Stage or merge to main.
+
+## D-008 — Preserve Existing Repository License
+
+Date: 2026-07-25
+Status: ACCEPTED
+
+The AGPL-3.0 `LICENSE` created in the initial `main` bootstrap commit remains the repository license and is preserved during the G0 governance foundation import.

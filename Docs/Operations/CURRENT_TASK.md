@@ -4,7 +4,8 @@
 
 - Stage: G0
 - Title: Governance Foundation Import
-- Status: AWAITING_OWNER_REVIEW
+- Status: ACCEPTED
+- Lifecycle: CLOSED
 - Intended branch: `docs/governance-foundation-v1`
 - Actual branch: `docs/governance-foundation-v1`
 - Base branch: `main`
@@ -16,9 +17,20 @@
 - Main bootstrap commit: `1769b87b8227188edeef9dcb33962091feb9fcb6`
 - Governance import commit: `5dd90c8594c37ae492c3c84530fe62ae107c11d6`
 - Recorded content end HEAD: `5dd90c8594c37ae492c3c84530fe62ae107c11d6`
-- Draft PR: [#1](https://github.com/yoCruzer/HouseholdOS/pull/1)
+- PR head: `f6d49d5ea3ef37af2b42c43a8d240b1d5c761404`
+- Main before merge: `1769b87b8227188edeef9dcb33962091feb9fcb6`
+- Merge commit: `4149469f136a9501905a699b0e59b3ee339cb73a`
+- Merged PR: [#1](https://github.com/yoCruzer/HouseholdOS/pull/1)
+- Merge method: merge commit
 - PR base/head: `main` <- `docs/governance-foundation-v1`
-- Handoff metadata: recorded in the follow-up commit containing this execution record; its SHA is the final PR head reported in the G0 Stage Report.
+
+## Closure
+
+- Owner decision: `APPROVED`
+- G0 result: accepted and closed
+- Current approved implementation Stage: none
+- Next planned Stage: `F0 — Repository & Xcode Foundation Definition`
+- F0 status: not approved for execution; awaiting Owner definition and approval
 
 ## Objective
 
@@ -75,6 +87,8 @@ Import the HouseholdOS Repository Initialization Package v1.0 into the empty rep
 
 ## Git Authorization
 
+The original G0 import authorization is complete. The Owner subsequently authorized PR #1 to be marked Ready, merged safely, and followed by a post-merge status update on `main`.
+
 Allowed:
 
 - `git init` or clone
@@ -85,13 +99,19 @@ Allowed:
 - push governance branch
 - create Draft PR
 
-Not allowed:
+Not allowed during the completed import before Owner approval:
 
 - merge PR
 - force push
 - rewrite shared history
 - delete remote branches
 - enable auto-merge
+
+Current prohibitions:
+
+- Do not define or execute F0.
+- Do not create product implementation code, Swift files, Xcode projects, Swift packages or CI.
+- Do not modify frozen product semantics or the Product Design Book.
 
 ## Required Verification
 
@@ -113,9 +133,9 @@ Not allowed:
 - Generated or binary artifacts: PASS — no Swift, Xcode project, DOCX, PDF, ZIP or build output added.
 - `git diff --check`: PASS.
 - Remote refs: PASS — `main` and `docs/governance-foundation-v1` exist on `origin`.
-- Draft PR: PASS — PR #1 is Draft with base `main` and head `docs/governance-foundation-v1`.
+- PR merge: PASS — PR #1 was approved and merged with a merge commit into `main`.
 - Tests/build: NOT APPLICABLE — this Stage contains no code.
-- Final working tree: PASS — clean after the handoff commit and push.
+- Post-merge state: the G0 merge baseline is `4149469f136a9501905a699b0e59b3ee339cb73a`.
 
 ## Stop Conditions
 

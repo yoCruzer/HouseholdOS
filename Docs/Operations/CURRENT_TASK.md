@@ -4,7 +4,7 @@
 
 - Stage: F0
 - Title: Repository & Xcode Foundation
-- Status: APPROVED
+- Status: IN_PROGRESS
 - Lifecycle: OPEN
 - Intended branch: `chore/f0-repository-xcode-foundation`
 - Actual branch: `chore/f0-repository-xcode-foundation`
@@ -17,7 +17,7 @@
 - Starting HEAD: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
 - Actual base HEAD: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
 - Working branch: `chore/f0-repository-xcode-foundation`
-- Activation commit: pending
+- Activation commit: `85fc499c11965271ee0d86eb8c985335ca2177fc`
 - Implementation commit: pending
 - Ending HEAD: pending
 - Draft PR: pending

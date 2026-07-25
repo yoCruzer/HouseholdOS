@@ -2,160 +2,219 @@
 
 ## Identity
 
-- Stage: G0
-- Title: Governance Foundation Import
-- Status: ACCEPTED
-- Lifecycle: CLOSED
-- Intended branch: `docs/governance-foundation-v1`
-- Actual branch: `docs/governance-foundation-v1`
+- Stage: F0
+- Title: Repository & Xcode Foundation
+- Status: APPROVED
+- Lifecycle: OPEN
+- Intended branch: `chore/f0-repository-xcode-foundation`
+- Actual branch: `chore/f0-repository-xcode-foundation`
 - Base branch: `main`
+- Owner approval reference: `Codex Execution Prompt — HouseholdOS F0 Repository & Xcode Foundation`
 
 ## Execution Record
 
 - Starting branch: `main`
-- Starting HEAD: `1769b87b8227188edeef9dcb33962091feb9fcb6`
-- Main bootstrap commit: `1769b87b8227188edeef9dcb33962091feb9fcb6`
-- Governance import commit: `5dd90c8594c37ae492c3c84530fe62ae107c11d6`
-- Recorded content end HEAD: `5dd90c8594c37ae492c3c84530fe62ae107c11d6`
-- PR head: `f6d49d5ea3ef37af2b42c43a8d240b1d5c761404`
-- Main before merge: `1769b87b8227188edeef9dcb33962091feb9fcb6`
-- Merge commit: `4149469f136a9501905a699b0e59b3ee339cb73a`
-- Merged PR: [#1](https://github.com/yoCruzer/HouseholdOS/pull/1)
-- Merge method: merge commit
-- PR base/head: `main` <- `docs/governance-foundation-v1`
-
-## Closure
-
-- Owner decision: `APPROVED`
-- G0 result: accepted and closed
-- Current approved implementation Stage: none
-- Next planned Stage: `F0 — Repository & Xcode Foundation Definition`
-- F0 status: not approved for execution; awaiting Owner definition and approval
+- Starting HEAD: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
+- Actual base HEAD: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
+- Working branch: `chore/f0-repository-xcode-foundation`
+- Activation commit: pending
+- Implementation commit: pending
+- Ending HEAD: pending
+- Draft PR: pending
+- F1 status: NOT STARTED / NOT APPROVED
 
 ## Objective
 
-Import the HouseholdOS Repository Initialization Package v1.0 into the empty repository, establish the first auditable documentation baseline, push it to GitHub, and create a Draft PR for Owner Review.
+在不实现任何业务模型、持久化或产品功能的前提下，建立一个可以在本机稳定构建、运行最小测试并由后续 Stage 继续演进的原生 iOS Xcode 工程基线。
+
+F0 结束时必须新增以下可验证能力：
+
+> HouseholdOS 已拥有明确的平台和工程配置、可编译的最小 SwiftUI App Target、可运行的 Unit Test Target、稳定 Scheme、实际环境记录和首个 build/test baseline。
+
+## Technical Baseline
+
+- Platform: Native iOS
+- UI: SwiftUI
+- Language: Swift
+- Language mode: Swift 6
+- Minimum deployment target: iOS 17.0
+- Dependency policy: Apple native frameworks only
+- Device family: iPhone (`TARGETED_DEVICE_FAMILY = 1`)
+- Project: `HouseholdOSApp.xcodeproj`
+- App Target: `HouseholdOSApp`
+- Unit Test Target: `HouseholdOSAppTests`
+- Shared Scheme: `HouseholdOSApp`
+- Product / Display Name: `HouseholdOS`
+- Temporary Bundle Identifier: `com.yocruzer.householdos.dev`
 
 ## Included Scope
 
-1. Initialize or clone `https://github.com/yoCruzer/HouseholdOS`.
-2. Preserve the package directory structure exactly unless a path is invalid.
-3. Add all Markdown governance files and `.gitignore`.
-4. Verify internal Markdown links and required files.
-5. Create the initial Git history required by an empty repository.
-6. Place the complete governance package on `docs/governance-foundation-v1`.
-7. Commit with a documentation-only commit.
-8. Push `main` bootstrap if technically necessary.
-9. Push the governance branch.
-10. Create a Draft PR targeting `main`.
-11. Update this file to `AWAITING_OWNER_REVIEW` with actual branch, commit and PR information.
-12. Update `CURRENT_STATE.md` with actual repository state.
+1. Add `Docs/Operations/ENGINEERING_GOVERNANCE_SNAPSHOT.md` from the Owner-approved Governance Snapshot v0.1.
+2. Activate F0 through this Stage Definition.
+3. Create a native iOS `.xcodeproj` with the approved project, target and shared scheme names.
+4. Establish the minimal architecture-aligned directory structure.
+5. Add a minimal SwiftUI app lifecycle and Foundation placeholder view.
+6. Add an XCTest Unit Test Target with one deterministic module smoke test.
+7. Validate project discovery and actual build settings.
+8. Build, run unit tests, install and launch on an available iPhone Simulator.
+9. Scan for prohibited F0 scope.
+10. Record the actual environment and validation baseline in repository documentation.
+11. Create clear commits, push the F0 branch and open a Draft PR to `main`.
 
 ## Explicit Non-goals
 
-- Do not create an Xcode project.
-- Do not write Swift.
-- Do not add CI.
-- Do not choose a Bundle Identifier.
-- Do not change Foundation product semantics.
-- Do not add future features.
-- Do not merge the Draft PR.
-- Do not delete or replace Product Design Book content.
-- Do not convert Markdown files to DOCX/PDF in the repository.
+- SwiftData, `ModelContainer`, Schema or migrations.
+- Repository or Domain Entity definitions.
+- Item, CaptureDraft, WishItem, Household, Member or LocationNode.
+- Acquisition, LifecycleEvent, CostEvent, UsageRecord, MaintenanceRecord or ExperienceNote.
+- Camera, Photo Library, media storage, drafts, search, export or backup.
+- OCR, AI, CloudKit, iCloud or household sharing.
+- App Group, Push Notifications, App Intents, Widget, Share Extension or Spotlight.
+- Third-party dependencies, GitHub Actions, TestFlight or release configuration.
+- Real-device signing or a formal Apple Development Team.
+- Formal App Icon, branding or Design System.
+- F1 or any later Stage implementation.
+- Marking the Draft PR Ready, enabling auto-merge or merging the PR.
 
 ## Referenced SSOT
 
 - `AGENTS.md`
-- `README.md`
-- `Docs/Product/HouseholdOS_Product_Design_Book_v1.0.md`
-- All files in `Docs/Foundation/`
+- `Docs/Operations/ENGINEERING_GOVERNANCE_SNAPSHOT.md`
+- `Docs/Operations/CURRENT_STATE.md`
+- `Docs/Foundation/ARCHITECTURE.md`
+- `Docs/Foundation/V1_SCOPE.md`
+- `Docs/Foundation/PRODUCT_BOUNDARY.md`
+- `Docs/Planning/IMPLEMENTATION_PLAN.md`
 - `Docs/Planning/STAGE_DEFINITIONS.md`
+- `Docs/Planning/TEST_STRATEGY.md`
+- `Docs/Operations/DECISION_LOG.md`
+- `Docs/Operations/KNOWN_LIMITATIONS.md`
 
 ## Acceptance Criteria
 
-- Repository has a valid `main` branch.
-- Governance changes exist on `docs/governance-foundation-v1`.
-- All expected package files exist.
-- Product Design Book v1.0 is stored under `Docs/Product/`.
-- No Swift, Xcode project, binary document or generated build file is added.
-- `git diff --check` passes.
-- A Draft PR targets `main`.
-- PR body explains scope, non-goals and validation.
-- `CURRENT_STATE.md` reflects reality.
-- `CURRENT_TASK.md` is marked `AWAITING_OWNER_REVIEW`.
-- Working tree is clean after commit/push.
-
-## Git Authorization
-
-The original G0 import authorization is complete. The Owner subsequently authorized PR #1 to be marked Ready, merged safely, and followed by a post-merge status update on `main`.
-
-Allowed:
-
-- `git init` or clone
-- initial bootstrap commit if required by empty remote
-- create/switch branch
-- add/commit
-- push `main` only for minimal bootstrap
-- push governance branch
-- create Draft PR
-
-Not allowed during the completed import before Owner approval:
-
-- merge PR
-- force push
-- rewrite shared history
-- delete remote branches
-- enable auto-merge
-
-Current prohibitions:
-
-- Do not define or execute F0.
-- Do not create product implementation code, Swift files, Xcode projects, Swift packages or CI.
-- Do not modify frozen product semantics or the Product Design Book.
+1. The F0 branch was created from the verified latest `main`.
+2. Governance Snapshot v0.1 is present in the repository.
+3. `CURRENT_TASK.md` correctly activates F0.
+4. Native `HouseholdOSApp.xcodeproj` exists.
+5. `HouseholdOSApp` App Target exists.
+6. `HouseholdOSAppTests` Unit Test Target exists.
+7. A discoverable Shared Scheme exists and includes the test target.
+8. Deployment target, Swift version, device family and temporary Bundle Identifier match the approved baseline.
+9. The minimal SwiftUI app builds successfully.
+10. The Unit Test actually runs and passes.
+11. Simulator install and launch smoke succeeds.
+12. No SwiftData, business models, CloudKit, third-party dependencies or later-Stage features are present.
+13. `CURRENT_STATE.md` records the real environment and verification baseline.
+14. Final status is `AWAITING_OWNER_REVIEW`.
+15. `git diff --check` passes.
+16. Commits are scoped and auditable.
+17. The F0 branch is pushed.
+18. A Draft PR targeting `main` is created.
+19. The final worktree is clean.
+20. The PR is not merged and F1 is not started.
 
 ## Required Verification
 
-- List all tracked files.
-- Check expected file manifest.
+### Environment
+
+- `xcode-select -p`
+- `xcodebuild -version`
+- `xcrun swift --version`
+- `xcodebuild -showsdks`
+- `xcrun simctl list runtimes`
+- `xcrun simctl list devices available`
+
+### Project Inspection
+
+- `xcodebuild -list -project HouseholdOSApp.xcodeproj`
+- `xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -showdestinations`
+- `xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -showBuildSettings`
+
+### Build and Tests
+
+- Use an actual available iPhone Simulator destination.
+- Write Derived Data outside the repository.
+- Run a clean App build and require `BUILD SUCCEEDED`.
+- Run the XCTest suite and require `TEST SUCCEEDED`.
+- Report actual tests, failures, skips, destination, runtime and exit status.
+
+### Simulator Launch
+
+- Install the built app using `simctl`.
+- Launch the app using `simctl`.
+- Report build, test, install, launch and visual inspection separately.
+
+### Repository Checks
+
+- Scan for SwiftData, CoreData, CloudKit, third-party packages, entitlements, protected-resource usage descriptions, GitHub Actions, business entities and Repository definitions.
 - `git diff --check`
 - `git status --short`
-- Confirm branch and HEAD.
-- Confirm remote refs.
-- Confirm Draft PR base/head.
-- No tests/build are required because code does not exist.
+- `git diff --stat`
+- `git diff --name-status`
+- `git log --oneline --decorate -5`
+- Require an empty final `git status --short`.
 
-## Verification Results
+## Documentation Updates
 
-- Package structure: PASS — 23 intended repository files found.
-- Package SHA-256: PASS — all 26 manifest entries, including delivery-only files, matched before import.
-- Repository manifest paths: PASS — all 23 intended files exist.
-- Internal Markdown links: PASS — no Markdown links required path resolution.
-- Generated or binary artifacts: PASS — no Swift, Xcode project, DOCX, PDF, ZIP or build output added.
-- `git diff --check`: PASS.
-- Remote refs: PASS — `main` and `docs/governance-foundation-v1` exist on `origin`.
-- PR merge: PASS — PR #1 was approved and merged with a merge commit into `main`.
-- Tests/build: NOT APPLICABLE — this Stage contains no code.
-- Post-merge state: the G0 merge baseline is `4149469f136a9501905a699b0e59b3ee339cb73a`.
+- Update `Docs/Operations/CURRENT_STATE.md` with only verified repository, environment and validation facts.
+- Finish this file at `Status: AWAITING_OWNER_REVIEW` and `Lifecycle: OPEN`.
+- Append `D-009 — Native iOS Xcode Foundation` and `D-010 — Temporary Development Identifier` only if environment validation supports them.
+- Update `Docs/Operations/KNOWN_LIMITATIONS.md` with confirmed limitations only.
+- Minimally update `README.md` with open, scheme, deployment target, build/test commands and F0 boundary.
+
+## Git Authorization
+
+Allowed:
+
+- Fetch and safely fast-forward local `main`.
+- Create and switch to `chore/f0-repository-xcode-foundation`.
+- Modify files within F0 scope.
+- Create scoped commits.
+- Push the F0 branch.
+- Create a Draft PR targeting `main`.
+
+Not allowed:
+
+- Direct development on `main`.
+- Force push, rebase or shared-history rewriting.
+- Delete remote branches.
+- Mark the PR Ready, merge it or enable auto-merge.
+- Create a release or tag.
+- Modify the repository license.
+- Start F1.
 
 ## Stop Conditions
 
 Stop if:
 
-- Remote contains unexpected commits or files.
-- Package files are missing or corrupted.
-- Authentication does not permit push/PR creation.
-- Any change to frozen product semantics appears necessary.
-- An existing working tree has unrelated uncommitted changes.
+1. The worktree contains changes of unknown ownership.
+2. Remote `main` contains unknown product implementation or another active Stage.
+3. The installed Xcode cannot support iOS 17.0.
+4. The Swift toolchain cannot support Swift 6.
+5. No iPhone Simulator runtime can run the Unit Test.
+6. A native Xcode project requires a third-party generator.
+7. Build or tests fail and cannot be reliably fixed inside F0.
+8. A real Apple Developer Team, formal Bundle Identifier or entitlements become necessary.
+9. SwiftData or business models become necessary.
+10. Foundation Documents conflict with the Owner-approved F0 Prompt.
+11. A destructive Git operation becomes necessary.
+12. Actual build or test execution cannot be confirmed.
 
 ## Completion Report
 
 Report:
 
-- Initial remote state.
-- Bootstrap approach.
-- Branches and commit SHAs.
-- Files imported.
-- Manifest validation.
-- Draft PR link/number.
-- Final git status.
-- No-code confirmation.
+1. Stage result and recommendation.
+2. Starting and ending branch, HEAD, ahead/behind and worktree state.
+3. Environment and actual Simulator destination.
+4. Project configuration.
+5. Completed scope.
+6. Explicitly unimplemented and prohibited scope.
+7. All changed files.
+8. Project inspection, build, test, Simulator and repository-check results.
+9. Documentation updates.
+10. Commits, push and Draft PR details.
+11. Every Acceptance Criterion as PASS or FAIL.
+12. Confirmed limitations.
+13. Deviations and decisions.
+14. F1 status and recommended next action.

@@ -12,18 +12,20 @@ Status: ACTIVE
 
 ## Architecture
 
-- Final minimum iOS version has not yet been validated against the local Xcode environment.
-- SwiftData is the intended persistence technology but must be validated in F0/F1.
+- iOS 17.0 has been validated as the F0 minimum deployment target with Xcode 26.5 and the iOS 26.5 Simulator runtime.
+- SwiftData is the intended persistence technology but has not been implemented or validated; that work belongs to an approved F1.
 - Backup format and migration versioning are not yet implemented.
 - No performance baseline exists for large photo libraries or thousands of items.
 
 ## Development
 
-- No Xcode project exists.
-- No test commands or build scheme exist.
+- F0 has only been built, tested, installed and launched on an iPhone Simulator.
+- Real-device installation and paid Apple signing are not configured or verified.
+- `com.yocruzer.householdos.dev` is a temporary Bundle Identifier with no external service bindings.
 - No CI exists.
-- No signed app or TestFlight pipeline exists.
-- GitHub repository initialization has not yet been completed at the time this file was generated.
+- No TestFlight pipeline exists.
+- No formal App Icon or brand assets are included.
+- The current App is only an engineering placeholder; no business capability is implemented.
 
 ## Privacy
 

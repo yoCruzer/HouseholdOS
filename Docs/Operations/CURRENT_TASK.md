@@ -4,8 +4,8 @@
 
 - Stage: F0
 - Title: Repository & Xcode Foundation
-- Status: AWAITING_OWNER_REVIEW
-- Lifecycle: OPEN
+- Status: ACCEPTED
+- Lifecycle: CLOSED
 - Intended branch: `chore/f0-repository-xcode-foundation`
 - Actual branch: `chore/f0-repository-xcode-foundation`
 - Base branch: `main`
@@ -19,9 +19,23 @@
 - Working branch: `chore/f0-repository-xcode-foundation`
 - Activation commit: `85fc499c11965271ee0d86eb8c985335ca2177fc`
 - Implementation commit: `00883987b7baffd2b46ed5dcde694610a9083709`
-- Ending HEAD: final branch tip after the F0 validation-baseline handoff commit
-- Draft PR: [#2](https://github.com/yoCruzer/HouseholdOS/pull/2)
-- F1 status: NOT STARTED / NOT APPROVED
+- Approved PR head: `703890ddda2be35dae03cb67b981511e476275fd`
+- Merge commit: `8844aab9deb9e10d46ed8ffba072874430715b07`
+- Merged PR: [#2](https://github.com/yoCruzer/HouseholdOS/pull/2)
+- Merge method: merge commit
+- Acceptance record commit: this commit (`docs: record F0 owner acceptance`)
+- Final main HEAD: the acceptance record commit at the `main` branch tip; exact SHA is recorded in the final closure report
+- F1 status: NOT DEFINED / NOT APPROVED / NOT STARTED
+
+## Closure
+
+- Owner decision: APPROVED
+- F0 result: accepted and closed
+- PR #2 was marked Ready only after the approved head and review state were reverified.
+- PR #2 was merged with a normal merge commit.
+- Auto-merge, squash, rebase and remote branch deletion were not used.
+- Current approved implementation Stage: none
+- F1: NOT DEFINED / NOT APPROVED / NOT STARTED
 
 ## Verification Results
 

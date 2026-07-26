@@ -1,6 +1,6 @@
 # Current State
 
-Status: F0_AWAITING_OWNER_REVIEW
+Status: F0_ACCEPTED
 Updated: 2026-07-26
 
 ## Repository State
@@ -19,8 +19,14 @@ Updated: 2026-07-26
 - F0 branch: `chore/f0-repository-xcode-foundation`
 - F0 activation commit: `85fc499c11965271ee0d86eb8c985335ca2177fc`
 - F0 implementation commit: `00883987b7baffd2b46ed5dcde694610a9083709`
-- Draft PR: [#2](https://github.com/yoCruzer/HouseholdOS/pull/2)
+- F0 approved PR head: `703890ddda2be35dae03cb67b981511e476275fd`
+- Main before F0 merge: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
+- F0 merge commit: `8844aab9deb9e10d46ed8ffba072874430715b07`
+- Merged F0 PR: [#2](https://github.com/yoCruzer/HouseholdOS/pull/2)
+- F0 merge method: merge commit
 - PR base/head: `main` <- `chore/f0-repository-xcode-foundation`
+- Acceptance record commit: this commit (`docs: record F0 owner acceptance`)
+- Final main HEAD: the acceptance record commit at the `main` branch tip; exact SHA is recorded in the final closure report
 - Product Design Book: frozen at v1.0
 - Governance package: imported, approved and merged
 - Engineering Governance Snapshot v0.1: active for F0
@@ -121,7 +127,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - Native iOS Xcode project, App target, Unit Test target and shared scheme are established.
 - Minimal SwiftUI launch surface and deterministic XCTest smoke test are established.
 - First local build, test, install, launch and visual Simulator baseline is verified.
-- F0 Draft PR #2 is open for Owner Review.
+- F0 passed Owner Review and PR #2 was merged with merge commit `8844aab9deb9e10d46ed8ffba072874430715b07`.
+- F0 is accepted and closed.
 
 ## Key Frozen Decisions
 
@@ -147,8 +154,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Next Stage Planning
 
-F1 is the next planned Stage but is not approved and has not started. F0 must receive Owner Review before any F1 definition or implementation.
+F1: NOT DEFINED / NOT APPROVED / NOT STARTED.
 
 ## Last Verified Baseline
 
-F0 is implemented and validated locally on `chore/f0-repository-xcode-foundation`; Draft PR #2 targets `main`. F0 is not accepted or merged, and F1 remains unapproved.
+F0 was approved by the Owner and merged through PR #2 using merge commit `8844aab9deb9e10d46ed8ffba072874430715b07`. The acceptance record is committed on `main`; F1 is not defined, approved or started.

@@ -57,3 +57,17 @@ Date: 2026-07-25
 Status: ACCEPTED
 
 The AGPL-3.0 `LICENSE` created in the initial `main` bootstrap commit remains the repository license and is preserved during the G0 governance foundation import.
+
+## D-009 — Native iOS Xcode Foundation
+
+Date: 2026-07-26
+Status: ACCEPTED
+
+The verified engineering baseline is a native iOS `.xcodeproj` using Swift, SwiftUI, Swift 6 language mode and an iOS 17.0 minimum deployment target. Initial stages use Apple native frameworks only and introduce no third-party dependencies.
+
+## D-010 — Temporary Development Identifier
+
+Date: 2026-07-26
+Status: ACCEPTED
+
+`com.yocruzer.householdos.dev` is a temporary local and Simulator development identifier. It must not be bound to CloudKit, App Groups, Keychain Sharing, Associated Domains, Push Notifications or another long-lived external service. Formal branding, signing and identifier selection require a separate Owner decision.

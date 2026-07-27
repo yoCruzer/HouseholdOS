@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UIKit
 import UniformTypeIdentifiers
 import XCTest
 @testable import HouseholdOSApp
@@ -141,6 +142,38 @@ final class Goal1CoreTests: XCTestCase {
 
         XCTAssertTrue(environment.service.mediaAssets.isEmpty)
         XCTAssertFalse(FileManager.default.fileExists(atPath: originalURL.path))
+    }
+
+    func testValidImageCreatesDerivedThumbnailWithoutChangingOriginal() throws {
+        let environment = try makeEnvironment()
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(source: .photoLibrary)
+        let originalData = UIGraphicsImageRenderer(
+            size: CGSize(width: 64, height: 48)
+        ).pngData { context in
+            UIColor.systemBlue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 64, height: 48))
+        }
+
+        let asset = try environment.service.addMediaData(
+            originalData,
+            contentTypeIdentifier: UTType.png.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+
+        XCTAssertEqual(
+            try Data(contentsOf: environment.service.originalURL(for: asset)),
+            originalData
+        )
+        let thumbnailName = try XCTUnwrap(asset.thumbnailFileName)
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: environment.mediaRoot
+                    .appendingPathComponent(thumbnailName)
+                    .path
+            )
+        )
     }
 
     func testOrphanedMediaIsCleanedWithoutRemovingKnownFiles() throws {

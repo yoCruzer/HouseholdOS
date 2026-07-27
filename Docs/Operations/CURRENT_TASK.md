@@ -4,8 +4,8 @@
 
 - Goal: Goal 1
 - Title: 建立可持续扩展的家庭物品库核心
-- Status: IN_PROGRESS
-- Lifecycle: OPEN
+- Status: AWAITING_OWNER_REVIEW
+- Lifecycle: IMPLEMENTATION_COMPLETE
 - Working branch: `goal/v1-household-library-core`
 - Base branch: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
@@ -231,6 +231,29 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 - `git diff --check`；
 - `git status --short`；
 - remote/ahead/behind 核验。
+
+## Completion Evidence
+
+- Goal activation commit: `9627268`
+- Persistence and service core commit: `6ea3852`
+- User flows and UI regression commit: `7f45a0d`
+- Focused core tests: PASS — 9 tests, 0 failures, 0 skips
+- Full suite: PASS — 11 tests, 0 failures, 0 skips
+- End-to-end UI journey: PASS — capture fallback, draft save/relaunch,
+  confirmation, search, edit/relaunch, archive exclusion and archived inclusion
+- clean Debug Simulator build: PASS
+- clean Release Simulator build: PASS
+- Simulator install and launch: PASS — PID `23644`
+- Final screenshot inspection: PASS — Items empty state, search, filters, add and
+  three-tab navigation rendered without startup error
+- `git diff --check`: PASS before completion documentation
+- Third-party dependencies, CloudKit, account, remote service and Goal 2 scope: none
+
+## Review State
+
+Goal 1 implementation and local validation are complete. The branch is ready to be
+pushed and opened as a Draft PR. No merge to `main` is authorized. Goal 2 remains
+not started.
 
 ## Stop Conditions
 

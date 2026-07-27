@@ -71,3 +71,24 @@ Date: 2026-07-26
 Status: ACCEPTED
 
 `com.yocruzer.householdos.dev` is a temporary local and Simulator development identifier. It must not be bound to CloudKit, App Groups, Keychain Sharing, Associated Domains, Push Notifications or another long-lived external service. Formal branding, signing and identifier selection require a separate Owner decision.
+
+## D-011 — Versioned Local SwiftData Store
+
+Date: 2026-07-28
+Status: PROPOSED FOR OWNER REVIEW
+
+Goal 1 uses an explicit versioned SwiftData schema and migration plan for Item,
+CaptureDraft, MediaAsset, Category and Location records. The store is local-only and
+has no CloudKit configuration. Future Goal 2 and Goal 3 schema changes must extend
+this store through migration rather than require users to clear it.
+
+## D-012 — Managed Originals and Transferable Media Ownership
+
+Date: 2026-07-28
+Status: PROPOSED FOR OWNER REVIEW
+
+Imported originals are copied unchanged into versioned Application Support storage;
+thumbnails are disposable derivatives. Each MediaAsset has one Draft or Item owner,
+and Draft confirmation transfers that ownership without copying or re-encoding the
+original. Owner deletion removes managed files, and orphan cleanup never removes
+known files.

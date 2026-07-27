@@ -1,18 +1,18 @@
 # Current State
 
-Status: GOAL_1_IN_PROGRESS
+Status: GOAL_1_AWAITING_OWNER_REVIEW
 Updated: 2026-07-28
 
 ## Active Goal
 
 - Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
-- Status: IN_PROGRESS
+- Status: AWAITING_OWNER_REVIEW
 - Branch: `goal/v1-household-library-core`
 - Base: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
 - Owner authorization: `HouseholdOS Goal 1 Autonomous Execution Prompt`
-- Current work: persistence, Item/Draft/Media/Location foundation and the single-item user loop
-- Next verification: focused tests, full tests, clean build, Release build and Simulator flows
+- Current work: implementation and local verification complete
+- Next verification: Owner review of the Draft PR
 - Owner decision required: no
 
 ## Repository State
@@ -46,6 +46,7 @@ Updated: 2026-07-28
 - Xcode project: `HouseholdOSApp.xcodeproj`
 - App target: `HouseholdOSApp`
 - Unit test target: `HouseholdOSAppTests`
+- UI test target: `HouseholdOSAppUITests`
 - Shared scheme: `HouseholdOSApp`
 - CI: not configured
 - App distribution: not configured
@@ -141,6 +142,17 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - First local build, test, install, launch and visual Simulator baseline is verified.
 - F0 passed Owner Review and PR #2 was merged with merge commit `8844aab9deb9e10d46ed8ffba072874430715b07`.
 - F0 is accepted and closed.
+- Goal 1 established a versioned, local-only SwiftData schema for Item, CaptureDraft,
+  MediaAsset, Category and Location.
+- Goal 1 established managed original media files, derived thumbnails, explicit
+  Draft/Item ownership transfer and orphan cleanup.
+- Goal 1 delivered photo-library, available-camera and manual capture entry points,
+  draft recovery/confirmation, item search/filter/sort, edit, archive and permanent
+  delete flows.
+- Goal 1 full suite passed with 11 tests, including 9 focused core tests and one
+  end-to-end UI journey.
+- Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
+  passed on iPhone 17 Pro / iOS 26.5.
 
 ## Key Frozen Decisions
 
@@ -157,16 +169,18 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Known Limitations
 
-- F0 has only been validated on an iPhone Simulator.
+- Goal 1 has only been validated on an iPhone Simulator.
 - Real-device installation, paid signing and TestFlight have not been configured or verified.
+- Real-device camera capture, denial handling and selection of a real Photos asset
+  remain unverified; automated coverage validates fallback behavior and media storage.
 - The Bundle Identifier is temporary and has no external service bindings.
 - CI is not configured.
-- No persistence, migration, media, export, backup or business capability exists yet.
+- Export, backup/recovery UI and real cross-version migration remain unimplemented.
 - App icon and formal brand assets are not included.
 
 ## Goal Planning
 
-- Goal 1: IN PROGRESS
+- Goal 1: AWAITING OWNER REVIEW
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -174,7 +188,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Last Verified Baseline
 
-Before Goal 1 implementation, local and remote `main` were both verified at
-`581f970451033a0efd702202eb2845ed2a264360` with a clean worktree. On 2026-07-28,
-the F0 clean Debug build and full test suite were rerun successfully on iPhone 17 Pro /
-iOS 26.5 using Xcode 26.6; 1 test passed with 0 failures and 0 skips.
+Goal 1 started from clean local and remote `main` at
+`581f970451033a0efd702202eb2845ed2a264360`. On 2026-07-28, the final focused
+suite passed 9 tests and the full suite passed 11 tests with 0 failures and 0 skips.
+Clean Debug and Release builds, explicit install, launch (PID `23644`) and screenshot
+inspection passed on iPhone 17 Pro / iOS 26.5 using Xcode 26.6.

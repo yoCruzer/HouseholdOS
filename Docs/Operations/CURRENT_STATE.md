@@ -1,7 +1,19 @@
 # Current State
 
-Status: F0_ACCEPTED
-Updated: 2026-07-26
+Status: GOAL_1_IN_PROGRESS
+Updated: 2026-07-28
+
+## Active Goal
+
+- Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
+- Status: IN_PROGRESS
+- Branch: `goal/v1-household-library-core`
+- Base: `main`
+- Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
+- Owner authorization: `HouseholdOS Goal 1 Autonomous Execution Prompt`
+- Current work: persistence, Item/Draft/Media/Location foundation and the single-item user loop
+- Next verification: focused tests, full tests, clean build, Release build and Simulator flows
+- Owner decision required: no
 
 ## Repository State
 
@@ -43,8 +55,8 @@ Updated: 2026-07-26
 - macOS: 26.5.2 (`25F84`)
 - Host architecture: `x86_64`
 - Active developer directory: `/Applications/Xcode.app/Contents/Developer`
-- Xcode: 26.5 (`17F42`)
-- Swift toolchain: Apple Swift 6.3.2
+- Xcode: 26.6 (`17F113`)
+- Swift toolchain: Apple Swift 6.3.3
 - Installed iOS Simulator runtime: iOS 26.5 (`23F77`)
 - Selected destination: iPhone 17 Pro, iOS 26.5
 - Selected destination ID: `4C8C76D9-41F0-4EB1-9881-836515666D9F`
@@ -152,10 +164,17 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - No persistence, migration, media, export, backup or business capability exists yet.
 - App icon and formal brand assets are not included.
 
-## Next Stage Planning
+## Goal Planning
 
-F1: NOT DEFINED / NOT APPROVED / NOT STARTED.
+- Goal 1: IN PROGRESS
+- Goal 2: NOT STARTED
+- Goal 3: NOT STARTED
+- Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
+  product-value execution unit.
 
 ## Last Verified Baseline
 
-F0 was approved by the Owner and merged through PR #2 using merge commit `8844aab9deb9e10d46ed8ffba072874430715b07`. The acceptance record is committed on `main`; F1 is not defined, approved or started.
+Before Goal 1 implementation, local and remote `main` were both verified at
+`581f970451033a0efd702202eb2845ed2a264360` with a clean worktree. On 2026-07-28,
+the F0 clean Debug build and full test suite were rerun successfully on iPhone 17 Pro /
+iOS 26.5 using Xcode 26.6; 1 test passed with 0 failures and 0 skips.

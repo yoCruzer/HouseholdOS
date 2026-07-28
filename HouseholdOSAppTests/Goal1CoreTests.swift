@@ -7,7 +7,7 @@ import XCTest
 
 @MainActor
 final class Goal1CoreTests: XCTestCase {
-    func testDraftCRUDAndTimestampUpdates() throws {
+    func testDraftCRUDAndTimestampUpdates() async throws {
         var timestamp = Date(timeIntervalSince1970: 1_000)
         let environment = try makeEnvironment(now: { timestamp })
         defer { environment.removeFiles() }
@@ -35,7 +35,7 @@ final class Goal1CoreTests: XCTestCase {
         XCTAssertEqual(updated.locationID, location.id)
         XCTAssertEqual(updated.updatedAt, timestamp)
 
-        try environment.service.deleteDraft(id: draft.id)
+        _ = try await environment.service.deleteDraft(id: draft.id)
         XCTAssertTrue(environment.service.drafts.isEmpty)
     }
 
@@ -52,14 +52,14 @@ final class Goal1CoreTests: XCTestCase {
         XCTAssertTrue(environment.service.items.isEmpty)
     }
 
-    func testConfirmationTransfersMediaAndIsIdempotent() throws {
+    func testConfirmationTransfersMediaAndIsIdempotent() async throws {
         let environment = try makeEnvironment()
         defer { environment.removeFiles() }
         let draft = try environment.service.createDraft(
             source: .photoLibrary,
             name: "Camera"
         )
-        let asset = try environment.service.addMediaData(
+        let asset = try await environment.service.addMediaData(
             Data("original-image-data".utf8),
             contentTypeIdentifier: UTType.jpeg.identifier,
             ownerKind: .draft,
@@ -86,115 +86,410 @@ final class Goal1CoreTests: XCTestCase {
         XCTAssertEqual(environment.service.items.count, 1)
     }
 
-    func testItemUpdateArchiveRestoreAndPermanentDelete() throws {
-        var timestamp = Date(timeIntervalSince1970: 10_000)
-        let environment = try makeEnvironment(now: { timestamp })
-        defer { environment.removeFiles() }
-        let draft = try environment.service.createDraft(source: .manual, name: "Lamp")
-        let item = try environment.service.confirmDraft(id: draft.id)
-
-        timestamp = Date(timeIntervalSince1970: 20_000)
-        try environment.service.updateItem(
-            id: item.id,
-            name: "Desk Lamp",
-            categoryID: DefaultCategoryDefinition.all[3].id,
-            locationID: nil,
-            note: "Warm light"
+    func testSaveFailureRollsBackDatabaseTimestampAndPreparedFiles() async throws {
+        var timestamp = Date(timeIntervalSince1970: 1_000)
+        let saveGate = SaveGate()
+        let environment = try makeEnvironment(
+            now: { timestamp },
+            saveGate: saveGate
         )
-        XCTAssertEqual(item.name, "Desk Lamp")
-        XCTAssertEqual(item.note, "Warm light")
-        XCTAssertEqual(item.updatedAt, timestamp)
-
-        timestamp = Date(timeIntervalSince1970: 30_000)
-        try environment.service.setArchived(true, itemID: item.id)
-        XCTAssertEqual(item.status, .archived)
-        XCTAssertEqual(item.archivedAt, timestamp)
-        XCTAssertTrue(
-            environment.service.visibleItems(
-                query: "",
-                categoryID: nil,
-                includeArchived: false,
-                sort: .newest
-            ).isEmpty
-        )
-
-        try environment.service.setArchived(false, itemID: item.id)
-        XCTAssertEqual(item.status, .active)
-        XCTAssertNil(item.archivedAt)
-
-        try environment.service.deleteItem(id: item.id)
-        XCTAssertTrue(environment.service.items.isEmpty)
-    }
-
-    func testDeletingOwnerRemovesMediaFilesAndRecords() throws {
-        let environment = try makeEnvironment()
         defer { environment.removeFiles() }
         let draft = try environment.service.createDraft(source: .camera)
-        let asset = try environment.service.addMediaData(
-            Data("camera-data".utf8),
+        let originalTimestamp = draft.updatedAt
+
+        timestamp = Date(timeIntervalSince1970: 2_000)
+        saveGate.failNextSave = true
+        do {
+            _ = try await environment.service.addMediaData(
+                Data("prepared-file".utf8),
+                contentTypeIdentifier: UTType.jpeg.identifier,
+                ownerKind: .draft,
+                ownerID: draft.id
+            )
+            XCTFail("Expected the injected save failure")
+        } catch {
+            XCTAssertEqual(error as? InjectedFailure, .save)
+        }
+
+        try environment.service.reload()
+        XCTAssertTrue(environment.service.mediaAssets.isEmpty)
+        XCTAssertEqual(
+            environment.service.drafts.first(where: { $0.id == draft.id })?.updatedAt,
+            originalTimestamp
+        )
+        XCTAssertEqual(try mediaFileNames(at: environment.mediaRoot), [])
+    }
+
+    func testSaveSuccessReloadFailureKeepsCommittedMediaAndReopens() async throws {
+        let baseURL = temporaryDirectory(prefix: "ReloadBoundary")
+        try FileManager.default.createDirectory(
+            at: baseURL,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: baseURL) }
+        let storeURL = baseURL.appendingPathComponent("HouseholdOS.store")
+        let mediaRoot = baseURL.appendingPathComponent("Media", isDirectory: true)
+        let snapshotGate = SnapshotGate()
+
+        var firstContainer: ModelContainer? = try PersistenceController.makeContainer(
+            storeURL: storeURL
+        )
+        var firstService: ItemLibraryService? = ItemLibraryService(
+            context: try XCTUnwrap(firstContainer).mainContext,
+            mediaStore: try MediaFileStore(rootURL: mediaRoot),
+            snapshotLoader: snapshotGate.load
+        )
+        try firstService?.bootstrap()
+        let draft = try XCTUnwrap(
+            firstService?.createDraft(source: .manual, name: "Reload boundary")
+        )
+        snapshotGate.failNextReload = true
+
+        let asset = try await XCTUnwrap(firstService).addMediaData(
+            Data("committed".utf8),
             contentTypeIdentifier: UTType.jpeg.identifier,
             ownerKind: .draft,
             ownerID: draft.id
         )
-        let originalURL = environment.service.originalURL(for: asset)
-
-        try environment.service.deleteDraft(id: draft.id)
-
-        XCTAssertTrue(environment.service.mediaAssets.isEmpty)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: originalURL.path))
-    }
-
-    func testValidImageCreatesDerivedThumbnailWithoutChangingOriginal() throws {
-        let environment = try makeEnvironment()
-        defer { environment.removeFiles() }
-        let draft = try environment.service.createDraft(source: .photoLibrary)
-        let originalData = UIGraphicsImageRenderer(
-            size: CGSize(width: 64, height: 48)
-        ).pngData { context in
-            UIColor.systemBlue.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 64, height: 48))
+        let assetID = asset.id
+        let assetURL = try XCTUnwrap(firstService).originalURL(for: asset)
+        guard case .savedButRefreshFailed = firstService?.lastCommitOutcome else {
+            return XCTFail("Expected an explicit saved-but-refresh-failed outcome")
         }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: assetURL.path))
 
-        let asset = try environment.service.addMediaData(
-            originalData,
-            contentTypeIdentifier: UTType.png.identifier,
-            ownerKind: .draft,
-            ownerID: draft.id
+        firstService = nil
+        firstContainer = nil
+        let reopenedContainer = try PersistenceController.makeContainer(
+            storeURL: storeURL
         )
+        let reopenedService = ItemLibraryService(
+            context: reopenedContainer.mainContext,
+            mediaStore: try MediaFileStore(rootURL: mediaRoot)
+        )
+        try reopenedService.bootstrap()
 
-        XCTAssertEqual(
-            try Data(contentsOf: environment.service.originalURL(for: asset)),
-            originalData
-        )
-        let thumbnailName = try XCTUnwrap(asset.thumbnailFileName)
+        XCTAssertEqual(reopenedService.mediaAssets.map(\.id), [assetID])
         XCTAssertTrue(
             FileManager.default.fileExists(
-                atPath: environment.mediaRoot
-                    .appendingPathComponent(thumbnailName)
-                    .path
+                atPath: reopenedService.originalURL(
+                    for: try XCTUnwrap(reopenedService.mediaAssets.first)
+                ).path
             )
         )
     }
 
-    func testOrphanedMediaIsCleanedWithoutRemovingKnownFiles() throws {
-        let environment = try makeEnvironment()
+    func testConfirmRemainsIdempotentWhenPostCommitReloadFails() throws {
+        let snapshotGate = SnapshotGate()
+        let environment = try makeEnvironment(snapshotGate: snapshotGate)
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "One item"
+        )
+        snapshotGate.failNextReload = true
+
+        let first = try environment.service.confirmDraft(id: draft.id)
+        guard case .savedButRefreshFailed = environment.service.lastCommitOutcome else {
+            return XCTFail("Expected an explicit saved-but-refresh-failed outcome")
+        }
+        let retry = try environment.service.confirmDraft(id: draft.id)
+
+        XCTAssertEqual(first.id, retry.id)
+        try environment.service.reload()
+        XCTAssertEqual(environment.service.items.map(\.id), [first.id])
+        XCTAssertTrue(environment.service.drafts.isEmpty)
+    }
+
+    func testOwnerDeletionCommitsEvenWhenFileRemovalFailsAndCleanupRetries() async throws {
+        let removal = RemovalController()
+        let environment = try makeEnvironment(removal: removal)
+        defer { environment.removeFiles() }
+
+        let draft = try environment.service.createDraft(source: .camera)
+        let draftAsset = try await environment.service.addMediaData(
+            Data("draft-photo".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+        removal.failFileNames = [draftAsset.originalFileName]
+        let draftDelete = try await environment.service.deleteDraft(id: draft.id)
+        XCTAssertFalse(draftDelete.isComplete)
+        XCTAssertTrue(environment.service.drafts.isEmpty)
+        XCTAssertTrue(environment.service.mediaAssets.isEmpty)
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: environment.service.originalURL(for: draftAsset).path
+            )
+        )
+
+        removal.failFileNames = []
+        let draftRetry = await environment.service.cleanupOrphanedMediaFiles()
+        XCTAssertTrue(draftRetry.isComplete)
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: environment.service.originalURL(for: draftAsset).path
+            )
+        )
+
+        let itemDraft = try environment.service.createDraft(
+            source: .manual,
+            name: "Item"
+        )
+        let item = try environment.service.confirmDraft(id: itemDraft.id)
+        let itemAsset = try await environment.service.addMediaData(
+            Data("item-photo".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .item,
+            ownerID: item.id
+        )
+        removal.failFileNames = [itemAsset.originalFileName]
+        let itemDelete = try await environment.service.deleteItem(id: item.id)
+        XCTAssertFalse(itemDelete.isComplete)
+        XCTAssertTrue(environment.service.items.isEmpty)
+        XCTAssertTrue(environment.service.mediaAssets.isEmpty)
+
+        removal.failFileNames = []
+        let itemRetry = await environment.service.cleanupOrphanedMediaFiles()
+        XCTAssertTrue(itemRetry.isComplete)
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: environment.service.originalURL(for: itemAsset).path
+            )
+        )
+    }
+
+    func testCleanupIsolatesFailuresPreservesKnownFilesAndRemovesIncoming() async throws {
+        let removal = RemovalController()
+        let environment = try makeEnvironment(removal: removal)
         defer { environment.removeFiles() }
         let draft = try environment.service.createDraft(source: .manual)
-        let asset = try environment.service.addMediaData(
+        let knownAsset = try await environment.service.addMediaData(
             Data("known".utf8),
             contentTypeIdentifier: UTType.jpeg.identifier,
             ownerKind: .draft,
             ownerID: draft.id
         )
-        let knownURL = environment.service.originalURL(for: asset)
-        let orphanURL = environment.mediaRoot.appendingPathComponent("orphan.jpg")
-        try Data("orphan".utf8).write(to: orphanURL)
+        let knownURL = environment.service.originalURL(for: knownAsset)
+        let blockedURL = environment.mediaRoot.appendingPathComponent("blocked.jpg")
+        let removableURL = environment.mediaRoot.appendingPathComponent("orphan.jpg")
+        let incomingURL = environment.mediaRoot.appendingPathComponent(".incoming-stale")
+        try Data("blocked".utf8).write(to: blockedURL)
+        try Data("orphan".utf8).write(to: removableURL)
+        try Data("incoming".utf8).write(to: incomingURL)
+        removal.failFileNames = ["blocked.jpg"]
 
-        let removed = try environment.service.cleanupOrphanedMediaFiles()
+        let result = await environment.service.cleanupOrphanedMediaFiles()
 
-        XCTAssertEqual(removed, ["orphan.jpg"])
+        XCTAssertEqual(result.failures.map(\.fileName), ["blocked.jpg"])
+        XCTAssertEqual(
+            Set(result.removedFileNames),
+            Set(["orphan.jpg", ".incoming-stale"])
+        )
         XCTAssertTrue(FileManager.default.fileExists(atPath: knownURL.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: orphanURL.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: blockedURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: removableURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: incomingURL.path))
+
+        removal.failFileNames = []
+        let retry = await environment.service.cleanupOrphanedMediaFiles()
+        XCTAssertEqual(retry.removedFileNames, ["blocked.jpg"])
+    }
+
+    func testPreparedMediaIsReservedFromConcurrentOrphanCleanup() async throws {
+        let baseURL = temporaryDirectory(prefix: "PreparedReservation")
+        let mediaRoot = baseURL.appendingPathComponent("Media", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: baseURL) }
+        let store = try MediaFileStore(rootURL: mediaRoot)
+        let storedFile = try await store.importData(
+            Data("prepared".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            id: UUID()
+        )
+
+        let whilePrepared = await store.cleanupOrphans(keeping: [])
+        XCTAssertTrue(whilePrepared.removedFileNames.isEmpty)
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: store.url(for: storedFile.originalFileName).path
+            )
+        )
+
+        await store.markPersisted(storedFile)
+        let afterReservationReleased = await store.cleanupOrphans(keeping: [])
+        XCTAssertEqual(
+            afterReservationReleased.removedFileNames,
+            [storedFile.originalFileName]
+        )
+    }
+
+    func testStartupAvailabilityDoesNotDependOnMediaCleanup() async throws {
+        let baseURL = temporaryDirectory(prefix: "StartupCleanup")
+        let mediaRoot = baseURL.appendingPathComponent("Media", isDirectory: true)
+        let removal = RemovalController()
+        let store = try MediaFileStore(
+            rootURL: mediaRoot,
+            removeFile: removal.remove
+        )
+        let orphanURL = mediaRoot.appendingPathComponent("blocked.jpg")
+        try Data("orphan".utf8).write(to: orphanURL)
+        removal.failFileNames = ["blocked.jpg"]
+        defer { try? FileManager.default.removeItem(at: baseURL) }
+
+        let container = try PersistenceController.makeContainer(inMemoryOnly: true)
+        let service = ItemLibraryService(
+            context: container.mainContext,
+            mediaStore: store
+        )
+        XCTAssertNoThrow(try service.bootstrap())
+        XCTAssertEqual(service.categories.count, DefaultCategoryDefinition.all.count)
+
+        await service.performStartupMediaMaintenance()
+        XCTAssertEqual(
+            service.lastMediaMaintenanceResult.failures.map(\.fileName),
+            ["blocked.jpg"]
+        )
+        XCTAssertEqual(service.categories.count, DefaultCategoryDefinition.all.count)
+    }
+
+    func testEveryMediaMutationUpdatesOwnerTimestampIncludingCoverChanges() async throws {
+        var timestamp = Date(timeIntervalSince1970: 100)
+        let environment = try makeEnvironment(now: { timestamp })
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(source: .manual)
+
+        timestamp = Date(timeIntervalSince1970: 200)
+        let draftFirst = try await environment.service.addMediaData(
+            Data("draft-first".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+        XCTAssertEqual(draft.updatedAt, timestamp)
+
+        timestamp = Date(timeIntervalSince1970: 300)
+        _ = try await environment.service.addMediaData(
+            Data("draft-second".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+        XCTAssertEqual(draft.updatedAt, timestamp)
+
+        timestamp = Date(timeIntervalSince1970: 400)
+        _ = try await environment.service.removeMedia(id: draftFirst.id)
+        XCTAssertEqual(draft.updatedAt, timestamp)
+
+        timestamp = Date(timeIntervalSince1970: 500)
+        let itemDraft = try environment.service.createDraft(
+            source: .manual,
+            name: "Item"
+        )
+        let item = try environment.service.confirmDraft(id: itemDraft.id)
+
+        timestamp = Date(timeIntervalSince1970: 600)
+        let firstItemAsset = try await environment.service.addMediaData(
+            Data("item-first".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .item,
+            ownerID: item.id
+        )
+        XCTAssertEqual(item.updatedAt, timestamp)
+
+        timestamp = Date(timeIntervalSince1970: 700)
+        let secondItemAsset = try await environment.service.addMediaData(
+            Data("item-second".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .item,
+            ownerID: item.id
+        )
+        XCTAssertEqual(item.updatedAt, timestamp)
+
+        timestamp = Date(timeIntervalSince1970: 800)
+        _ = try await environment.service.removeMedia(id: secondItemAsset.id)
+        XCTAssertEqual(item.updatedAt, timestamp)
+        XCTAssertEqual(item.coverMediaID, firstItemAsset.id)
+
+        timestamp = Date(timeIntervalSince1970: 900)
+        _ = try await environment.service.removeMedia(id: firstItemAsset.id)
+        XCTAssertEqual(item.updatedAt, timestamp)
+        XCTAssertNotEqual(item.coverMediaID, firstItemAsset.id)
+    }
+
+    func testMultipleLargeImageImportsAreUniqueOrderedAndOffMainThread() async throws {
+        let operations = OperationRecorder()
+        let environment = try makeEnvironment(operationRecorder: operations)
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(source: .photoLibrary)
+        let largeImage = UIGraphicsImageRenderer(
+            size: CGSize(width: 4_032, height: 3_024)
+        ).jpegData(withCompressionQuality: 0.88) { context in
+            UIColor.systemIndigo.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 4_032, height: 3_024))
+        }
+
+        let first = try await environment.service.addMediaData(
+            largeImage,
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+        let second = try await environment.service.addMediaData(
+            largeImage,
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+
+        XCTAssertNotEqual(first.originalFileName, second.originalFileName)
+        XCTAssertEqual(first.ownerID, draft.id)
+        XCTAssertEqual(second.ownerID, draft.id)
+        XCTAssertEqual(first.sortOrder, 0)
+        XCTAssertEqual(second.sortOrder, 1)
+        XCTAssertNotNil(first.thumbnailFileName)
+        XCTAssertNotNil(second.thumbnailFileName)
+        XCTAssertFalse(operations.observations.isEmpty)
+        XCTAssertTrue(operations.observations.allSatisfy { !$0.ranOnMainThread })
+    }
+
+    func testImmediateMediaAndLocationPersistWhenItemFieldSaveIsRejected() async throws {
+        let environment = try makeEnvironment()
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "Original"
+        )
+        let item = try environment.service.confirmDraft(id: draft.id)
+        let location = try environment.service.createLocation(name: "Garage")
+        let media = try await environment.service.addMediaData(
+            Data("immediate".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .item,
+            ownerID: item.id
+        )
+
+        XCTAssertThrowsError(
+            try environment.service.updateItem(
+                id: item.id,
+                name: "  ",
+                categoryID: nil,
+                locationID: location.id,
+                note: "unsaved"
+            )
+        ) { error in
+            XCTAssertEqual(error as? LibraryError, .nameRequired)
+        }
+        try environment.service.reload()
+
+        XCTAssertEqual(environment.service.items.first?.name, "Original")
+        XCTAssertEqual(environment.service.locations.map(\.id), [location.id])
+        XCTAssertEqual(environment.service.mediaAssets.map(\.id), [media.id])
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: environment.service.originalURL(for: media).path
+            )
+        )
     }
 
     func testSearchCategoryLocationArchiveAndSorting() throws {
@@ -260,8 +555,7 @@ final class Goal1CoreTests: XCTestCase {
     }
 
     func testDataCanBeReadAfterContainerReopens() throws {
-        let baseURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("HouseholdOS-Persistence-\(UUID().uuidString)", isDirectory: true)
+        let baseURL = temporaryDirectory(prefix: "Persistence")
         try FileManager.default.createDirectory(
             at: baseURL,
             withIntermediateDirectories: true
@@ -273,9 +567,9 @@ final class Goal1CoreTests: XCTestCase {
         var firstContainer: ModelContainer? = try PersistenceController.makeContainer(
             storeURL: storeURL
         )
-        var firstService: ItemLibraryService? = try ItemLibraryService(
+        var firstService: ItemLibraryService? = ItemLibraryService(
             context: try XCTUnwrap(firstContainer).mainContext,
-            mediaStore: MediaFileStore(rootURL: mediaRoot)
+            mediaStore: try MediaFileStore(rootURL: mediaRoot)
         )
         try firstService?.bootstrap()
         let draft = try XCTUnwrap(
@@ -299,16 +593,35 @@ final class Goal1CoreTests: XCTestCase {
     }
 
     private func makeEnvironment(
-        now: @escaping () -> Date = Date.init
+        now: @escaping () -> Date = Date.init,
+        saveGate: SaveGate? = nil,
+        snapshotGate: SnapshotGate? = nil,
+        removal: RemovalController? = nil,
+        operationRecorder: OperationRecorder? = nil
     ) throws -> TestEnvironment {
-        let baseURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("HouseholdOS-Tests-\(UUID().uuidString)", isDirectory: true)
+        let baseURL = temporaryDirectory(prefix: "Tests")
         let mediaRoot = baseURL.appendingPathComponent("Media", isDirectory: true)
         let container = try PersistenceController.makeContainer(inMemoryOnly: true)
         let service = ItemLibraryService(
             context: container.mainContext,
-            mediaStore: try MediaFileStore(rootURL: mediaRoot),
-            now: now
+            mediaStore: try MediaFileStore(
+                rootURL: mediaRoot,
+                removeFile: removal?.remove ?? MediaFileStore.defaultTestRemoval,
+                operationObserver: operationRecorder?.record
+            ),
+            now: now,
+            contextSave: { context in
+                if saveGate?.consumeFailure() == true {
+                    throw InjectedFailure.save
+                }
+                try context.save()
+            },
+            snapshotLoader: { context in
+                if snapshotGate?.consumeFailure() == true {
+                    throw InjectedFailure.reload
+                }
+                return try LibrarySnapshot.load(from: context)
+            }
         )
         try service.bootstrap()
         return TestEnvironment(
@@ -317,6 +630,122 @@ final class Goal1CoreTests: XCTestCase {
             container: container,
             service: service
         )
+    }
+
+    private func temporaryDirectory(prefix: String) -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(
+            "HouseholdOS-\(prefix)-\(UUID().uuidString)",
+            isDirectory: true
+        )
+    }
+
+    private func mediaFileNames(at rootURL: URL) throws -> [String] {
+        guard FileManager.default.fileExists(atPath: rootURL.path) else {
+            return []
+        }
+        return try FileManager.default.contentsOfDirectory(atPath: rootURL.path).sorted()
+    }
+}
+
+private extension MediaFileStore {
+    static func defaultTestRemoval(_ url: URL) throws {
+        try FileManager.default.removeItem(at: url)
+    }
+}
+
+@MainActor
+private final class SaveGate {
+    var failNextSave = false
+
+    func consumeFailure() -> Bool {
+        defer { failNextSave = false }
+        return failNextSave
+    }
+}
+
+@MainActor
+private final class SnapshotGate {
+    var failNextReload = false
+
+    func consumeFailure() -> Bool {
+        defer { failNextReload = false }
+        return failNextReload
+    }
+
+    func load(_ context: ModelContext) throws -> LibrarySnapshot {
+        if consumeFailure() {
+            throw InjectedFailure.reload
+        }
+        return try LibrarySnapshot.load(from: context)
+    }
+}
+
+private enum InjectedFailure: LocalizedError, Equatable {
+    case save
+    case reload
+    case remove
+
+    var errorDescription: String? {
+        switch self {
+        case .save:
+            "Injected database save failure"
+        case .reload:
+            "Injected snapshot reload failure"
+        case .remove:
+            "Injected media removal failure"
+        }
+    }
+}
+
+private final class RemovalController: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _failFileNames: Set<String> = []
+
+    var failFileNames: Set<String> {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _failFileNames
+        }
+        set {
+            lock.lock()
+            _failFileNames = newValue
+            lock.unlock()
+        }
+    }
+
+    func remove(_ url: URL) throws {
+        if failFileNames.contains(url.lastPathComponent) {
+            throw InjectedFailure.remove
+        }
+        try FileManager.default.removeItem(at: url)
+    }
+}
+
+private final class OperationRecorder: @unchecked Sendable {
+    struct Observation: Sendable {
+        let operation: MediaFileOperation
+        let ranOnMainThread: Bool
+    }
+
+    private let lock = NSLock()
+    private var _observations: [Observation] = []
+
+    var observations: [Observation] {
+        lock.lock()
+        defer { lock.unlock() }
+        return _observations
+    }
+
+    func record(_ operation: MediaFileOperation, _ ranOnMainThread: Bool) {
+        lock.lock()
+        _observations.append(
+            Observation(
+                operation: operation,
+                ranOnMainThread: ranOnMainThread
+            )
+        )
+        lock.unlock()
     }
 }
 

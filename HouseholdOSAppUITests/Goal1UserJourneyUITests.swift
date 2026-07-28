@@ -69,7 +69,20 @@ final class Goal1UserJourneyUITests: XCTestCase {
         let itemNameField = app.textFields["record.name"]
         XCTAssertTrue(itemNameField.waitForExistence(timeout: 5))
         itemNameField.tap()
-        itemNameField.typeText(" Impact")
+        itemNameField.typeText(" Unsaved")
+        app.swipeUp()
+        XCTAssertTrue(
+            app.staticTexts["item.savingSemantics"].waitForExistence(timeout: 5)
+        )
+        app.buttons["item.close"].tap()
+        XCTAssertTrue(app.staticTexts["Cordless Drill"].waitForExistence(timeout: 5))
+
+        app.buttons["item.edit"].tap()
+        let reopenedNameField = app.textFields["record.name"]
+        XCTAssertTrue(reopenedNameField.waitForExistence(timeout: 5))
+        XCTAssertEqual(reopenedNameField.value as? String, "Cordless Drill")
+        reopenedNameField.tap()
+        reopenedNameField.typeText(" Impact")
         app.buttons["item.save"].tap()
         XCTAssertTrue(app.staticTexts["Cordless Drill Impact"].waitForExistence(timeout: 5))
 

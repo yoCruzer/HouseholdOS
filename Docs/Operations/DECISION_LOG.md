@@ -92,3 +92,24 @@ thumbnails are disposable derivatives. Each MediaAsset has one Draft or Item own
 and Draft confirmation transfers that ownership without copying or re-encoding the
 original. Owner deletion removes managed files, and orphan cleanup never removes
 known files.
+
+## D-013 — Observable and Retryable Media Maintenance
+
+Date: 2026-07-29
+Status: PROPOSED FOR OWNER REVIEW
+
+The structured database commit is authoritative for permanent record deletion.
+Managed-file cleanup runs after that commit, reports failures per file without
+blocking startup or unrelated cleanup, and retries residual orphan files during
+later maintenance. Files prepared for an in-flight database insert are reserved
+from orphan cleanup until the insert commits or rolls back.
+
+## D-014 — Explicit Editor Persistence Boundaries
+
+Date: 2026-07-29
+Status: PROPOSED FOR OWNER REVIEW
+
+Item editor field changes commit only when the user chooses Save; Close discards
+unsaved field changes. Media operations and creation of reusable Location records
+commit immediately and are labeled as such. Draft fields continue to save on leaving
+the editor, while Draft media and Location creation commit immediately.

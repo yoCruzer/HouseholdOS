@@ -5,11 +5,12 @@
 - Goal: Goal 1
 - Title: 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
-- Lifecycle: IMPLEMENTATION_COMPLETE
+- Lifecycle: REVIEW_REMEDIATION_COMPLETE
+- Review round: SECOND_OWNER_REVIEW
 - Working branch: `goal/v1-household-library-core`
 - Base branch: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner approval reference: `HouseholdOS Goal 1 Autonomous Execution Prompt`
+- Owner approval reference: `HouseholdOS PR #3 — Owner Review 修订执行 Prompt`
 
 ## Authorization
 
@@ -237,23 +238,33 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 - Goal activation commit: `9627268`
 - Persistence and service core commit: `6ea3852`
 - User flows and UI regression commit: `7f45a0d`
-- Focused core tests: PASS — 9 tests, 0 failures, 0 skips
-- Full suite: PASS — 11 tests, 0 failures, 0 skips
+- First Owner Review result: REQUEST_CHANGES
+- Review remediation: COMPLETE
+- Focused core tests: PASS — 15 tests, 0 failures, 0 skips
+- Full suite: PASS — 17 tests, 0 failures, 0 skips
 - End-to-end UI journey: PASS — capture fallback, draft save/relaunch,
-  confirmation, search, edit/relaunch, archive exclusion and archived inclusion
+  confirmation, search, editor Close/Save semantics, edit/relaunch, archive exclusion
+  and archived inclusion
 - clean Debug Simulator build: PASS
 - clean Release Simulator build: PASS
-- Simulator install and launch: PASS — PID `23644`
+- Simulator install and launch: PASS — PID `57483`
 - Final screenshot inspection: PASS — Items empty state, search, filters, add and
   three-tab navigation rendered without startup error
+- 4032 × 3024 image validation: PASS — two imports, unique files, thumbnails,
+  owner/order integrity and non-main-thread media operations
+- Persistence failure validation: PASS — save rollback/file cleanup, committed
+  save with refresh failure, reopen recovery and idempotent confirmation
+- Media maintenance validation: PASS — per-file failure isolation, `.incoming-*`
+  cleanup, prepared-file reservation, startup availability and later retry
 - `git diff --check`: PASS before completion documentation
 - Third-party dependencies, CloudKit, account, remote service and Goal 2 scope: none
 
 ## Review State
 
-Goal 1 implementation and local validation are complete. The branch is ready to be
-pushed and opened as a Draft PR. No merge to `main` is authorized. Goal 2 remains
-not started.
+Draft PR #3 is open. The first Owner Review result was REQUEST_CHANGES. The requested
+R1–R6 remediation and local validation are complete on the existing PR branch. PR #3
+must remain Draft and unmerged. Merge to `main` remains unauthorized. Goal 2 remains
+not started. The branch is awaiting second Owner Review.
 
 ## Stop Conditions
 
@@ -269,6 +280,6 @@ not started.
 - 将本文件标为 `AWAITING_OWNER_REVIEW`；
 - 仅在形成永久决策时更新 `DECISION_LOG.md`；
 - 仅记录真实限制到 `KNOWN_LIMITATIONS.md`；
-- 推送 Goal 1 分支并创建 PR；
-- 输出 `HouseholdOS Goal 1 Completion Report`；
+- 推送 Goal 1 分支并更新既有 Draft PR #3；
+- 输出 `HouseholdOS PR #3 Review Remediation Report`；
 - 停止并等待 Owner Review。

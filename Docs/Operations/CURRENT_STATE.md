@@ -1,19 +1,22 @@
 # Current State
 
 Status: GOAL_1_AWAITING_OWNER_REVIEW
-Updated: 2026-07-28
+Updated: 2026-07-29
 
 ## Active Goal
 
 - Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
+- Review round: SECOND_OWNER_REVIEW
 - Branch: `goal/v1-household-library-core`
 - Base: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner authorization: `HouseholdOS Goal 1 Autonomous Execution Prompt`
-- Current work: implementation and local verification complete
-- Next verification: Owner review of the Draft PR
-- Owner decision required: no
+- Owner authorization: `HouseholdOS PR #3 — Owner Review 修订执行 Prompt`
+- Draft PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
+- First Owner Review: REQUEST_CHANGES
+- Current work: review remediation and local verification complete
+- Next verification: second Owner review of Draft PR #3
+- Owner decision required: yes
 
 ## Repository State
 
@@ -145,12 +148,16 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - Goal 1 established a versioned, local-only SwiftData schema for Item, CaptureDraft,
   MediaAsset, Category and Location.
 - Goal 1 established managed original media files, derived thumbnails, explicit
-  Draft/Item ownership transfer and orphan cleanup.
+  Draft/Item ownership transfer, prepared-file reservation and retryable orphan cleanup.
 - Goal 1 delivered photo-library, available-camera and manual capture entry points,
   draft recovery/confirmation, item search/filter/sort, edit, archive and permanent
   delete flows.
-- Goal 1 full suite passed with 11 tests, including 9 focused core tests and one
-  end-to-end UI journey.
+- PR #3 review remediation separated database commit failure from post-commit refresh
+  failure, made permanent media cleanup observable and retryable, moved media I/O,
+  encoding, thumbnail generation and display decoding off MainActor, and documented
+  truthful editor persistence boundaries.
+- Goal 1 full suite passed with 17 tests: 15 focused core tests, the F0 smoke test
+  and one end-to-end UI journey.
 - Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
   passed on iPhone 17 Pro / iOS 26.5.
 
@@ -172,7 +179,13 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - Goal 1 has only been validated on an iPhone Simulator.
 - Real-device installation, paid signing and TestFlight have not been configured or verified.
 - Real-device camera capture, denial handling and selection of a real Photos asset
-  remain unverified; automated coverage validates fallback behavior and media storage.
+  remain unverified; automated coverage validates fallback behavior, media storage
+  and two 4032 × 3024 image imports at the service boundary.
+- Media deletion failures are retained as observable maintenance results and retried
+  by later orphan maintenance, including startup maintenance; no user-facing
+  maintenance dashboard or manual retry control exists.
+- No performance ceiling has been established for large libraries or sustained
+  multi-image import.
 - The Bundle Identifier is temporary and has no external service bindings.
 - CI is not configured.
 - Export, backup/recovery UI and real cross-version migration remain unimplemented.
@@ -180,7 +193,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Goal Planning
 
-- Goal 1: AWAITING OWNER REVIEW
+- Goal 1: AWAITING SECOND OWNER REVIEW
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -189,7 +202,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 ## Last Verified Baseline
 
 Goal 1 started from clean local and remote `main` at
-`581f970451033a0efd702202eb2845ed2a264360`. On 2026-07-28, the final focused
-suite passed 9 tests and the full suite passed 11 tests with 0 failures and 0 skips.
-Clean Debug and Release builds, explicit install, launch (PID `23644`) and screenshot
-inspection passed on iPhone 17 Pro / iOS 26.5 using Xcode 26.6.
+`581f970451033a0efd702202eb2845ed2a264360`. On 2026-07-29, PR #3 remediation
+focused tests passed 15 tests and the full suite passed 17 tests with 0 failures and
+0 skips. Clean Debug and Release builds, explicit install, launch (PID `57483`) and
+screenshot inspection passed on iPhone 17 Pro / iOS 26.5 using Xcode 26.6. Draft
+PR #3 remains unmerged and awaits second Owner Review.

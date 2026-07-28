@@ -1,6 +1,5 @@
 import AVFoundation
 import SwiftUI
-import UniformTypeIdentifiers
 import UIKit
 
 struct ItemLibraryView: View {
@@ -315,11 +314,13 @@ struct ItemDetailView: View {
     }
 
     private func deleteItem() {
-        do {
-            try library.deleteItem(id: itemID)
-            dismiss()
-        } catch {
-            errorMessage = error.localizedDescription
+        Task {
+            do {
+                _ = try await library.deleteItem(id: itemID)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }
@@ -340,6 +341,7 @@ struct ItemEditorView: View {
     @State private var showsCamera = false
     @State private var showsRemovePhotoConfirmation = false
     @State private var pendingMediaID: UUID?
+    @State private var isProcessingMedia = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -365,20 +367,37 @@ struct ItemEditorView: View {
                 } label: {
                     Label("Add from Photos", systemImage: "photo.badge.plus")
                 }
+                .disabled(isProcessingMedia)
 
                 Button(action: openCamera) {
                     Label("Take Photo", systemImage: "camera")
                 }
-                .disabled(!cameraAvailable)
+                .disabled(!cameraAvailable || isProcessingMedia)
+
+                if isProcessingMedia {
+                    ProgressView("Updating photos…")
+                }
+            }
+
+            Section("Saving") {
+                Text(
+                    "Field changes are saved only when you tap Save. "
+                        + "Photos and newly created locations are saved immediately. "
+                        + "Close discards unsaved field changes."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("item.savingSemantics")
             }
         }
         .navigationTitle("Edit Item")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("Close") {
                     dismiss()
                 }
+                .accessibilityIdentifier("item.close")
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save", action: save)
@@ -462,11 +481,18 @@ struct ItemEditorView: View {
 
     private func removePendingPhoto() {
         guard let pendingMediaID else { return }
-        do {
-            try library.removeMedia(id: pendingMediaID)
-            self.pendingMediaID = nil
-        } catch {
-            errorMessage = error.localizedDescription
+        isProcessingMedia = true
+        Task {
+            defer { isProcessingMedia = false }
+            do {
+                let result = try await library.removeMedia(id: pendingMediaID)
+                self.pendingMediaID = nil
+                if !result.isComplete {
+                    errorMessage = "The photo was removed. Leftover files will be retried during maintenance."
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -489,37 +515,48 @@ struct ItemEditorView: View {
         case .success(.none):
             return
         case .success(.some(let pickedFile)):
-            defer { try? FileManager.default.removeItem(at: pickedFile.temporaryURL) }
-            do {
-                try library.addMediaFile(
-                    at: pickedFile.temporaryURL,
-                    contentTypeIdentifier: pickedFile.contentTypeIdentifier,
-                    ownerKind: .item,
-                    ownerID: itemID
-                )
-            } catch {
-                errorMessage = error.localizedDescription
+            isProcessingMedia = true
+            Task {
+                defer { isProcessingMedia = false }
+                do {
+                    try await library.addMediaFile(
+                        at: pickedFile.temporaryURL,
+                        contentTypeIdentifier: pickedFile.contentTypeIdentifier,
+                        ownerKind: .item,
+                        ownerID: itemID
+                    )
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+                await discardPickedMediaFile(pickedFile)
             }
         case .failure(let error):
             errorMessage = error.localizedDescription
         }
     }
 
-    private func handleCameraResult(_ result: Result<Data?, MediaPickerError>) {
+    private func handleCameraResult(
+        _ result: Result<PickedMediaFile?, MediaPickerError>
+    ) {
         showsCamera = false
         switch result {
         case .success(.none):
             return
-        case .success(.some(let data)):
-            do {
-                try library.addMediaData(
-                    data,
-                    contentTypeIdentifier: UTType.jpeg.identifier,
-                    ownerKind: .item,
-                    ownerID: itemID
-                )
-            } catch {
-                errorMessage = error.localizedDescription
+        case .success(.some(let pickedFile)):
+            isProcessingMedia = true
+            Task {
+                defer { isProcessingMedia = false }
+                do {
+                    try await library.addMediaFile(
+                        at: pickedFile.temporaryURL,
+                        contentTypeIdentifier: pickedFile.contentTypeIdentifier,
+                        ownerKind: .item,
+                        ownerID: itemID
+                    )
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+                await discardPickedMediaFile(pickedFile)
             }
         case .failure(let error):
             errorMessage = error.localizedDescription

@@ -51,6 +51,9 @@ final class AppRuntime: ObservableObject {
             self.container = container
             self.library = library
             self.startupError = nil
+            Task {
+                await library.performStartupMediaMaintenance()
+            }
         } catch {
             self.container = nil
             self.library = nil

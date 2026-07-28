@@ -1,6 +1,5 @@
 import AVFoundation
 import SwiftUI
-import UniformTypeIdentifiers
 import UIKit
 
 struct CaptureView: View {
@@ -11,6 +10,7 @@ struct CaptureView: View {
     @State private var showsDraftEditor = false
     @State private var showsPhotoPicker = false
     @State private var showsCamera = false
+    @State private var isImportingMedia = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -36,6 +36,7 @@ struct CaptureView: View {
                         systemImage: "photo.on.rectangle",
                         action: { showsPhotoPicker = true }
                     )
+                    .disabled(isImportingMedia)
                     .accessibilityIdentifier("capture.photoLibrary")
 
                     captureButton(
@@ -46,7 +47,7 @@ struct CaptureView: View {
                         systemImage: "camera",
                         action: openCamera
                     )
-                    .disabled(!cameraAvailable)
+                    .disabled(!cameraAvailable || isImportingMedia)
                     .accessibilityIdentifier("capture.camera")
 
                     captureButton(
@@ -55,7 +56,12 @@ struct CaptureView: View {
                         systemImage: "square.and.pencil",
                         action: startManualDraft
                     )
+                    .disabled(isImportingMedia)
                     .accessibilityIdentifier("capture.manual")
+
+                    if isImportingMedia {
+                        ProgressView("Saving photo…")
+                    }
 
                     Label(
                         "A formal item only requires a name. "
@@ -171,11 +177,19 @@ struct CaptureView: View {
         case .success(.none):
             return
         case .success(.some(let pickedFile)):
-            defer { try? FileManager.default.removeItem(at: pickedFile.temporaryURL) }
-            do {
-                let draft = try library.createDraft(source: .photoLibrary)
+            isImportingMedia = true
+            Task {
+                defer { isImportingMedia = false }
+                let draft: CaptureDraftRecord
                 do {
-                    try library.addMediaFile(
+                    draft = try library.createDraft(source: .photoLibrary)
+                } catch {
+                    errorMessage = error.localizedDescription
+                    await discardPickedMediaFile(pickedFile)
+                    return
+                }
+                do {
+                    try await library.addMediaFile(
                         at: pickedFile.temporaryURL,
                         contentTypeIdentifier: pickedFile.contentTypeIdentifier,
                         ownerKind: .draft,
@@ -183,37 +197,52 @@ struct CaptureView: View {
                     )
                 } catch {
                     errorMessage = "The draft was saved, but the photo could not be added."
+                    await discardPickedMediaFile(pickedFile)
+                    presentEditor(for: draft.id)
+                    return
                 }
+                await discardPickedMediaFile(pickedFile)
                 presentEditor(for: draft.id)
-            } catch {
-                errorMessage = error.localizedDescription
             }
         case .failure(let error):
             errorMessage = error.localizedDescription
         }
     }
 
-    private func handleCameraResult(_ result: Result<Data?, MediaPickerError>) {
+    private func handleCameraResult(
+        _ result: Result<PickedMediaFile?, MediaPickerError>
+    ) {
         showsCamera = false
         switch result {
         case .success(.none):
             return
-        case .success(.some(let data)):
-            do {
-                let draft = try library.createDraft(source: .camera)
+        case .success(.some(let pickedFile)):
+            isImportingMedia = true
+            Task {
+                defer { isImportingMedia = false }
+                let draft: CaptureDraftRecord
                 do {
-                    try library.addMediaData(
-                        data,
-                        contentTypeIdentifier: UTType.jpeg.identifier,
+                    draft = try library.createDraft(source: .camera)
+                } catch {
+                    errorMessage = error.localizedDescription
+                    await discardPickedMediaFile(pickedFile)
+                    return
+                }
+                do {
+                    try await library.addMediaFile(
+                        at: pickedFile.temporaryURL,
+                        contentTypeIdentifier: pickedFile.contentTypeIdentifier,
                         ownerKind: .draft,
                         ownerID: draft.id
                     )
                 } catch {
                     errorMessage = "The draft was saved, but the photo could not be added."
+                    await discardPickedMediaFile(pickedFile)
+                    presentEditor(for: draft.id)
+                    return
                 }
+                await discardPickedMediaFile(pickedFile)
                 presentEditor(for: draft.id)
-            } catch {
-                errorMessage = error.localizedDescription
             }
         case .failure(let error):
             errorMessage = error.localizedDescription

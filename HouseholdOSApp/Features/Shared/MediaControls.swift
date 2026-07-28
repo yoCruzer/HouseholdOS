@@ -104,7 +104,8 @@ struct PhotoLibraryPicker: UIViewControllerRepresentable {
 }
 
 struct CameraPicker: UIViewControllerRepresentable {
-    let completion: @MainActor @Sendable (Result<Data?, MediaPickerError>) -> Void
+    let completion:
+        @MainActor @Sendable (Result<PickedMediaFile?, MediaPickerError>) -> Void
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
@@ -126,11 +127,11 @@ struct CameraPicker: UIViewControllerRepresentable {
     final class Coordinator: NSObject, UINavigationControllerDelegate,
         UIImagePickerControllerDelegate {
         private let completion:
-            @MainActor @Sendable (Result<Data?, MediaPickerError>) -> Void
+            @MainActor @Sendable (Result<PickedMediaFile?, MediaPickerError>) -> Void
 
         init(
             completion: @escaping
-                @MainActor @Sendable (Result<Data?, MediaPickerError>) -> Void
+                @MainActor @Sendable (Result<PickedMediaFile?, MediaPickerError>) -> Void
         ) {
             self.completion = completion
         }
@@ -146,20 +147,72 @@ struct CameraPicker: UIViewControllerRepresentable {
         ) {
             picker.dismiss(animated: true)
 
-            do {
-                if let imageURL = info[.imageURL] as? URL {
-                    completion(.success(try Data(contentsOf: imageURL)))
-                } else if let image = info[.originalImage] as? UIImage,
-                          let data = image.jpegData(compressionQuality: 0.95) {
-                    completion(.success(data))
-                } else {
-                    completion(.failure(MediaPickerError.missingFile))
+            if let imageURL = info[.imageURL] as? URL {
+                prepareCameraFile(imageURL: imageURL, image: nil)
+            } else if let image = info[.originalImage] as? UIImage {
+                prepareCameraFile(
+                    imageURL: nil,
+                    image: SendableImage(image: image)
+                )
+            } else {
+                completion(.failure(MediaPickerError.missingFile))
+            }
+        }
+
+        private func prepareCameraFile(
+            imageURL: URL?,
+            image: SendableImage?
+        ) {
+            let completion = completion
+            Task.detached {
+                let result: Result<PickedMediaFile?, MediaPickerError>
+                let temporaryURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(
+                        "householdos-camera-\(UUID().uuidString).jpg"
+                    )
+                do {
+                    if let imageURL {
+                        try FileManager.default.copyItem(
+                            at: imageURL,
+                            to: temporaryURL
+                        )
+                    } else if let image,
+                              let data = image.image.jpegData(
+                                compressionQuality: 0.95
+                              ) {
+                        try data.write(to: temporaryURL, options: .atomic)
+                    } else {
+                        throw MediaPickerError.missingFile
+                    }
+                    result = .success(
+                        PickedMediaFile(
+                            temporaryURL: temporaryURL,
+                            contentTypeIdentifier: UTType.jpeg.identifier
+                        )
+                    )
+                } catch let error as MediaPickerError {
+                    result = .failure(error)
+                } catch {
+                    result = .failure(
+                        .readFailed(error.localizedDescription)
+                    )
                 }
-            } catch {
-                completion(.failure(.readFailed(error.localizedDescription)))
+                await MainActor.run {
+                    completion(result)
+                }
             }
         }
     }
+}
+
+private struct SendableImage: @unchecked Sendable {
+    let image: UIImage
+}
+
+func discardPickedMediaFile(_ pickedFile: PickedMediaFile) async {
+    await Task.detached {
+        try? FileManager.default.removeItem(at: pickedFile.temporaryURL)
+    }.value
 }
 
 enum MediaPickerError: LocalizedError, Sendable {
@@ -181,10 +234,11 @@ struct MediaThumbnailView: View {
     var size: CGFloat = 72
 
     @EnvironmentObject private var library: ItemLibraryService
+    @State private var image: UIImage?
 
     var body: some View {
         Group {
-            if let image = UIImage(contentsOfFile: library.displayURL(for: asset).path) {
+            if let image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -198,6 +252,16 @@ struct MediaThumbnailView: View {
         .background(Color.secondary.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .accessibilityLabel("Item photo")
+        .task(id: asset.id) {
+            let path = library.displayURL(for: asset).path
+            let loadedImage: SendableImage? = await Task.detached {
+                guard let image = UIImage(contentsOfFile: path) else {
+                    return nil
+                }
+                return SendableImage(image: image)
+            }.value
+            image = loadedImage?.image
+        }
     }
 }
 

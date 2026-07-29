@@ -7,15 +7,16 @@ Updated: 2026-07-29
 
 - Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
-- Review round: SECOND_OWNER_REVIEW
+- Review round: THIRD_OWNER_REVIEW
 - Branch: `goal/v1-household-library-core`
 - Base: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner authorization: `HouseholdOS PR #3 — Owner Review 修订执行 Prompt`
+- Owner authorization: `HouseholdOS PR #3 — 第二轮 Owner Review 修订执行 Prompt`
 - Draft PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
 - First Owner Review: REQUEST_CHANGES
-- Current work: review remediation and local verification complete
-- Next verification: second Owner review of Draft PR #3
+- Second Owner Review: REQUEST_CHANGES
+- Current work: S1/S2 focused remediation and local verification complete
+- Next verification: third Owner review of Draft PR #3
 - Owner decision required: yes
 
 ## Repository State
@@ -156,8 +157,11 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
   failure, made permanent media cleanup observable and retryable, moved media I/O,
   encoding, thumbnail generation and display decoding off MainActor, and documented
   truthful editor persistence boundaries.
-- Goal 1 full suite passed with 17 tests: 15 focused core tests, the F0 smoke test
-  and one end-to-end UI journey.
+- PR #3 second-review remediation now keeps partial Draft/Item deletion outcomes
+  visible after dismissal and gives committed-but-unrefreshed writes a safe snapshot
+  recovery path that never repeats the original write.
+- Goal 1 full suite passed with 26 tests, including 8 focused S1/S2 service tests
+  and 3 focused remediation UI journeys.
 - Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
   passed on iPhone 17 Pro / iOS 26.5.
 
@@ -181,9 +185,9 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - Real-device camera capture, denial handling and selection of a real Photos asset
   remain unverified; automated coverage validates fallback behavior, media storage
   and two 4032 × 3024 image imports at the service boundary.
-- Media deletion failures are retained as observable maintenance results and retried
-  by later orphan maintenance, including startup maintenance; no user-facing
-  maintenance dashboard or manual retry control exists.
+- Media deletion failures are shown after record dismissal and retried by later orphan
+  maintenance, including startup maintenance; no user-facing maintenance dashboard
+  or manual retry control exists.
 - No performance ceiling has been established for large libraries or sustained
   multi-image import.
 - The Bundle Identifier is temporary and has no external service bindings.
@@ -193,7 +197,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Goal Planning
 
-- Goal 1: AWAITING SECOND OWNER REVIEW
+- Goal 1: AWAITING THIRD OWNER REVIEW
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -202,8 +206,9 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 ## Last Verified Baseline
 
 Goal 1 started from clean local and remote `main` at
-`581f970451033a0efd702202eb2845ed2a264360`. On 2026-07-29, PR #3 remediation
-focused tests passed 15 tests and the full suite passed 17 tests with 0 failures and
-0 skips. Clean Debug and Release builds, explicit install, launch (PID `57483`) and
-screenshot inspection passed on iPhone 17 Pro / iOS 26.5 using Xcode 26.6. Draft
-PR #3 remains unmerged and awaits second Owner Review.
+`581f970451033a0efd702202eb2845ed2a264360`. The second-review remediation started
+from PR head `0266ef1a4adec212430850fd18830901b4132276`. On 2026-07-29, 8 focused
+service tests, 3 focused UI tests and the 26-test full suite passed with 0 failures
+and 0 skips. Clean Debug and Release builds, explicit install, launch (PID `73904`)
+and screenshot inspection passed on iPhone 17 Pro / iOS 26.5 using Xcode 26.6.
+Draft PR #3 remains unmerged and awaits third Owner Review.

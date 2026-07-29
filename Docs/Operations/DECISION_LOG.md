@@ -113,3 +113,13 @@ Item editor field changes commit only when the user chooses Save; Close discards
 unsaved field changes. Media operations and creation of reusable Location records
 commit immediately and are labeled as such. Draft fields continue to save on leaving
 the editor, while Draft media and Location creation commit immediately.
+
+## D-015 — Committed Writes Recover Without Repeating the Write
+
+Date: 2026-07-29
+Status: PROPOSED FOR OWNER REVIEW
+
+When a database write commits but the published snapshot cannot refresh, the committed
+transaction remains authoritative. HouseholdOS may retry snapshot loading, but it must
+not repeat the original create, confirm, update, archive or media write. If recovery
+still fails, the UI states that data was saved and offers a safe Reload action.

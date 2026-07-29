@@ -6,11 +6,11 @@
 - Title: 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
 - Lifecycle: REVIEW_REMEDIATION_COMPLETE
-- Review round: SECOND_OWNER_REVIEW
+- Review round: THIRD_OWNER_REVIEW
 - Working branch: `goal/v1-household-library-core`
 - Base branch: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner approval reference: `HouseholdOS PR #3 — Owner Review 修订执行 Prompt`
+- Owner approval reference: `HouseholdOS PR #3 — 第二轮 Owner Review 修订执行 Prompt`
 
 ## Authorization
 
@@ -239,15 +239,17 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 - Persistence and service core commit: `6ea3852`
 - User flows and UI regression commit: `7f45a0d`
 - First Owner Review result: REQUEST_CHANGES
-- Review remediation: COMPLETE
-- Focused core tests: PASS — 15 tests, 0 failures, 0 skips
-- Full suite: PASS — 17 tests, 0 failures, 0 skips
+- Second Owner Review result: REQUEST_CHANGES
+- Focused remediation for deletion-result UX and refresh-recovery semantics: COMPLETE
+- Focused S1/S2 service tests: PASS — 8 tests, 0 failures, 0 skips
+- Focused S1/S2 UI tests: PASS — 3 tests, 0 failures, 0 skips
+- Full suite: PASS — 26 tests, 0 failures, 0 skips
 - End-to-end UI journey: PASS — capture fallback, draft save/relaunch,
   confirmation, search, editor Close/Save semantics, edit/relaunch, archive exclusion
   and archived inclusion
 - clean Debug Simulator build: PASS
 - clean Release Simulator build: PASS
-- Simulator install and launch: PASS — PID `57483`
+- Simulator install and launch: PASS — PID `73904`
 - Final screenshot inspection: PASS — Items empty state, search, filters, add and
   three-tab navigation rendered without startup error
 - 4032 × 3024 image validation: PASS — two imports, unique files, thumbnails,
@@ -261,10 +263,10 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 
 ## Review State
 
-Draft PR #3 is open. The first Owner Review result was REQUEST_CHANGES. The requested
-R1–R6 remediation and local validation are complete on the existing PR branch. PR #3
-must remain Draft and unmerged. Merge to `main` remains unauthorized. Goal 2 remains
-not started. The branch is awaiting second Owner Review.
+PR #3 is open and remains Draft. The second Owner Review result was REQUEST_CHANGES.
+Focused remediation for deletion-result UX and refresh-recovery semantics is complete
+on the existing PR branch. The branch is awaiting third Owner Review. Merge remains
+unauthorized. Goal 2 remains not started.
 
 ## Stop Conditions
 
@@ -281,5 +283,5 @@ not started. The branch is awaiting second Owner Review.
 - 仅在形成永久决策时更新 `DECISION_LOG.md`；
 - 仅记录真实限制到 `KNOWN_LIMITATIONS.md`；
 - 推送 Goal 1 分支并更新既有 Draft PR #3；
-- 输出 `HouseholdOS PR #3 Review Remediation Report`；
+- 输出 `HouseholdOS PR #3 Second Review Remediation Report`；
 - 停止并等待 Owner Review。

@@ -18,9 +18,9 @@ Status: ACTIVE
 - Controlled Simulator tests cover two 4032 × 3024 image imports, thumbnail creation
   and non-main-thread media operations, but no performance ceiling exists for large
   photo libraries, sustained imports or thousands of items.
-- Failed managed-file deletion is observable and retryable through later orphan
-  maintenance, including startup maintenance. There is no user-facing maintenance
-  dashboard or manual retry control.
+- Failed managed-file deletion produces a user-visible post-dismissal warning and is
+  retryable through later orphan maintenance, including startup maintenance. There
+  is no user-facing maintenance dashboard or manual retry control.
 
 ## Development
 

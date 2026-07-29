@@ -52,6 +52,61 @@ final class Goal1CoreTests: XCTestCase {
         XCTAssertTrue(environment.service.items.isEmpty)
     }
 
+    func testCreateDraftCommitSuccessRefreshFailureDoesNotDuplicateDraft() throws {
+        let saveGate = SaveGate()
+        let snapshotGate = SnapshotGate()
+        let environment = try makeEnvironment(
+            saveGate: saveGate,
+            snapshotGate: snapshotGate
+        )
+        defer { environment.removeFiles() }
+        let saveBaseline = saveGate.saveAttempts
+        snapshotGate.failNextReloads(2)
+
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "Committed once"
+        )
+
+        guard case .savedButRefreshFailed =
+            environment.service.lastCommitOutcome else {
+            return XCTFail("Expected a committed-but-unrefreshed outcome")
+        }
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertTrue(environment.service.drafts.isEmpty)
+        XCTAssertEqual(environment.service.draftRecord(id: draft.id)?.id, draft.id)
+        XCTAssertNotNil(environment.service.refreshFailure)
+
+        try environment.service.recoverSnapshot()
+        XCTAssertEqual(environment.service.drafts.map(\.id), [draft.id])
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertNil(environment.service.refreshFailure)
+    }
+
+    func testCreateDraftRefreshRecoveryReturnsOriginalDraft() throws {
+        let saveGate = SaveGate()
+        let snapshotGate = SnapshotGate()
+        let environment = try makeEnvironment(
+            saveGate: saveGate,
+            snapshotGate: snapshotGate
+        )
+        defer { environment.removeFiles() }
+        let saveBaseline = saveGate.saveAttempts
+        let reloadBaseline = snapshotGate.loadAttempts
+        snapshotGate.failNextReloads(1)
+
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "Recovered automatically"
+        )
+
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertEqual(snapshotGate.loadAttempts, reloadBaseline + 2)
+        XCTAssertEqual(environment.service.drafts.map(\.id), [draft.id])
+        XCTAssertEqual(environment.service.lastCommitOutcome, .savedAndReloaded)
+        XCTAssertNil(environment.service.refreshFailure)
+    }
+
     func testConfirmationTransfersMediaAndIsIdempotent() async throws {
         let environment = try makeEnvironment()
         defer { environment.removeFiles() }
@@ -143,7 +198,7 @@ final class Goal1CoreTests: XCTestCase {
         let draft = try XCTUnwrap(
             firstService?.createDraft(source: .manual, name: "Reload boundary")
         )
-        snapshotGate.failNextReload = true
+        snapshotGate.failNextReloads(2)
 
         let asset = try await XCTUnwrap(firstService).addMediaData(
             Data("committed".utf8),
@@ -179,29 +234,102 @@ final class Goal1CoreTests: XCTestCase {
         )
     }
 
-    func testConfirmRemainsIdempotentWhenPostCommitReloadFails() throws {
+    func testConfirmDraftRefreshFailureDoesNotCreateSecondItem() throws {
+        let saveGate = SaveGate()
         let snapshotGate = SnapshotGate()
-        let environment = try makeEnvironment(snapshotGate: snapshotGate)
+        let environment = try makeEnvironment(
+            saveGate: saveGate,
+            snapshotGate: snapshotGate
+        )
         defer { environment.removeFiles() }
         let draft = try environment.service.createDraft(
             source: .manual,
             name: "One item"
         )
-        snapshotGate.failNextReload = true
+        let saveBaseline = saveGate.saveAttempts
+        snapshotGate.failNextReloads(2)
 
-        let first = try environment.service.confirmDraft(id: draft.id)
+        let item = try environment.service.confirmDraft(id: draft.id)
         guard case .savedButRefreshFailed = environment.service.lastCommitOutcome else {
             return XCTFail("Expected an explicit saved-but-refresh-failed outcome")
         }
-        let retry = try environment.service.confirmDraft(id: draft.id)
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertEqual(environment.service.itemRecord(id: item.id)?.sourceDraftID, draft.id)
 
-        XCTAssertEqual(first.id, retry.id)
-        try environment.service.reload()
-        XCTAssertEqual(environment.service.items.map(\.id), [first.id])
+        try environment.service.recoverSnapshot()
+        XCTAssertEqual(environment.service.items.map(\.id), [item.id])
         XCTAssertTrue(environment.service.drafts.isEmpty)
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
     }
 
-    func testOwnerDeletionCommitsEvenWhenFileRemovalFailsAndCleanupRetries() async throws {
+    func testUpdateItemRefreshFailureDoesNotInviteSecondWrite() throws {
+        let saveGate = SaveGate()
+        let snapshotGate = SnapshotGate()
+        let environment = try makeEnvironment(
+            saveGate: saveGate,
+            snapshotGate: snapshotGate
+        )
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "Before"
+        )
+        let item = try environment.service.confirmDraft(id: draft.id)
+        let saveBaseline = saveGate.saveAttempts
+        snapshotGate.failNextReloads(2)
+
+        try environment.service.updateItem(
+            id: item.id,
+            name: "After",
+            categoryID: nil,
+            locationID: nil,
+            note: nil
+        )
+
+        guard case .savedButRefreshFailed =
+            environment.service.lastCommitOutcome else {
+            return XCTFail("Expected a committed-but-unrefreshed outcome")
+        }
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertEqual(environment.service.itemRecord(id: item.id)?.name, "After")
+
+        try environment.service.recoverSnapshot()
+        XCTAssertEqual(environment.service.items.first?.name, "After")
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+    }
+
+    func testArchiveRefreshFailurePreservesSingleCommittedTransition() throws {
+        let saveGate = SaveGate()
+        let snapshotGate = SnapshotGate()
+        let environment = try makeEnvironment(
+            saveGate: saveGate,
+            snapshotGate: snapshotGate
+        )
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "Archive once"
+        )
+        let item = try environment.service.confirmDraft(id: draft.id)
+        let saveBaseline = saveGate.saveAttempts
+        snapshotGate.failNextReloads(2)
+
+        try environment.service.setArchived(true, itemID: item.id)
+
+        guard case .savedButRefreshFailed =
+            environment.service.lastCommitOutcome else {
+            return XCTFail("Expected a committed-but-unrefreshed outcome")
+        }
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertEqual(environment.service.itemRecord(id: item.id)?.status, .archived)
+
+        try environment.service.recoverSnapshot()
+        XCTAssertEqual(environment.service.items.count, 1)
+        XCTAssertEqual(environment.service.items.first?.status, .archived)
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+    }
+
+    func testDraftDeleteCleanupFailureReturnsObservablePartialCompletion() async throws {
         let removal = RemovalController()
         let environment = try makeEnvironment(removal: removal)
         defer { environment.removeFiles() }
@@ -223,6 +351,12 @@ final class Goal1CoreTests: XCTestCase {
                 atPath: environment.service.originalURL(for: draftAsset).path
             )
         )
+        let notice = try XCTUnwrap(
+            MediaDeletionNotice.make(kind: .draft, result: draftDelete)
+        )
+        XCTAssertEqual(notice.title, "Draft record deleted")
+        XCTAssertTrue(notice.message.contains("will retry"))
+        XCTAssertFalse(notice.message.localizedCaseInsensitiveContains("delete failed"))
 
         removal.failFileNames = []
         let draftRetry = await environment.service.cleanupOrphanedMediaFiles()
@@ -232,7 +366,12 @@ final class Goal1CoreTests: XCTestCase {
                 atPath: environment.service.originalURL(for: draftAsset).path
             )
         )
+    }
 
+    func testItemDeleteCleanupFailureReturnsObservablePartialCompletion() async throws {
+        let removal = RemovalController()
+        let environment = try makeEnvironment(removal: removal)
+        defer { environment.removeFiles() }
         let itemDraft = try environment.service.createDraft(
             source: .manual,
             name: "Item"
@@ -249,6 +388,17 @@ final class Goal1CoreTests: XCTestCase {
         XCTAssertFalse(itemDelete.isComplete)
         XCTAssertTrue(environment.service.items.isEmpty)
         XCTAssertTrue(environment.service.mediaAssets.isEmpty)
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: environment.service.originalURL(for: itemAsset).path
+            )
+        )
+        let notice = try XCTUnwrap(
+            MediaDeletionNotice.make(kind: .item, result: itemDelete)
+        )
+        XCTAssertEqual(notice.title, "Item record deleted")
+        XCTAssertTrue(notice.message.contains("next launch"))
+        XCTAssertFalse(notice.message.localizedCaseInsensitiveContains("delete failed"))
 
         removal.failFileNames = []
         let itemRetry = await environment.service.cleanupOrphanedMediaFiles()
@@ -258,6 +408,24 @@ final class Goal1CoreTests: XCTestCase {
                 atPath: environment.service.originalURL(for: itemAsset).path
             )
         )
+    }
+
+    func testCompleteOwnerDeletionDoesNotCreateResidualFileNotice() async throws {
+        let environment = try makeEnvironment()
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(source: .manual)
+        let draftResult = try await environment.service.deleteDraft(id: draft.id)
+        XCTAssertTrue(draftResult.isComplete)
+        XCTAssertNil(MediaDeletionNotice.make(kind: .draft, result: draftResult))
+
+        let itemDraft = try environment.service.createDraft(
+            source: .manual,
+            name: "Complete deletion"
+        )
+        let item = try environment.service.confirmDraft(id: itemDraft.id)
+        let itemResult = try await environment.service.deleteItem(id: item.id)
+        XCTAssertTrue(itemResult.isComplete)
+        XCTAssertNil(MediaDeletionNotice.make(kind: .item, result: itemResult))
     }
 
     func testCleanupIsolatesFailuresPreservesKnownFilesAndRemovesIncoming() async throws {
@@ -656,8 +824,10 @@ private extension MediaFileStore {
 @MainActor
 private final class SaveGate {
     var failNextSave = false
+    private(set) var saveAttempts = 0
 
     func consumeFailure() -> Bool {
+        saveAttempts += 1
         defer { failNextSave = false }
         return failNextSave
     }
@@ -665,11 +835,20 @@ private final class SaveGate {
 
 @MainActor
 private final class SnapshotGate {
-    var failNextReload = false
+    private var failuresRemaining = 0
+    private(set) var loadAttempts = 0
+
+    func failNextReloads(_ count: Int) {
+        failuresRemaining = count
+    }
 
     func consumeFailure() -> Bool {
-        defer { failNextReload = false }
-        return failNextReload
+        loadAttempts += 1
+        guard failuresRemaining > 0 else {
+            return false
+        }
+        failuresRemaining -= 1
+        return true
     }
 
     func load(_ context: ModelContext) throws -> LibrarySnapshot {

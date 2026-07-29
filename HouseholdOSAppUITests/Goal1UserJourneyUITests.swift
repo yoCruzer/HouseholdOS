@@ -124,4 +124,114 @@ final class Goal1UserJourneyUITests: XCTestCase {
         app.buttons["Include Archived"].tap()
         XCTAssertTrue(archivedItemRow.waitForExistence(timeout: 5))
     }
+
+    func testDraftDeleteUIReportsResidualFilesAfterRecordRemoval() throws {
+        let app = deletionFixtureApp(kind: "draft")
+        app.launch()
+
+        app.tabBars.buttons["Drafts"].tap()
+        let draft = app.staticTexts["Residual Draft"]
+        XCTAssertTrue(draft.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.images["Item photo"].waitForExistence(timeout: 10))
+        draft.tap()
+        XCTAssertTrue(app.buttons["More actions"].waitForExistence(timeout: 5))
+        app.buttons["More actions"].tap()
+        let deleteDraftButton = app.buttons["Delete Draft"].firstMatch
+        XCTAssertTrue(deleteDraftButton.waitForExistence(timeout: 5))
+        deleteDraftButton.tap()
+        let draftDeleteConfirmation = app.buttons["Delete Draft Permanently"].firstMatch
+        XCTAssertTrue(
+            draftDeleteConfirmation.waitForExistence(timeout: 5)
+        )
+        draftDeleteConfirmation.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["Draft record deleted"].waitForExistence(timeout: 5)
+        )
+        XCTAssertTrue(
+            residualFileMessage(in: app).waitForExistence(timeout: 5)
+        )
+        XCTAssertFalse(app.staticTexts["Delete failed"].exists)
+        app.buttons["OK"].tap()
+        XCTAssertFalse(draft.waitForExistence(timeout: 2))
+    }
+
+    func testItemDeleteUIReportsResidualFilesAfterRecordRemoval() throws {
+        let app = deletionFixtureApp(kind: "item")
+        app.launch()
+
+        let item = app.staticTexts["Residual Item"]
+        XCTAssertTrue(item.waitForExistence(timeout: 10))
+        item.tap()
+        XCTAssertTrue(app.buttons["More actions"].waitForExistence(timeout: 5))
+        app.buttons["More actions"].tap()
+        XCTAssertTrue(app.buttons["item.delete"].waitForExistence(timeout: 5))
+        app.buttons["item.delete"].tap()
+        XCTAssertTrue(
+            app.buttons["item.delete.confirm"].waitForExistence(timeout: 5)
+        )
+        app.buttons["item.delete.confirm"].firstMatch.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["Item record deleted"].waitForExistence(timeout: 5)
+        )
+        XCTAssertTrue(
+            residualFileMessage(in: app).waitForExistence(timeout: 5)
+        )
+        XCTAssertFalse(app.staticTexts["Delete failed"].exists)
+        app.buttons["OK"].tap()
+        XCTAssertFalse(item.waitForExistence(timeout: 2))
+    }
+
+    func testCreateDraftRefreshFailureRecoversWithoutUnavailableOrDuplicate() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_FAIL_NEXT_REFRESH"] = "1"
+        app.launch()
+
+        app.tabBars.buttons["Add"].tap()
+        XCTAssertTrue(app.buttons["capture.manual"].waitForExistence(timeout: 5))
+        app.buttons["capture.manual"].tap()
+
+        let nameField = app.textFields["record.name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Draft unavailable"].exists)
+        nameField.tap()
+        nameField.typeText("Recovered Draft")
+        app.buttons["draft.save"].tap()
+
+        app.terminate()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "0"
+        app.launch()
+        app.tabBars.buttons["Drafts"].tap()
+        let recoveredDrafts = app.staticTexts.matching(
+            NSPredicate(format: "label == %@", "Recovered Draft")
+        )
+        XCTAssertTrue(recoveredDrafts.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(recoveredDrafts.count, 1)
+        recoveredDrafts.firstMatch.tap()
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        XCTAssertEqual(nameField.value as? String, "Recovered Draft")
+        XCTAssertFalse(app.staticTexts["Draft unavailable"].exists)
+    }
+
+    private func deletionFixtureApp(kind: String) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_FAIL_MEDIA_REMOVAL"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"] = kind
+        return app
+    }
+
+    private func residualFileMessage(in app: XCUIApplication) -> XCUIElement {
+        app.staticTexts.matching(
+            NSPredicate(
+                format: "label CONTAINS %@ AND label CONTAINS %@",
+                "local photo files could not be removed",
+                "retry during later maintenance"
+            )
+        ).firstMatch
+    }
 }

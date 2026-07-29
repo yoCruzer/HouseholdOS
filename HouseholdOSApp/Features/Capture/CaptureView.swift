@@ -4,6 +4,7 @@ import UIKit
 
 struct CaptureView: View {
     @Binding var selectedTab: RootTab
+    let reportDeletion: (DeletedRecordKind, MediaMaintenanceResult) -> Void
 
     @EnvironmentObject private var library: ItemLibraryService
     @State private var editingDraftID: UUID?
@@ -90,9 +91,10 @@ struct CaptureView: View {
                                 showsDraftEditor = false
                                 selectedTab = .items
                             },
-                            onDeleted: {
+                            onDeleted: { result in
                                 showsDraftEditor = false
                                 selectedTab = .drafts
+                                reportDeletion(.draft, result)
                             }
                         )
                     }

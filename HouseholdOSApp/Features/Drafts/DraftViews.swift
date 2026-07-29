@@ -4,6 +4,7 @@ import UIKit
 
 struct DraftInboxView: View {
     @Binding var selectedTab: RootTab
+    let reportDeletion: (DeletedRecordKind, MediaMaintenanceResult) -> Void
 
     @EnvironmentObject private var library: ItemLibraryService
     @State private var path: [UUID] = []
@@ -39,8 +40,9 @@ struct DraftInboxView: View {
                         path.removeAll()
                         selectedTab = .items
                     },
-                    onDeleted: {
+                    onDeleted: { result in
                         path.removeAll()
+                        reportDeletion(.draft, result)
                     }
                 )
             }
@@ -95,7 +97,7 @@ private struct DraftRow: View {
 struct DraftEditorView: View {
     let draftID: UUID
     let onConfirmed: () -> Void
-    let onDeleted: () -> Void
+    let onDeleted: (MediaMaintenanceResult) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var library: ItemLibraryService
@@ -185,9 +187,14 @@ struct DraftEditorView: View {
                         }
                         .accessibilityIdentifier("draft.save")
                     }
-                    ToolbarItem(placement: .bottomBar) {
-                        Button("Delete Draft", role: .destructive) {
-                            showsDeleteConfirmation = true
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Button("Delete Draft", role: .destructive) {
+                                showsDeleteConfirmation = true
+                            }
+                            .accessibilityIdentifier("draft.delete")
+                        } label: {
+                            Label("More actions", systemImage: "ellipsis.circle")
                         }
                     }
                 }
@@ -213,18 +220,20 @@ struct DraftEditorView: View {
                 .ignoresSafeArea()
         }
         .confirmationDialog(
-            "Delete this draft and its photos?",
-            isPresented: $showsDeleteConfirmation,
+            confirmationTitle,
+            isPresented: confirmationBinding,
             titleVisibility: .visible
         ) {
-            Button("Delete Draft", role: .destructive, action: deleteDraft)
-        }
-        .confirmationDialog(
-            "Remove this photo permanently?",
-            isPresented: $showsRemovePhotoConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Remove Photo", role: .destructive, action: removePendingPhoto)
+            if showsDeleteConfirmation {
+                Button(
+                    "Delete Draft Permanently",
+                    role: .destructive,
+                    action: deleteDraft
+                )
+                .accessibilityIdentifier("draft.delete.confirm")
+            } else {
+                Button("Remove Photo", role: .destructive, action: removePendingPhoto)
+            }
         }
         .alert("Couldn’t save", isPresented: errorBinding) {
             Button("OK", role: .cancel) {}
@@ -235,6 +244,7 @@ struct DraftEditorView: View {
 
     private var draft: CaptureDraftRecord? {
         library.drafts.first(where: { $0.id == draftID })
+            ?? library.draftRecord(id: draftID)
     }
 
     private var assets: [MediaAssetRecord] {
@@ -250,6 +260,24 @@ struct DraftEditorView: View {
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )
+    }
+
+    private var confirmationBinding: Binding<Bool> {
+        Binding(
+            get: { showsDeleteConfirmation || showsRemovePhotoConfirmation },
+            set: { isPresented in
+                if !isPresented {
+                    showsDeleteConfirmation = false
+                    showsRemovePhotoConfirmation = false
+                }
+            }
+        )
+    }
+
+    private var confirmationTitle: String {
+        showsDeleteConfirmation
+            ? "Delete this draft and its photos?"
+            : "Remove this photo permanently?"
     }
 
     private func loadFieldsIfNeeded() {
@@ -294,8 +322,8 @@ struct DraftEditorView: View {
     private func deleteDraft() {
         Task {
             do {
-                _ = try await library.deleteDraft(id: draftID)
-                onDeleted()
+                let result = try await library.deleteDraft(id: draftID)
+                onDeleted(result)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription

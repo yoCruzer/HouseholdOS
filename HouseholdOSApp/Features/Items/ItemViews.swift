@@ -4,6 +4,7 @@ import UIKit
 
 struct ItemLibraryView: View {
     @Binding var selectedTab: RootTab
+    let reportDeletion: (DeletedRecordKind, MediaMaintenanceResult) -> Void
 
     @EnvironmentObject private var library: ItemLibraryService
     @State private var searchText = ""
@@ -35,7 +36,12 @@ struct ItemLibraryView: View {
                 } else {
                     List(visibleItems, id: \.id) { item in
                         NavigationLink {
-                            ItemDetailView(itemID: item.id)
+                            ItemDetailView(
+                                itemID: item.id,
+                                onDeleted: {
+                                    reportDeletion(.item, $0)
+                                }
+                            )
                         } label: {
                             ItemRow(item: item)
                         }
@@ -175,6 +181,7 @@ private struct ItemRow: View {
 
 struct ItemDetailView: View {
     let itemID: UUID
+    let onDeleted: (MediaMaintenanceResult) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var library: ItemLibraryService
@@ -255,6 +262,7 @@ struct ItemDetailView: View {
                             Button("Delete Permanently", role: .destructive) {
                                 showsDeleteConfirmation = true
                             }
+                            .accessibilityIdentifier("item.delete")
                         } label: {
                             Label("More actions", systemImage: "ellipsis.circle")
                         }
@@ -279,6 +287,7 @@ struct ItemDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Delete Permanently", role: .destructive, action: deleteItem)
+                .accessibilityIdentifier("item.delete.confirm")
         } message: {
             Text("Archive the item instead if you may need it later.")
         }
@@ -291,6 +300,7 @@ struct ItemDetailView: View {
 
     private var item: ItemRecord? {
         library.items.first(where: { $0.id == itemID })
+            ?? library.itemRecord(id: itemID)
     }
 
     private var assets: [MediaAssetRecord] {
@@ -316,7 +326,8 @@ struct ItemDetailView: View {
     private func deleteItem() {
         Task {
             do {
-                _ = try await library.deleteItem(id: itemID)
+                let result = try await library.deleteItem(id: itemID)
+                onDeleted(result)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription
@@ -428,6 +439,7 @@ struct ItemEditorView: View {
 
     private var item: ItemRecord? {
         library.items.first(where: { $0.id == itemID })
+            ?? library.itemRecord(id: itemID)
     }
 
     private var assets: [MediaAssetRecord] {

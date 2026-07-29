@@ -7,6 +7,11 @@ enum LibraryCommitOutcome: Equatable {
     case savedButRefreshFailed(String)
 }
 
+struct LibraryRefreshFailure: Equatable, Identifiable {
+    let id = UUID()
+    let message: String
+}
+
 @MainActor
 struct LibrarySnapshot {
     let items: [ItemRecord]
@@ -72,6 +77,7 @@ final class ItemLibraryService: ObservableObject {
     @Published private(set) var categories: [CategoryRecord] = []
     @Published private(set) var locations: [LocationRecord] = []
     @Published private(set) var lastCommitOutcome: LibraryCommitOutcome = .savedAndReloaded
+    @Published private(set) var refreshFailure: LibraryRefreshFailure?
     @Published private(set) var lastMediaMaintenanceResult: MediaMaintenanceResult = .empty
 
     let mediaStore: MediaFileStore
@@ -106,6 +112,16 @@ final class ItemLibraryService: ObservableObject {
         let snapshot = try snapshotLoader(context)
         apply(snapshot)
         lastCommitOutcome = .savedAndReloaded
+        refreshFailure = nil
+    }
+
+    func recoverSnapshot() throws {
+        do {
+            try reload()
+        } catch {
+            publishRefreshFailure(message: error.localizedDescription)
+            throw error
+        }
     }
 
     func performStartupMediaMaintenance() async {
@@ -353,6 +369,14 @@ final class ItemLibraryService: ObservableObject {
             .sorted(by: mediaSort)
     }
 
+    func draftRecord(id: UUID) -> CaptureDraftRecord? {
+        try? requireDraft(id: id)
+    }
+
+    func itemRecord(id: UUID) -> ItemRecord? {
+        try? requireItem(id: id)
+    }
+
     func visibleItems(
         query: String,
         categoryID: UUID?,
@@ -556,16 +580,24 @@ final class ItemLibraryService: ObservableObject {
             throw error
         }
 
-        do {
-            try reload()
-            return .savedAndReloaded
-        } catch {
-            let outcome = LibraryCommitOutcome.savedButRefreshFailed(
-                error.localizedDescription
-            )
-            lastCommitOutcome = outcome
-            return outcome
+        var refreshError: Error?
+        for _ in 0..<2 {
+            do {
+                try reload()
+                return .savedAndReloaded
+            } catch {
+                refreshError = error
+            }
         }
+
+        let message = refreshError?.localizedDescription
+            ?? "The saved library could not be refreshed."
+        let outcome = LibraryCommitOutcome.savedButRefreshFailed(
+            message
+        )
+        lastCommitOutcome = outcome
+        publishRefreshFailure(message: message)
+        return outcome
     }
 
     private func apply(_ snapshot: LibrarySnapshot) {
@@ -574,6 +606,12 @@ final class ItemLibraryService: ObservableObject {
         mediaAssets = snapshot.mediaAssets
         categories = snapshot.categories
         locations = snapshot.locations
+    }
+
+    private func publishRefreshFailure(message: String) {
+        refreshFailure = LibraryRefreshFailure(
+            message: message
+        )
     }
 
     private func removeStoredFiles(

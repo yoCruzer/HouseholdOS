@@ -123,3 +123,6 @@ When a database write commits but the published snapshot cannot refresh, the com
 transaction remains authoritative. HouseholdOS may retry snapshot loading, but it must
 not repeat the original create, confirm, update, archive or media write. If recovery
 still fails, the UI states that data was saved and offers a safe Reload action.
+Committed display recovery uses immutable value projections plus upserts and tombstones;
+it never depends on a post-commit entity fetch. A successful database snapshot absorbs
+and clears the in-memory overlay, while relaunch starts from the database only.

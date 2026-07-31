@@ -21,6 +21,9 @@ Status: ACTIVE
 - Failed managed-file deletion produces a user-visible post-dismissal warning and is
   retryable through later orphan maintenance, including startup maintenance. There
   is no user-facing maintenance dashboard or manual retry control.
+- Count-based refresh fault injection validates the committed-display and read-only
+  recovery control flow. It does not reproduce real SwiftData or SQLite engine
+  corruption, locking or I/O failure behavior.
 
 ## Development
 

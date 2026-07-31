@@ -11,7 +11,9 @@ HouseholdOS 是一款本地优先、以拍照录入为主要入口的 iOS 家庭
 - 原生 iOS Xcode 工程、App、Unit Test、UI Test Target 和 Shared Scheme 已建立。
 - 版本化 SwiftData、Item/Draft/Media/Category/Location 核心和本地媒体存储已建立。
 - 用户可以录入、保存草稿、确认、搜索、编辑、归档或删除家庭物品。
-- Goal 1 的 11 条自动化测试、Debug/Release build 和 Simulator 主流程已通过。
+- Goal 1 的持久化、媒体与恢复路径已有 unit、integration 和 UI 自动化覆盖；
+  Debug/Release build 和 Simulator 主流程已通过。
+- PR #3 的 closure remediation 已完成，PR 仍为 Draft、未合并，并等待下一轮 Owner Review。
 - 当前唯一获批任务见 `Docs/Operations/CURRENT_TASK.md`。
 
 ## 本地开发

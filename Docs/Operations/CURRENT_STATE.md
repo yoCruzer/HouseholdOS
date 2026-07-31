@@ -1,22 +1,24 @@
 # Current State
 
 Status: GOAL_1_AWAITING_OWNER_REVIEW
-Updated: 2026-07-29
+Updated: 2026-08-01
 
 ## Active Goal
 
 - Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
-- Review round: THIRD_OWNER_REVIEW
+- Review round: FOURTH_OWNER_REVIEW
 - Branch: `goal/v1-household-library-core`
 - Base: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner authorization: `HouseholdOS PR #3 — 第二轮 Owner Review 修订执行 Prompt`
+- Owner authorization: `HouseholdOS PR #3 — Closure Remediation Implementation Prompt`
 - Draft PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
 - First Owner Review: REQUEST_CHANGES
 - Second Owner Review: REQUEST_CHANGES
-- Current work: S1/S2 focused remediation and local verification complete
-- Next verification: third Owner review of Draft PR #3
+- Third Owner Review: REQUEST_CHANGES
+- Closure Design Audit: APPROVED_WITH_AMENDMENTS
+- Current work: closure remediation and local verification complete
+- Next verification: fourth Owner review of Draft PR #3
 - Owner decision required: yes
 
 ## Repository State
@@ -160,8 +162,11 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - PR #3 second-review remediation now keeps partial Draft/Item deletion outcomes
   visible after dismissal and gives committed-but-unrefreshed writes a safe snapshot
   recovery path that never repeats the original write.
-- Goal 1 full suite passed with 26 tests, including 8 focused S1/S2 service tests
-  and 3 focused remediation UI journeys.
+- PR #3 closure remediation now publishes immutable display values, preserves committed
+  upserts/tombstones across reload failures, and keeps refresh recovery separate from
+  FIFO transient media-cleanup notices.
+- Goal 1 full suite passed with 33 tests; 26 Goal1Core tests and the 3 mandatory
+  persistent-refresh UI journeys also passed in focused runs.
 - Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
   passed on iPhone 17 Pro / iOS 26.5.
 
@@ -188,6 +193,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - Media deletion failures are shown after record dismissal and retried by later orphan
   maintenance, including startup maintenance; no user-facing maintenance dashboard
   or manual retry control exists.
+- Refresh fault injection validates product control flow and read-only recovery; it is
+  not equivalent to real SwiftData or SQLite engine corruption.
 - No performance ceiling has been established for large libraries or sustained
   multi-image import.
 - The Bundle Identifier is temporary and has no external service bindings.
@@ -197,7 +204,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Goal Planning
 
-- Goal 1: AWAITING THIRD OWNER REVIEW
+- Goal 1: AWAITING FOURTH OWNER REVIEW
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -206,9 +213,9 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 ## Last Verified Baseline
 
 Goal 1 started from clean local and remote `main` at
-`581f970451033a0efd702202eb2845ed2a264360`. The second-review remediation started
-from PR head `0266ef1a4adec212430850fd18830901b4132276`. On 2026-07-29, 8 focused
-service tests, 3 focused UI tests and the 26-test full suite passed with 0 failures
-and 0 skips. Clean Debug and Release builds, explicit install, launch (PID `73904`)
-and screenshot inspection passed on iPhone 17 Pro / iOS 26.5 using Xcode 26.6.
-Draft PR #3 remains unmerged and awaits third Owner Review.
+`581f970451033a0efd702202eb2845ed2a264360`. Closure remediation started from clean,
+remote-aligned PR head `b9fdb505b6ba45f36d7e99694a1e2c0afddf866d`. On 2026-08-01,
+26 focused Goal1Core tests, 3 focused closure UI tests and the 33-test full suite passed
+with 0 failures and 0 skips. Clean Debug and Release builds, explicit install, launch
+(PID `58711`) and screenshot inspection passed on iPhone 17 Pro / iOS 26.5 using
+Xcode 26.6. Draft PR #3 remains open, Draft and unmerged, and awaits fourth Owner Review.

@@ -71,6 +71,9 @@ final class Goal1UserJourneyUITests: XCTestCase {
         itemNameField.tap()
         itemNameField.typeText(" Unsaved")
         app.swipeUp()
+        if !app.staticTexts["item.savingSemantics"].exists {
+            app.swipeUp()
+        }
         XCTAssertTrue(
             app.staticTexts["item.savingSemantics"].waitForExistence(timeout: 5)
         )
@@ -120,8 +123,12 @@ final class Goal1UserJourneyUITests: XCTestCase {
         XCTAssertFalse(archivedItemRow.waitForExistence(timeout: 2))
 
         app.buttons["items.filters"].tap()
-        XCTAssertTrue(app.buttons["Include Archived"].waitForExistence(timeout: 5))
-        app.buttons["Include Archived"].tap()
+        let includeArchived = app.buttons["Include Archived"]
+        if !includeArchived.exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(includeArchived.waitForExistence(timeout: 5))
+        includeArchived.tap()
         XCTAssertTrue(archivedItemRow.waitForExistence(timeout: 5))
     }
 
@@ -187,7 +194,7 @@ final class Goal1UserJourneyUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
-        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_FAIL_NEXT_REFRESH"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_REFRESH_FAILURE_COUNT"] = "2"
         app.launch()
 
         app.tabBars.buttons["Add"].tap()
@@ -197,6 +204,13 @@ final class Goal1UserJourneyUITests: XCTestCase {
         let nameField = app.textFields["record.name"]
         XCTAssertTrue(nameField.waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Draft unavailable"].exists)
+        XCTAssertTrue(
+            app.otherElements["library.refreshBanner"].waitForExistence(timeout: 5)
+        )
+        app.buttons["library.refreshBanner.reload"].tap()
+        XCTAssertFalse(
+            app.otherElements["library.refreshBanner"].waitForExistence(timeout: 2)
+        )
         nameField.tap()
         nameField.typeText("Recovered Draft")
         app.buttons["draft.save"].tap()
@@ -216,12 +230,79 @@ final class Goal1UserJourneyUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Draft unavailable"].exists)
     }
 
+    func testManualReloadFailureKeepsPersistentBannerUntilNextSuccess() throws {
+        let app = refreshFailureApp(count: 3)
+        app.launch()
+
+        app.tabBars.buttons["Add"].tap()
+        XCTAssertTrue(app.buttons["capture.manual"].waitForExistence(timeout: 5))
+        app.buttons["capture.manual"].tap()
+        XCTAssertTrue(app.textFields["record.name"].waitForExistence(timeout: 5))
+        let banner = app.otherElements["library.refreshBanner"]
+        XCTAssertTrue(banner.waitForExistence(timeout: 5))
+
+        app.buttons["library.refreshBanner.reload"].tap()
+        XCTAssertTrue(banner.waitForExistence(timeout: 5))
+        app.buttons["library.refreshBanner.later"].tap()
+        XCTAssertTrue(banner.exists)
+        XCTAssertTrue(app.buttons["library.refreshBanner.reload"].exists)
+
+        app.buttons["library.refreshBanner.reload"].tap()
+        XCTAssertFalse(banner.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Draft unavailable"].exists)
+
+        app.tabBars.buttons["Drafts"].tap()
+        let drafts = app.staticTexts.matching(
+            NSPredicate(format: "label == %@", "Untitled draft")
+        )
+        XCTAssertTrue(drafts.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(drafts.count, 1)
+    }
+
+    func testCombinedDraftDeleteShowsBannerAndResidualNoticeWithoutRestoringRow() throws {
+        let app = deletionFixtureApp(kind: "draft")
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_REFRESH_FAILURE_COUNT"] = "2"
+        app.launch()
+
+        app.tabBars.buttons["Drafts"].tap()
+        let draft = app.staticTexts["Residual Draft"]
+        XCTAssertTrue(draft.waitForExistence(timeout: 10))
+        draft.tap()
+        app.buttons["More actions"].tap()
+        app.buttons["Delete Draft"].firstMatch.tap()
+        app.buttons["Delete Draft Permanently"].firstMatch.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["Draft record deleted"].waitForExistence(timeout: 5)
+        )
+        XCTAssertTrue(
+            app.otherElements["library.refreshBanner"].waitForExistence(timeout: 5)
+        )
+        app.buttons["OK"].tap()
+        XCTAssertTrue(app.otherElements["library.refreshBanner"].exists)
+        XCTAssertFalse(draft.waitForExistence(timeout: 2))
+
+        app.buttons["library.refreshBanner.reload"].tap()
+        XCTAssertFalse(
+            app.otherElements["library.refreshBanner"].waitForExistence(timeout: 5)
+        )
+        XCTAssertFalse(draft.waitForExistence(timeout: 2))
+    }
+
     private func deletionFixtureApp(kind: String) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_FAIL_MEDIA_REMOVAL"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"] = kind
+        return app
+    }
+
+    private func refreshFailureApp(count: Int) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_REFRESH_FAILURE_COUNT"] = "\(count)"
         return app
     }
 

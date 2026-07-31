@@ -7,18 +7,17 @@ enum LibraryCommitOutcome: Equatable {
     case savedButRefreshFailed(String)
 }
 
-struct LibraryRefreshFailure: Equatable, Identifiable {
-    let id = UUID()
+struct LibraryRefreshRecoveryState: Equatable {
     let message: String
 }
 
 @MainActor
 struct LibrarySnapshot {
-    let items: [ItemRecord]
-    let drafts: [CaptureDraftRecord]
-    let mediaAssets: [MediaAssetRecord]
-    let categories: [CategoryRecord]
-    let locations: [LocationRecord]
+    let items: [ItemValue]
+    let drafts: [DraftValue]
+    let mediaAssets: [MediaValue]
+    let categories: [CategoryValue]
+    let locations: [LocationValue]
 
     static func load(from context: ModelContext) throws -> LibrarySnapshot {
         let items = try context.fetch(
@@ -57,13 +56,23 @@ struct LibrarySnapshot {
             )
         )
         return LibrarySnapshot(
-            items: items,
-            drafts: drafts,
-            mediaAssets: mediaAssets,
-            categories: categories,
-            locations: locations
+            items: items.map(ItemValue.init),
+            drafts: drafts.map(DraftValue.init),
+            mediaAssets: mediaAssets.map(MediaValue.init),
+            categories: categories.map(CategoryValue.init),
+            locations: locations.map(LocationValue.init)
         )
     }
+}
+
+private struct CommittedDisplayDelta {
+    var draftUpserts: [UUID: DraftValue] = [:]
+    var draftTombstones: Set<UUID> = []
+    var itemUpserts: [UUID: ItemValue] = [:]
+    var itemTombstones: Set<UUID> = []
+    var mediaUpserts: [UUID: MediaValue] = [:]
+    var mediaTombstones: Set<UUID> = []
+    var locationUpserts: [UUID: LocationValue] = [:]
 }
 
 typealias LibraryContextSave = @MainActor (ModelContext) throws -> Void
@@ -71,21 +80,34 @@ typealias LibrarySnapshotLoader = @MainActor (ModelContext) throws -> LibrarySna
 
 @MainActor
 final class ItemLibraryService: ObservableObject {
-    @Published private(set) var items: [ItemRecord] = []
-    @Published private(set) var drafts: [CaptureDraftRecord] = []
-    @Published private(set) var mediaAssets: [MediaAssetRecord] = []
-    @Published private(set) var categories: [CategoryRecord] = []
-    @Published private(set) var locations: [LocationRecord] = []
+    @Published private(set) var displayItems: [ItemValue] = []
+    @Published private(set) var displayDrafts: [DraftValue] = []
+    @Published private(set) var displayMedia: [MediaValue] = []
+    @Published private(set) var displayCategories: [CategoryValue] = []
+    @Published private(set) var displayLocations: [LocationValue] = []
     @Published private(set) var lastCommitOutcome: LibraryCommitOutcome = .savedAndReloaded
-    @Published private(set) var refreshFailure: LibraryRefreshFailure?
+    @Published private(set) var refreshRecoveryState: LibraryRefreshRecoveryState?
     @Published private(set) var lastMediaMaintenanceResult: MediaMaintenanceResult = .empty
 
+    var items: [ItemValue] { displayItems }
+    var drafts: [DraftValue] { displayDrafts }
+    var mediaAssets: [MediaValue] { displayMedia }
+    var categories: [CategoryValue] { displayCategories }
+    var locations: [LocationValue] { displayLocations }
     let mediaStore: MediaFileStore
 
     private let context: ModelContext
     private let now: () -> Date
     private let contextSave: LibraryContextSave
     private let snapshotLoader: LibrarySnapshotLoader
+    private var snapshot = LibrarySnapshot(
+        items: [],
+        drafts: [],
+        mediaAssets: [],
+        categories: [],
+        locations: []
+    )
+    private var committedDisplay = CommittedDisplayDelta()
 
     init(
         context: ModelContext,
@@ -109,10 +131,10 @@ final class ItemLibraryService: ObservableObject {
     }
 
     func reload() throws {
-        let snapshot = try snapshotLoader(context)
-        apply(snapshot)
+        let loadedSnapshot = try snapshotLoader(context)
+        apply(loadedSnapshot)
         lastCommitOutcome = .savedAndReloaded
-        refreshFailure = nil
+        refreshRecoveryState = nil
     }
 
     func recoverSnapshot() throws {
@@ -135,7 +157,7 @@ final class ItemLibraryService: ObservableObject {
         categoryID: UUID? = nil,
         locationID: UUID? = nil,
         note: String? = nil
-    ) throws -> CaptureDraftRecord {
+    ) throws -> LibraryWriteResult<DraftValue> {
         let timestamp = now()
         let draft = CaptureDraftRecord(
             name: name,
@@ -148,28 +170,36 @@ final class ItemLibraryService: ObservableObject {
             orderingIndex: try fetchDrafts().count
         )
         context.insert(draft)
-        try saveAndReload()
-        return draft
+        let value = DraftValue(draft)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(draftUpserts: [value.id: value])
+        )
+        return LibraryWriteResult(value: value, outcome: outcome)
     }
 
+    @discardableResult
     func updateDraft(
         id: UUID,
         name: String,
         categoryID: UUID?,
         locationID: UUID?,
         note: String?
-    ) throws {
+    ) throws -> LibraryWriteResult<Void> {
         let draft = try requireDraft(id: id)
         draft.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         draft.categoryID = categoryID
         draft.locationID = locationID
         draft.note = normalizedOptional(note)
         draft.updatedAt = now()
-        try saveAndReload()
+        let value = DraftValue(draft)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(draftUpserts: [value.id: value])
+        )
+        return LibraryWriteResult(value: (), outcome: outcome)
     }
 
     @discardableResult
-    func deleteDraft(id: UUID) async throws -> MediaMaintenanceResult {
+    func deleteDraft(id: UUID) async throws -> LibraryWriteResult<MediaMaintenanceResult> {
         let draft = try requireDraft(id: id)
         let ownedMedia = try fetchMedia(ownerKind: .draft, ownerID: id)
         let ownedFiles = ownedMedia.map(storedFile)
@@ -179,14 +209,23 @@ final class ItemLibraryService: ObservableObject {
         }
         context.delete(draft)
 
-        try saveAndReload()
-        return await removeStoredFiles(ownedFiles)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(
+                draftTombstones: [id],
+                mediaTombstones: Set(ownedMedia.map(\.id))
+            )
+        )
+        let maintenance = await removeStoredFiles(ownedFiles)
+        return LibraryWriteResult(value: maintenance, outcome: outcome)
     }
 
     @discardableResult
-    func confirmDraft(id: UUID) throws -> ItemRecord {
+    func confirmDraft(id: UUID) throws -> LibraryWriteResult<ItemValue> {
         if let existingItem = try fetchItems().first(where: { $0.sourceDraftID == id }) {
-            return existingItem
+            return LibraryWriteResult(
+                value: ItemValue(existingItem),
+                outcome: lastCommitOutcome
+            )
         }
 
         let draft = try requireDraft(id: id)
@@ -215,17 +254,28 @@ final class ItemLibraryService: ObservableObject {
             asset.ownerID = item.id
         }
         context.delete(draft)
-        try saveAndReload()
-        return item
+        let itemValue = ItemValue(item)
+        let mediaValues = ownedMedia.map(MediaValue.init)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(
+                draftTombstones: [id],
+                itemUpserts: [itemValue.id: itemValue],
+                mediaUpserts: Dictionary(
+                    uniqueKeysWithValues: mediaValues.map { ($0.id, $0) }
+                )
+            )
+        )
+        return LibraryWriteResult(value: itemValue, outcome: outcome)
     }
 
+    @discardableResult
     func updateItem(
         id: UUID,
         name: String,
         categoryID: UUID?,
         locationID: UUID?,
         note: String?
-    ) throws {
+    ) throws -> LibraryWriteResult<Void> {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else {
             throw LibraryError.nameRequired
@@ -237,20 +287,32 @@ final class ItemLibraryService: ObservableObject {
         item.locationID = locationID
         item.note = normalizedOptional(note)
         item.updatedAt = now()
-        try saveAndReload()
+        let value = ItemValue(item)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(itemUpserts: [value.id: value])
+        )
+        return LibraryWriteResult(value: (), outcome: outcome)
     }
 
-    func setArchived(_ archived: Bool, itemID: UUID) throws {
+    @discardableResult
+    func setArchived(
+        _ archived: Bool,
+        itemID: UUID
+    ) throws -> LibraryWriteResult<Void> {
         let item = try requireItem(id: itemID)
         let timestamp = now()
         item.status = archived ? .archived : .active
         item.archivedAt = archived ? timestamp : nil
         item.updatedAt = timestamp
-        try saveAndReload()
+        let value = ItemValue(item)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(itemUpserts: [value.id: value])
+        )
+        return LibraryWriteResult(value: (), outcome: outcome)
     }
 
     @discardableResult
-    func deleteItem(id: UUID) async throws -> MediaMaintenanceResult {
+    func deleteItem(id: UUID) async throws -> LibraryWriteResult<MediaMaintenanceResult> {
         let item = try requireItem(id: id)
         let ownedMedia = try fetchMedia(ownerKind: .item, ownerID: id)
         let ownedFiles = ownedMedia.map(storedFile)
@@ -260,12 +322,18 @@ final class ItemLibraryService: ObservableObject {
         }
         context.delete(item)
 
-        try saveAndReload()
-        return await removeStoredFiles(ownedFiles)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(
+                itemTombstones: [id],
+                mediaTombstones: Set(ownedMedia.map(\.id))
+            )
+        )
+        let maintenance = await removeStoredFiles(ownedFiles)
+        return LibraryWriteResult(value: maintenance, outcome: outcome)
     }
 
     @discardableResult
-    func createLocation(name: String) throws -> LocationRecord {
+    func createLocation(name: String) throws -> LibraryWriteResult<LocationValue> {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else {
             throw LibraryError.locationNameRequired
@@ -275,7 +343,10 @@ final class ItemLibraryService: ObservableObject {
             $0.archivedAt == nil
                 && $0.name.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame
         }) {
-            return existing
+            return LibraryWriteResult(
+                value: LocationValue(existing),
+                outcome: lastCommitOutcome
+            )
         }
 
         let timestamp = now()
@@ -285,8 +356,11 @@ final class ItemLibraryService: ObservableObject {
             updatedAt: timestamp
         )
         context.insert(location)
-        try saveAndReload()
-        return location
+        let value = LocationValue(location)
+        let outcome = try saveAndReload(
+            delta: CommittedDisplayDelta(locationUpserts: [value.id: value])
+        )
+        return LibraryWriteResult(value: value, outcome: outcome)
     }
 
     @discardableResult
@@ -295,7 +369,7 @@ final class ItemLibraryService: ObservableObject {
         contentTypeIdentifier: String,
         ownerKind: MediaOwnerKind,
         ownerID: UUID
-    ) async throws -> MediaAssetRecord {
+    ) async throws -> LibraryWriteResult<MediaValue> {
         try validateOwner(kind: ownerKind, id: ownerID)
         let id = UUID()
         let storedFile = try await mediaStore.importFile(
@@ -317,7 +391,7 @@ final class ItemLibraryService: ObservableObject {
         contentTypeIdentifier: String,
         ownerKind: MediaOwnerKind,
         ownerID: UUID
-    ) async throws -> MediaAssetRecord {
+    ) async throws -> LibraryWriteResult<MediaValue> {
         try validateOwner(kind: ownerKind, id: ownerID)
         let id = UUID()
         let storedFile = try await mediaStore.importData(
@@ -334,7 +408,7 @@ final class ItemLibraryService: ObservableObject {
     }
 
     @discardableResult
-    func removeMedia(id: UUID) async throws -> MediaMaintenanceResult {
+    func removeMedia(id: UUID) async throws -> LibraryWriteResult<MediaMaintenanceResult> {
         guard let asset = try fetchMediaAssets().first(where: { $0.id == id }) else {
             throw LibraryError.mediaNotFound
         }
@@ -357,24 +431,31 @@ final class ItemLibraryService: ObservableObject {
             item.updatedAt = timestamp
         }
 
-        try saveAndReload()
+        let ownerValue: CommittedDisplayDelta
+        switch ownerKind {
+        case .draft:
+            let draft = try requireDraft(id: ownerID)
+            ownerValue = CommittedDisplayDelta(
+                draftUpserts: [ownerID: DraftValue(draft)],
+                mediaTombstones: [id]
+            )
+        case .item:
+            let item = try requireItem(id: ownerID)
+            ownerValue = CommittedDisplayDelta(
+                itemUpserts: [ownerID: ItemValue(item)],
+                mediaTombstones: [id]
+            )
+        }
+        let outcome = try saveAndReload(delta: ownerValue)
         let result = await mediaStore.remove(files)
         lastMediaMaintenanceResult = result
-        return result
+        return LibraryWriteResult(value: result, outcome: outcome)
     }
 
-    func media(for ownerKind: MediaOwnerKind, ownerID: UUID) -> [MediaAssetRecord] {
-        mediaAssets
+    func media(for ownerKind: MediaOwnerKind, ownerID: UUID) -> [MediaValue] {
+        displayMedia
             .filter { $0.ownerKind == ownerKind && $0.ownerID == ownerID }
             .sorted(by: mediaSort)
-    }
-
-    func draftRecord(id: UUID) -> CaptureDraftRecord? {
-        try? requireDraft(id: id)
-    }
-
-    func itemRecord(id: UUID) -> ItemRecord? {
-        try? requireItem(id: id)
     }
 
     func visibleItems(
@@ -382,9 +463,9 @@ final class ItemLibraryService: ObservableObject {
         categoryID: UUID?,
         includeArchived: Bool,
         sort: LibrarySort
-    ) -> [ItemRecord] {
+    ) -> [ItemValue] {
         LibrarySearch.filter(
-            items,
+            displayItems,
             query: query,
             categoryID: categoryID,
             includeArchived: includeArchived,
@@ -396,20 +477,28 @@ final class ItemLibraryService: ObservableObject {
 
     func categoryName(for id: UUID?) -> String? {
         guard let id else { return nil }
-        return categories.first(where: { $0.id == id })?.name
+        return displayCategories.first(where: { $0.id == id })?.name
     }
 
     func locationName(for id: UUID?) -> String? {
         guard let id else { return nil }
-        return locations.first(where: { $0.id == id })?.name
+        return displayLocations.first(where: { $0.id == id })?.name
     }
 
-    func displayURL(for asset: MediaAssetRecord) -> URL {
+    func displayURL(for asset: MediaValue) -> URL {
         mediaStore.url(for: asset.thumbnailFileName ?? asset.originalFileName)
     }
 
-    func originalURL(for asset: MediaAssetRecord) -> URL {
+    func displayURL(for result: LibraryWriteResult<MediaValue>) -> URL {
+        displayURL(for: result.value)
+    }
+
+    func originalURL(for asset: MediaValue) -> URL {
         mediaStore.url(for: asset.originalFileName)
+    }
+
+    func originalURL(for result: LibraryWriteResult<MediaValue>) -> URL {
+        originalURL(for: result.value)
     }
 
     @discardableResult
@@ -470,7 +559,7 @@ final class ItemLibraryService: ObservableObject {
         storedFile: StoredMediaFile,
         ownerKind: MediaOwnerKind,
         ownerID: UUID
-    ) async throws -> MediaAssetRecord {
+    ) async throws -> LibraryWriteResult<MediaValue> {
         do {
             try validateOwner(kind: ownerKind, id: ownerID)
         } catch {
@@ -504,9 +593,23 @@ final class ItemLibraryService: ObservableObject {
         }
 
         do {
-            try saveAndReload()
+            let mediaValue = MediaValue(asset)
+            let delta: CommittedDisplayDelta
+            switch ownerKind {
+            case .draft:
+                delta = CommittedDisplayDelta(
+                    draftUpserts: [ownerID: DraftValue(try requireDraft(id: ownerID))],
+                    mediaUpserts: [mediaValue.id: mediaValue]
+                )
+            case .item:
+                delta = CommittedDisplayDelta(
+                    itemUpserts: [ownerID: ItemValue(try requireItem(id: ownerID))],
+                    mediaUpserts: [mediaValue.id: mediaValue]
+                )
+            }
+            let outcome = try saveAndReload(delta: delta)
             await mediaStore.markPersisted(storedFile)
-            return asset
+            return LibraryWriteResult(value: mediaValue, outcome: outcome)
         } catch {
             let cleanupResult = await mediaStore.remove(storedFile)
             lastMediaMaintenanceResult = cleanupResult
@@ -571,14 +674,27 @@ final class ItemLibraryService: ObservableObject {
             : lhs.sortOrder < rhs.sortOrder
     }
 
+    private func mediaSort(
+        _ lhs: MediaValue,
+        _ rhs: MediaValue
+    ) -> Bool {
+        lhs.sortOrder == rhs.sortOrder
+            ? lhs.createdAt < rhs.createdAt
+            : lhs.sortOrder < rhs.sortOrder
+    }
+
     @discardableResult
-    private func saveAndReload() throws -> LibraryCommitOutcome {
+    private func saveAndReload(
+        delta: CommittedDisplayDelta
+    ) throws -> LibraryCommitOutcome {
         do {
             try contextSave(context)
         } catch {
             context.rollback()
             throw error
         }
+
+        applyCommitted(delta)
 
         var refreshError: Error?
         for _ in 0..<2 {
@@ -601,17 +717,76 @@ final class ItemLibraryService: ObservableObject {
     }
 
     private func apply(_ snapshot: LibrarySnapshot) {
-        items = snapshot.items
-        drafts = snapshot.drafts
-        mediaAssets = snapshot.mediaAssets
-        categories = snapshot.categories
-        locations = snapshot.locations
+        self.snapshot = snapshot
+        committedDisplay = CommittedDisplayDelta()
+        publishDisplay()
+        refreshRecoveryState = nil
     }
 
     private func publishRefreshFailure(message: String) {
-        refreshFailure = LibraryRefreshFailure(
-            message: message
+        refreshRecoveryState = LibraryRefreshRecoveryState(message: message)
+    }
+
+    private func applyCommitted(_ delta: CommittedDisplayDelta) {
+        committedDisplay.draftUpserts.merge(delta.draftUpserts) { _, latest in latest }
+        committedDisplay.draftTombstones.formUnion(delta.draftTombstones)
+        committedDisplay.itemUpserts.merge(delta.itemUpserts) { _, latest in latest }
+        committedDisplay.itemTombstones.formUnion(delta.itemTombstones)
+        committedDisplay.mediaUpserts.merge(delta.mediaUpserts) { _, latest in latest }
+        committedDisplay.mediaTombstones.formUnion(delta.mediaTombstones)
+        committedDisplay.locationUpserts.merge(delta.locationUpserts) { _, latest in latest }
+        publishDisplay()
+    }
+
+    private func publishDisplay() {
+        displayDrafts = mergedValues(
+            base: snapshot.drafts,
+            upserts: committedDisplay.draftUpserts,
+            tombstones: committedDisplay.draftTombstones
+        ) {
+            $0.orderingIndex == $1.orderingIndex
+                ? $0.createdAt > $1.createdAt
+                : $0.orderingIndex < $1.orderingIndex
+        }
+        displayItems = mergedValues(
+            base: snapshot.items,
+            upserts: committedDisplay.itemUpserts,
+            tombstones: committedDisplay.itemTombstones
+        ) {
+            $0.createdAt == $1.createdAt
+                ? $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                : $0.createdAt > $1.createdAt
+        }
+        displayMedia = mergedValues(
+            base: snapshot.mediaAssets,
+            upserts: committedDisplay.mediaUpserts,
+            tombstones: committedDisplay.mediaTombstones,
+            sortedBy: mediaSort
         )
+        displayLocations = mergedValues(
+            base: snapshot.locations,
+            upserts: committedDisplay.locationUpserts,
+            tombstones: []
+        ) {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+        displayCategories = snapshot.categories
+    }
+
+    private func mergedValues<Value: Identifiable>(
+        base: [Value],
+        upserts: [UUID: Value],
+        tombstones: Set<UUID>,
+        sortedBy: (Value, Value) -> Bool
+    ) -> [Value] where Value.ID == UUID {
+        var values = Dictionary(
+            uniqueKeysWithValues: base.map { ($0.id, $0) }
+        )
+        values.merge(upserts) { _, latest in latest }
+        for id in tombstones {
+            values.removeValue(forKey: id)
+        }
+        return values.values.sorted(by: sortedBy)
     }
 
     private func removeStoredFiles(
@@ -639,5 +814,82 @@ final class ItemLibraryService: ObservableObject {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+private extension DraftValue {
+    init(_ record: CaptureDraftRecord) {
+        self.init(
+            id: record.id,
+            householdID: record.householdID,
+            name: record.name,
+            categoryID: record.categoryID,
+            locationID: record.locationID,
+            note: record.note,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+            captureSource: record.captureSource,
+            orderingIndex: record.orderingIndex
+        )
+    }
+}
+
+private extension ItemValue {
+    init(_ record: ItemRecord) {
+        self.init(
+            id: record.id,
+            householdID: record.householdID,
+            name: record.name,
+            categoryID: record.categoryID,
+            locationID: record.locationID,
+            note: record.note,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+            captureSource: record.captureSource,
+            sourceDraftID: record.sourceDraftID,
+            status: record.status,
+            archivedAt: record.archivedAt,
+            coverMediaID: record.coverMediaID
+        )
+    }
+}
+
+private extension MediaValue {
+    init(_ record: MediaAssetRecord) {
+        self.init(
+            id: record.id,
+            ownerKind: record.ownerKind,
+            ownerID: record.ownerID,
+            originalFileName: record.originalFileName,
+            thumbnailFileName: record.thumbnailFileName,
+            contentTypeIdentifier: record.contentTypeIdentifier,
+            createdAt: record.createdAt,
+            sortOrder: record.sortOrder
+        )
+    }
+}
+
+private extension LocationValue {
+    init(_ record: LocationRecord) {
+        self.init(
+            id: record.id,
+            householdID: record.householdID,
+            name: record.name,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+            archivedAt: record.archivedAt
+        )
+    }
+}
+
+private extension CategoryValue {
+    init(_ record: CategoryRecord) {
+        self.init(
+            id: record.id,
+            householdID: record.householdID,
+            name: record.name,
+            sortOrder: record.sortOrder,
+            isSystem: record.isSystem
+        )
     }
 }

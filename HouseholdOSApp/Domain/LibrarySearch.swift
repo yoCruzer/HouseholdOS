@@ -2,14 +2,14 @@ import Foundation
 
 enum LibrarySearch {
     static func filter(
-        _ items: [ItemRecord],
+        _ items: [ItemValue],
         query: String,
         categoryID: UUID?,
         includeArchived: Bool,
         sort: LibrarySort,
         categoryName: (UUID?) -> String?,
         locationName: (UUID?) -> String?
-    ) -> [ItemRecord] {
+    ) -> [ItemValue] {
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
 
         return items
@@ -40,7 +40,7 @@ enum LibrarySearch {
     }
 
     private static func matches(
-        _ item: ItemRecord,
+        _ item: ItemValue,
         query: String,
         categoryName: String?,
         locationName: String?

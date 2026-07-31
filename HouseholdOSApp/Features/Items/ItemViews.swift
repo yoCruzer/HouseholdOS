@@ -4,7 +4,8 @@ import UIKit
 
 struct ItemLibraryView: View {
     @Binding var selectedTab: RootTab
-    let reportDeletion: (DeletedRecordKind, MediaMaintenanceResult) -> Void
+    let reportDeletion: (DeletedRecordKind, UUID, MediaMaintenanceResult) -> Void
+    let reportMediaRemoval: (UUID, MediaMaintenanceResult) -> Void
 
     @EnvironmentObject private var library: ItemLibraryService
     @State private var searchText = ""
@@ -24,7 +25,7 @@ struct ItemLibraryView: View {
                     } description: {
                         Text(emptyDescription)
                     } actions: {
-                        if library.items.isEmpty {
+                        if library.displayItems.isEmpty {
                             Button("Add your first item") {
                                 selectedTab = .capture
                             }
@@ -39,8 +40,9 @@ struct ItemLibraryView: View {
                             ItemDetailView(
                                 itemID: item.id,
                                 onDeleted: {
-                                    reportDeletion(.item, $0)
-                                }
+                                    reportDeletion(.item, item.id, $0)
+                                },
+                                onMediaRemoval: reportMediaRemoval
                             )
                         } label: {
                             ItemRow(item: item)
@@ -70,7 +72,7 @@ struct ItemLibraryView: View {
         }
     }
 
-    private var visibleItems: [ItemRecord] {
+    private var visibleItems: [ItemValue] {
         library.visibleItems(
             query: searchText,
             categoryID: selectedCategoryID,
@@ -84,14 +86,14 @@ struct ItemLibraryView: View {
     }
 
     private var emptyTitle: String {
-        if library.items.isEmpty {
+        if library.displayItems.isEmpty {
             return "No items yet"
         }
         return "No matching items"
     }
 
     private var emptyDescription: String {
-        if library.items.isEmpty {
+        if library.displayItems.isEmpty {
             return "Confirmed drafts will appear in your household library."
         }
         return "Try another search, category or archive setting."
@@ -101,7 +103,7 @@ struct ItemLibraryView: View {
         Menu {
             Picker("Category", selection: $selectedCategoryID) {
                 Text("All Categories").tag(UUID?.none)
-                ForEach(library.categories, id: \.id) { category in
+                ForEach(library.displayCategories, id: \.id) { category in
                     Text(category.name).tag(Optional(category.id))
                 }
             }
@@ -132,7 +134,7 @@ struct ItemLibraryView: View {
 }
 
 private struct ItemRow: View {
-    let item: ItemRecord
+    let item: ItemValue
 
     @EnvironmentObject private var library: ItemLibraryService
 
@@ -182,6 +184,7 @@ private struct ItemRow: View {
 struct ItemDetailView: View {
     let itemID: UUID
     let onDeleted: (MediaMaintenanceResult) -> Void
+    let onMediaRemoval: (UUID, MediaMaintenanceResult) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var library: ItemLibraryService
@@ -270,7 +273,10 @@ struct ItemDetailView: View {
                 }
                 .sheet(isPresented: $showsEditor) {
                     NavigationStack {
-                        ItemEditorView(itemID: itemID)
+                        ItemEditorView(
+                            itemID: itemID,
+                            onMediaRemoval: onMediaRemoval
+                        )
                     }
                 }
             } else {
@@ -298,12 +304,11 @@ struct ItemDetailView: View {
         }
     }
 
-    private var item: ItemRecord? {
-        library.items.first(where: { $0.id == itemID })
-            ?? library.itemRecord(id: itemID)
+    private var item: ItemValue? {
+        library.displayItems.first(where: { $0.id == itemID })
     }
 
-    private var assets: [MediaAssetRecord] {
+    private var assets: [MediaValue] {
         library.media(for: .item, ownerID: itemID)
     }
 
@@ -327,7 +332,7 @@ struct ItemDetailView: View {
         Task {
             do {
                 let result = try await library.deleteItem(id: itemID)
-                onDeleted(result)
+                onDeleted(result.value)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription
@@ -338,6 +343,7 @@ struct ItemDetailView: View {
 
 struct ItemEditorView: View {
     let itemID: UUID
+    let onMediaRemoval: (UUID, MediaMaintenanceResult) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var library: ItemLibraryService
@@ -437,12 +443,11 @@ struct ItemEditorView: View {
         }
     }
 
-    private var item: ItemRecord? {
-        library.items.first(where: { $0.id == itemID })
-            ?? library.itemRecord(id: itemID)
+    private var item: ItemValue? {
+        library.displayItems.first(where: { $0.id == itemID })
     }
 
-    private var assets: [MediaAssetRecord] {
+    private var assets: [MediaValue] {
         library.media(for: .item, ownerID: itemID)
     }
 
@@ -499,9 +504,7 @@ struct ItemEditorView: View {
             do {
                 let result = try await library.removeMedia(id: pendingMediaID)
                 self.pendingMediaID = nil
-                if !result.isComplete {
-                    errorMessage = "The photo was removed. Leftover files will be retried during maintenance."
-                }
+                onMediaRemoval(pendingMediaID, result.value)
             } catch {
                 errorMessage = error.localizedDescription
             }

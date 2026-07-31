@@ -20,7 +20,7 @@ struct CoreFieldsView: View {
 
             Picker("Category", selection: $categoryID) {
                 Text("Uncategorized").tag(UUID?.none)
-                ForEach(library.categories, id: \.id) { category in
+                ForEach(library.displayCategories, id: \.id) { category in
                     Text(category.name).tag(Optional(category.id))
                 }
             }
@@ -28,7 +28,7 @@ struct CoreFieldsView: View {
 
             Picker("Location", selection: $locationID) {
                 Text("No location").tag(UUID?.none)
-                ForEach(library.locations, id: \.id) { location in
+                ForEach(library.displayLocations, id: \.id) { location in
                     Text(location.name).tag(Optional(location.id))
                 }
             }

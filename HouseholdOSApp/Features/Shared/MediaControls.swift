@@ -230,7 +230,7 @@ enum MediaPickerError: LocalizedError, Sendable {
 }
 
 struct MediaThumbnailView: View {
-    let asset: MediaAssetRecord
+    let asset: MediaValue
     var size: CGFloat = 72
 
     @EnvironmentObject private var library: ItemLibraryService
@@ -266,8 +266,8 @@ struct MediaThumbnailView: View {
 }
 
 struct MediaGridView: View {
-    let assets: [MediaAssetRecord]
-    let remove: (MediaAssetRecord) -> Void
+    let assets: [MediaValue]
+    let remove: (MediaValue) -> Void
 
     private let columns = [
         GridItem(.adaptive(minimum: 88), spacing: 12)

@@ -6,134 +6,216 @@ enum RootTab: Hashable {
     case capture
 }
 
-enum DeletedRecordKind: String {
+enum DeletedRecordKind: String, Hashable {
     case draft = "Draft"
     case item = "Item"
 }
 
-struct MediaDeletionNotice: Identifiable {
-    let id = UUID()
-    let kind: DeletedRecordKind
+enum TransientNoticeKey: Hashable {
+    case recordDeletion(DeletedRecordKind, UUID)
+    case mediaRemoval(UUID)
+}
 
-    var title: String {
-        "\(kind.rawValue) record deleted"
+struct TransientNotice: Identifiable, Equatable {
+    let id: TransientNoticeKey
+    let title: String
+    let message: String
+}
+
+struct TransientNoticeQueue: Equatable {
+    private(set) var active: TransientNotice?
+    private(set) var pending: [TransientNotice] = []
+
+    mutating func enqueue(_ notice: TransientNotice) {
+        guard active?.id != notice.id,
+              !pending.contains(where: { $0.id == notice.id }) else {
+            return
+        }
+        if active == nil {
+            active = notice
+        } else {
+            pending.append(notice)
+        }
     }
 
-    var message: String {
-        "The \(kind.rawValue.lowercased()) record was deleted, but some local photo "
-            + "files could not be removed. HouseholdOS will retry during later "
-            + "maintenance or the next launch. There is no manual maintenance "
-            + "control at this time."
-    }
-
-    static func make(
-        kind: DeletedRecordKind,
-        result: MediaMaintenanceResult
-    ) -> MediaDeletionNotice? {
-        result.isComplete ? nil : MediaDeletionNotice(kind: kind)
+    mutating func dismissActive() {
+        active = pending.isEmpty ? nil : pending.removeFirst()
     }
 }
 
-private enum HouseholdNotice: Identifiable {
-    case deletion(MediaDeletionNotice)
-    case refresh(LibraryRefreshFailure)
+struct MediaDeletionNotice {
+    static func make(
+        kind: DeletedRecordKind,
+        recordID: UUID,
+        result: MediaMaintenanceResult
+    ) -> TransientNotice? {
+        guard !result.isComplete else { return nil }
+        return TransientNotice(
+            id: .recordDeletion(kind, recordID),
+            title: "\(kind.rawValue) record deleted",
+            message: "The \(kind.rawValue.lowercased()) record was deleted, but some "
+                + "local photo files could not be removed. HouseholdOS will retry "
+                + "during later maintenance or the next launch. There is no manual "
+                + "maintenance control at this time."
+        )
+    }
+}
 
-    var id: UUID {
-        switch self {
-        case .deletion(let notice):
-            notice.id
-        case .refresh(let failure):
-            failure.id
-        }
+struct MediaRemovalNotice {
+    static func make(
+        mediaID: UUID,
+        result: MediaMaintenanceResult
+    ) -> TransientNotice? {
+        guard !result.isComplete else { return nil }
+        return TransientNotice(
+            id: .mediaRemoval(mediaID),
+            title: "Photo record deleted",
+            message: "The photo record was deleted, but some local photo files remain. "
+                + "HouseholdOS will retry them during later maintenance or the next launch."
+        )
     }
 }
 
 struct RootView: View {
     @State private var selectedTab: RootTab = .items
-    @State private var notice: HouseholdNotice?
+    @State private var transientNotices = TransientNoticeQueue()
+    @State private var showsTransientNotice = false
+    @State private var deferredRecovery = false
+    @State private var isReloading = false
+
+    @EnvironmentObject private var library: ItemLibraryService
 
     var body: some View {
         TabView(selection: $selectedTab) {
             ItemLibraryView(
                 selectedTab: $selectedTab,
-                reportDeletion: reportDeletion
+                reportDeletion: reportDeletion,
+                reportMediaRemoval: reportMediaRemoval
             )
-                .tabItem {
-                    Label("Items", systemImage: "shippingbox")
-                }
-                .tag(RootTab.items)
+            .tabItem {
+                Label("Items", systemImage: "shippingbox")
+            }
+            .tag(RootTab.items)
 
             DraftInboxView(
                 selectedTab: $selectedTab,
-                reportDeletion: reportDeletion
+                reportDeletion: reportDeletion,
+                reportMediaRemoval: reportMediaRemoval
             )
-                .tabItem {
-                    Label("Drafts", systemImage: "tray.full")
-                }
-                .badge(draftBadge)
-                .tag(RootTab.drafts)
+            .tabItem {
+                Label("Drafts", systemImage: "tray.full")
+            }
+            .badge(library.displayDrafts.count)
+            .tag(RootTab.drafts)
 
             CaptureView(
                 selectedTab: $selectedTab,
-                reportDeletion: reportDeletion
+                reportDeletion: reportDeletion,
+                reportMediaRemoval: reportMediaRemoval
             )
-                .tabItem {
-                    Label("Add", systemImage: "plus.circle.fill")
-                }
-                .tag(RootTab.capture)
+            .tabItem {
+                Label("Add", systemImage: "plus.circle.fill")
+            }
+            .tag(RootTab.capture)
         }
         .tint(.indigo)
-        .onChange(of: library.refreshFailure) { _, failure in
-            if let failure {
-                notice = .refresh(failure)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if library.refreshRecoveryState != nil {
+                recoveryBanner
             }
         }
-        .alert(item: $notice) { notice in
-            switch notice {
-            case .deletion(let deletion):
-                Alert(
-                    title: Text(deletion.title),
-                    message: Text(deletion.message),
-                    dismissButton: .default(Text("OK"))
-                )
-            case .refresh:
-                Alert(
-                    title: Text("Saved, but the display needs to reload"),
-                    message: Text(
-                        "Your data was saved, but the current view could not refresh. "
-                            + "Reload is safe and will not repeat the change."
-                    ),
-                    primaryButton: .default(Text("Reload"), action: retrySnapshot),
-                    secondaryButton: .cancel(Text("Later"))
-                )
+        .onChange(of: library.refreshRecoveryState) { _, recovery in
+            if recovery == nil {
+                deferredRecovery = false
             }
+        }
+        .alert(
+            transientNotices.active?.title ?? "",
+            isPresented: $showsTransientNotice
+        ) {
+            Button("OK", action: advanceTransientNotice)
+        } message: {
+            Text(transientNotices.active?.message ?? "")
         }
     }
 
-    @EnvironmentObject private var library: ItemLibraryService
-
-    private var draftBadge: Int {
-        library.drafts.count
+    private var recoveryBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Saved, but the display needs to reload", systemImage: "arrow.clockwise")
+                .font(.headline)
+                .accessibilityIdentifier("library.refreshBanner.title")
+            if !deferredRecovery {
+                Text(
+                    "Your data is saved. The current display has not refreshed. "
+                        + "Reload only reads the library and will not repeat the change."
+                )
+                .font(.footnote)
+                .accessibilityIdentifier("library.refreshBanner.message")
+            }
+            HStack {
+                Button(isReloading ? "Reloading…" : "Reload", action: retrySnapshot)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isReloading)
+                    .accessibilityIdentifier("library.refreshBanner.reload")
+                if !deferredRecovery {
+                    Button("Later") {
+                        deferredRecovery = true
+                    }
+                    .accessibilityIdentifier("library.refreshBanner.later")
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(.orange.opacity(0.18))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("library.refreshBanner")
     }
 
     private func reportDeletion(
         _ kind: DeletedRecordKind,
+        _ recordID: UUID,
         _ result: MediaMaintenanceResult
     ) {
-        if let deletion = MediaDeletionNotice.make(kind: kind, result: result) {
-            notice = .deletion(deletion)
+        if let notice = MediaDeletionNotice.make(
+            kind: kind,
+            recordID: recordID,
+            result: result
+        ) {
+            transientNotices.enqueue(notice)
+            showsTransientNotice = true
+        }
+    }
+
+    private func reportMediaRemoval(
+        _ mediaID: UUID,
+        _ result: MediaMaintenanceResult
+    ) {
+        if let notice = MediaRemovalNotice.make(mediaID: mediaID, result: result) {
+            transientNotices.enqueue(notice)
+            showsTransientNotice = true
+        }
+    }
+
+    private func advanceTransientNotice() {
+        showsTransientNotice = false
+        transientNotices.dismissActive()
+        guard transientNotices.active != nil else { return }
+        Task {
+            await Task.yield()
+            showsTransientNotice = true
         }
     }
 
     private func retrySnapshot() {
+        isReloading = true
         Task {
-            await Task.yield()
+            defer { isReloading = false }
             do {
                 try library.recoverSnapshot()
             } catch {
-                if let failure = library.refreshFailure {
-                    notice = .refresh(failure)
-                }
+                // The persistent recovery state remains the user's safe retry boundary.
             }
         }
     }

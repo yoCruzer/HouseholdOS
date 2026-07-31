@@ -28,6 +28,7 @@ final class AppRuntime: ObservableObject {
             let container: ModelContainer
             let mediaStore: MediaFileStore
             let refreshGate: UITestRefreshFailureGate?
+            let refreshFailureCount: Int
             if isUITesting {
                 try FileManager.default.createDirectory(
                     at: uiTestingRoot,
@@ -47,14 +48,17 @@ final class AppRuntime: ObservableObject {
                         try FileManager.default.removeItem(at: url)
                     }
                 )
-                refreshGate =
-                    environment["HOUSEHOLDOS_UI_TEST_FAIL_NEXT_REFRESH"] == "1"
+                refreshFailureCount = Int(
+                    environment["HOUSEHOLDOS_UI_TEST_REFRESH_FAILURE_COUNT"] ?? "0"
+                ) ?? 0
+                refreshGate = refreshFailureCount > 0
                     ? UITestRefreshFailureGate()
                     : nil
             } else {
                 container = try PersistenceController.makeContainer()
                 mediaStore = try MediaFileStore.applicationSupport()
                 refreshGate = nil
+                refreshFailureCount = 0
             }
 
             let library = ItemLibraryService(
@@ -68,18 +72,22 @@ final class AppRuntime: ObservableObject {
                 }
             )
             try library.bootstrap()
-            refreshGate?.failNextRefresh()
+            let deletionFixtureKind =
+                environment["HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"]
+            if deletionFixtureKind == nil {
+                refreshGate?.arm(failures: refreshFailureCount)
+            }
             self.container = container
             self.library = library
             self.startupError = nil
             Task {
                 await library.performStartupMediaMaintenance()
-                if let deletionKind =
-                    environment["HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"] {
+                if let deletionKind = deletionFixtureKind {
                     await Self.seedDeletionFixture(
                         deletionKind,
                         library: library
                     )
+                    refreshGate?.arm(failures: refreshFailureCount)
                 }
             }
         } catch {
@@ -117,8 +125,8 @@ final class AppRuntime: ObservableObject {
 private final class UITestRefreshFailureGate {
     private var failuresRemaining = 0
 
-    func failNextRefresh() {
-        failuresRemaining = 1
+    func arm(failures: Int) {
+        failuresRemaining = max(0, failures)
     }
 
     func consumeFailure() -> Bool {

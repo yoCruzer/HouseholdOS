@@ -24,6 +24,73 @@ enum LibrarySort: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 }
 
+struct DraftValue: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let householdID: UUID
+    let name: String
+    let categoryID: UUID?
+    let locationID: UUID?
+    let note: String?
+    let createdAt: Date
+    let updatedAt: Date
+    let captureSource: CaptureSource
+    let orderingIndex: Int
+}
+
+struct ItemValue: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let householdID: UUID
+    let name: String
+    let categoryID: UUID?
+    let locationID: UUID?
+    let note: String?
+    let createdAt: Date
+    let updatedAt: Date
+    let captureSource: CaptureSource
+    let sourceDraftID: UUID?
+    let status: ItemStatus
+    let archivedAt: Date?
+    let coverMediaID: UUID?
+}
+
+struct MediaValue: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let ownerKind: MediaOwnerKind
+    let ownerID: UUID
+    let originalFileName: String
+    let thumbnailFileName: String?
+    let contentTypeIdentifier: String
+    let createdAt: Date
+    let sortOrder: Int
+}
+
+struct LocationValue: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let householdID: UUID
+    let name: String
+    let createdAt: Date
+    let updatedAt: Date
+    let archivedAt: Date?
+}
+
+struct CategoryValue: Identifiable, Equatable, Sendable {
+    let id: UUID
+    let householdID: UUID
+    let name: String
+    let sortOrder: Int
+    let isSystem: Bool
+}
+
+@dynamicMemberLookup
+struct LibraryWriteResult<Value> {
+    let value: Value
+    let outcome: LibraryCommitOutcome
+
+    subscript<Member>(dynamicMember keyPath: KeyPath<Value, Member>) -> Member {
+        value[keyPath: keyPath]
+    }
+}
+
 enum LibraryError: Error, Equatable {
     case draftNotFound
     case itemNotFound

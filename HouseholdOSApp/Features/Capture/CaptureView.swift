@@ -4,7 +4,8 @@ import UIKit
 
 struct CaptureView: View {
     @Binding var selectedTab: RootTab
-    let reportDeletion: (DeletedRecordKind, MediaMaintenanceResult) -> Void
+    let reportDeletion: (DeletedRecordKind, UUID, MediaMaintenanceResult) -> Void
+    let reportMediaRemoval: (UUID, MediaMaintenanceResult) -> Void
 
     @EnvironmentObject private var library: ItemLibraryService
     @State private var editingDraftID: UUID?
@@ -82,22 +83,21 @@ struct CaptureView: View {
                 CameraPicker(completion: handleCameraResult)
                     .ignoresSafeArea()
             }
-            .sheet(isPresented: $showsDraftEditor) {
+            .navigationDestination(isPresented: $showsDraftEditor) {
                 if let editingDraftID {
-                    NavigationStack {
-                        DraftEditorView(
-                            draftID: editingDraftID,
-                            onConfirmed: {
-                                showsDraftEditor = false
-                                selectedTab = .items
-                            },
-                            onDeleted: { result in
-                                showsDraftEditor = false
-                                selectedTab = .drafts
-                                reportDeletion(.draft, result)
-                            }
-                        )
-                    }
+                    DraftEditorView(
+                        draftID: editingDraftID,
+                        onConfirmed: {
+                            showsDraftEditor = false
+                            selectedTab = .items
+                        },
+                        onDeleted: { result in
+                            reportDeletion(.draft, editingDraftID, result)
+                            showsDraftEditor = false
+                            selectedTab = .drafts
+                        },
+                        onMediaRemoval: reportMediaRemoval
+                    )
                 }
             }
             .alert(
@@ -182,9 +182,9 @@ struct CaptureView: View {
             isImportingMedia = true
             Task {
                 defer { isImportingMedia = false }
-                let draft: CaptureDraftRecord
+                let draft: DraftValue
                 do {
-                    draft = try library.createDraft(source: .photoLibrary)
+                    draft = try library.createDraft(source: .photoLibrary).value
                 } catch {
                     errorMessage = error.localizedDescription
                     await discardPickedMediaFile(pickedFile)
@@ -222,9 +222,9 @@ struct CaptureView: View {
             isImportingMedia = true
             Task {
                 defer { isImportingMedia = false }
-                let draft: CaptureDraftRecord
+                let draft: DraftValue
                 do {
-                    draft = try library.createDraft(source: .camera)
+                    draft = try library.createDraft(source: .camera).value
                 } catch {
                     errorMessage = error.localizedDescription
                     await discardPickedMediaFile(pickedFile)

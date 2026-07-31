@@ -4,7 +4,8 @@ import UIKit
 
 struct DraftInboxView: View {
     @Binding var selectedTab: RootTab
-    let reportDeletion: (DeletedRecordKind, MediaMaintenanceResult) -> Void
+    let reportDeletion: (DeletedRecordKind, UUID, MediaMaintenanceResult) -> Void
+    let reportMediaRemoval: (UUID, MediaMaintenanceResult) -> Void
 
     @EnvironmentObject private var library: ItemLibraryService
     @State private var path: [UUID] = []
@@ -12,7 +13,7 @@ struct DraftInboxView: View {
     var body: some View {
         NavigationStack(path: $path) {
             Group {
-                if library.drafts.isEmpty {
+                if library.displayDrafts.isEmpty {
                     ContentUnavailableView {
                         Label("No drafts", systemImage: "tray")
                     } description: {
@@ -24,7 +25,7 @@ struct DraftInboxView: View {
                         .buttonStyle(.borderedProminent)
                     }
                 } else {
-                    List(library.drafts, id: \.id) { draft in
+                    List(library.displayDrafts, id: \.id) { draft in
                         NavigationLink(value: draft.id) {
                             DraftRow(draft: draft)
                         }
@@ -41,9 +42,10 @@ struct DraftInboxView: View {
                         selectedTab = .items
                     },
                     onDeleted: { result in
+                        reportDeletion(.draft, draftID, result)
                         path.removeAll()
-                        reportDeletion(.draft, result)
-                    }
+                    },
+                    onMediaRemoval: reportMediaRemoval
                 )
             }
             .toolbar {
@@ -60,7 +62,7 @@ struct DraftInboxView: View {
 }
 
 private struct DraftRow: View {
-    let draft: CaptureDraftRecord
+    let draft: DraftValue
 
     @EnvironmentObject private var library: ItemLibraryService
 
@@ -98,6 +100,7 @@ struct DraftEditorView: View {
     let draftID: UUID
     let onConfirmed: () -> Void
     let onDeleted: (MediaMaintenanceResult) -> Void
+    let onMediaRemoval: (UUID, MediaMaintenanceResult) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var library: ItemLibraryService
@@ -242,12 +245,11 @@ struct DraftEditorView: View {
         }
     }
 
-    private var draft: CaptureDraftRecord? {
-        library.drafts.first(where: { $0.id == draftID })
-            ?? library.draftRecord(id: draftID)
+    private var draft: DraftValue? {
+        library.displayDrafts.first(where: { $0.id == draftID })
     }
 
-    private var assets: [MediaAssetRecord] {
+    private var assets: [MediaValue] {
         library.media(for: .draft, ownerID: draftID)
     }
 
@@ -323,7 +325,7 @@ struct DraftEditorView: View {
         Task {
             do {
                 let result = try await library.deleteDraft(id: draftID)
-                onDeleted(result)
+                onDeleted(result.value)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription
@@ -349,9 +351,7 @@ struct DraftEditorView: View {
             do {
                 let result = try await library.removeMedia(id: pendingMediaID)
                 self.pendingMediaID = nil
-                if !result.isComplete {
-                    errorMessage = "The photo was removed. Leftover files will be retried during maintenance."
-                }
+                onMediaRemoval(pendingMediaID, result.value)
             } catch {
                 errorMessage = error.localizedDescription
             }

@@ -1,24 +1,25 @@
 # Current State
 
 Status: GOAL_1_AWAITING_OWNER_REVIEW
-Updated: 2026-08-01
+Updated: 2026-08-28
 
 ## Active Goal
 
 - Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
-- Review round: FOURTH_OWNER_REVIEW
+- Review round: FIFTH_OWNER_REVIEW
 - Branch: `goal/v1-household-library-core`
 - Base: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner authorization: `HouseholdOS PR #3 — Closure Remediation Implementation Prompt`
+- Owner authorization: `HouseholdOS PR #3 — Media Transaction Boundary Hardening Prompt`
 - Draft PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
 - First Owner Review: REQUEST_CHANGES
 - Second Owner Review: REQUEST_CHANGES
 - Third Owner Review: REQUEST_CHANGES
 - Closure Design Audit: APPROVED_WITH_AMENDMENTS
-- Current work: closure remediation and local verification complete
-- Next verification: fourth Owner review of Draft PR #3
+- Fourth Owner Review: REQUEST_CHANGES
+- Current work: media transaction-boundary hardening and local verification complete
+- Next verification: fifth Owner review of Draft PR #3
 - Owner decision required: yes
 
 ## Repository State
@@ -165,8 +166,13 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - PR #3 closure remediation now publishes immutable display values, preserves committed
   upserts/tombstones across reload failures, and keeps refresh recovery separate from
   FIFO transient media-cleanup notices.
-- Goal 1 full suite passed with 33 tests; 26 Goal1Core tests and the 3 mandatory
-  persistent-refresh UI journeys also passed in focused runs.
+- PR #3 fourth-review remediation now resolves all throwing media dependencies before
+  the first SwiftData mutation, rolls back save failures, releases failed prepared-file
+  reservations and preserves committed media when only post-commit refresh fails.
+- The transaction-focused T1–T5 suite passed with 5 tests, Goal1Core passed with 29
+  tests, and the full suite passed with 36 tests (29 core and 7 UI).
+- FIFO transient-notice ordering is unit tested; combined refresh recovery and deletion
+  notice coexistence is UI tested.
 - Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
   passed on iPhone 17 Pro / iOS 26.5.
 
@@ -204,7 +210,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Goal Planning
 
-- Goal 1: AWAITING FOURTH OWNER REVIEW
+- Goal 1: AWAITING FIFTH OWNER REVIEW
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -213,9 +219,10 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 ## Last Verified Baseline
 
 Goal 1 started from clean local and remote `main` at
-`581f970451033a0efd702202eb2845ed2a264360`. Closure remediation started from clean,
-remote-aligned PR head `b9fdb505b6ba45f36d7e99694a1e2c0afddf866d`. On 2026-08-01,
-26 focused Goal1Core tests, 3 focused closure UI tests and the 33-test full suite passed
-with 0 failures and 0 skips. Clean Debug and Release builds, explicit install, launch
-(PID `58711`) and screenshot inspection passed on iPhone 17 Pro / iOS 26.5 using
-Xcode 26.6. Draft PR #3 remains open, Draft and unmerged, and awaits fourth Owner Review.
+`581f970451033a0efd702202eb2845ed2a264360`. Fourth-review remediation started from
+clean, remote-aligned PR head `9dbbdc91ca4484f3014a19432b201b302faea0b4`.
+On 2026-08-28, the 5-test transaction suite, 29-test Goal1Core suite and 36-test full
+suite passed with 0 failures and 0 skips. Clean Debug and Release builds, explicit
+install, launch (PID `53499`) and screenshot inspection passed on iPhone 17 Pro /
+iOS 26.5 using Xcode 26.6. Draft PR #3 remains open, Draft and unmerged, and awaits
+fifth Owner Review.

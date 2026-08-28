@@ -126,3 +126,14 @@ still fails, the UI states that data was saved and offers a safe Reload action.
 Committed display recovery uses immutable value projections plus upserts and tombstones;
 it never depends on a post-commit entity fetch. A successful database snapshot absorbs
 and clears the in-memory overlay, while relaunch starts from the database only.
+
+## D-016 — Resolve Media Dependencies Before Mutation
+
+Date: 2026-08-28
+Status: PROPOSED FOR OWNER REVIEW
+
+Media operations resolve every throwing owner, media and cover dependency before the
+first SwiftData mutation. Once mutation starts, immutable display-value construction
+and `saveAndReload` form a tight non-throwing boundary until the database save path.
+Prepared files remain reserved until the structured insert commits or rolls back; a
+post-commit refresh failure never triggers rollback or deletion of committed media.

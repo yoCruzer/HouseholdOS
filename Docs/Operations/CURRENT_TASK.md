@@ -5,12 +5,12 @@
 - Goal: Goal 1
 - Title: 建立可持续扩展的家庭物品库核心
 - Status: AWAITING_OWNER_REVIEW
-- Lifecycle: CLOSURE_REMEDIATION_COMPLETE
-- Review round: FOURTH_OWNER_REVIEW
+- Lifecycle: MEDIA_TRANSACTION_BOUNDARY_HARDENING_COMPLETE
+- Review round: FIFTH_OWNER_REVIEW
 - Working branch: `goal/v1-household-library-core`
 - Base branch: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner approval reference: `HouseholdOS PR #3 — Closure Remediation Implementation Prompt`
+- Owner approval reference: `HouseholdOS PR #3 — Media Transaction Boundary Hardening Prompt`
 
 ## Authorization
 
@@ -242,23 +242,28 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 - Second Owner Review result: REQUEST_CHANGES
 - Third Owner Review result: REQUEST_CHANGES
 - Closure Design Audit result: APPROVED_WITH_AMENDMENTS
+- Fourth Owner Review result: REQUEST_CHANGES
 - Immutable display overlay/tombstones and explicit write outcomes: COMPLETE
 - Persistent Reload banner and Root FIFO transient notice queue: COMPLETE
-- Focused Goal1Core tests: PASS — 26 tests, 0 failures, 0 skips
-- Focused closure UI tests: PASS — 3 tests, 0 failures, 0 skips
-- Full suite: PASS — 33 tests, 0 failures, 0 skips
+- Resolve-before-mutate media transaction boundary: COMPLETE
+- Focused media transaction T1–T5 tests: PASS — 5 tests, 0 failures, 0 skips
+- Focused Goal1Core tests: PASS — 29 tests, 0 failures, 0 skips
+- Full suite: PASS — 36 tests (29 core and 7 UI), 0 failures, 0 skips
+- FIFO transient-notice ordering: unit tested
+- Combined recovery and deletion-notice coexistence: UI tested
 - End-to-end UI journey: PASS — capture fallback, draft save/relaunch,
   confirmation, search, editor Close/Save semantics, edit/relaunch, archive exclusion
   and archived inclusion
 - clean Debug Simulator build: PASS
 - clean Release Simulator build: PASS
-- Simulator install and launch: PASS — PID `73904`
+- Simulator install and launch: PASS — PID `53499`
 - Final screenshot inspection: PASS — Items empty state, search, filters, add and
   three-tab navigation rendered without startup error
 - 4032 × 3024 image validation: PASS — two imports, unique files, thumbnails,
   owner/order integrity and non-main-thread media operations
-- Persistence failure validation: PASS — save rollback/file cleanup, committed
-  save with refresh failure, reopen recovery and idempotent confirmation
+- Persistence failure validation: PASS — preflight isolation, unrelated-save checks,
+  save rollback/file cleanup, committed save with refresh failure, reopen recovery and
+  idempotent confirmation
 - Media maintenance validation: PASS — per-file failure isolation, `.incoming-*`
   cleanup, prepared-file reservation, startup availability and later retry
 - `git diff --check`: PASS before completion documentation
@@ -266,10 +271,10 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 
 ## Review State
 
-PR #3 is open and remains Draft. First, second and third Owner Reviews returned
-REQUEST_CHANGES. The Owner-approved closure remediation is complete on the existing
-PR branch and the branch is awaiting fourth Owner Review. Merge remains unauthorized.
-Goal 2 remains not started.
+PR #3 is open and remains Draft. First through fourth Owner Reviews returned
+REQUEST_CHANGES. The Owner-approved media transaction-boundary hardening is complete
+on the existing PR branch and the branch is awaiting fifth Owner Review. Merge remains
+unauthorized. Goal 2 remains not started.
 
 ## Stop Conditions
 
@@ -286,5 +291,5 @@ Goal 2 remains not started.
 - 仅在形成永久决策时更新 `DECISION_LOG.md`；
 - 仅记录真实限制到 `KNOWN_LIMITATIONS.md`；
 - 推送 Goal 1 分支并更新既有 Draft PR #3；
-- 输出 `HouseholdOS PR #3 Closure Remediation Report`；
+- 输出 `HouseholdOS PR #3 Fourth Review Transaction-Boundary Remediation Report`；
 - 停止并等待 Owner Review。

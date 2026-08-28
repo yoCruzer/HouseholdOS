@@ -180,19 +180,99 @@ final class Goal1CoreTests: XCTestCase {
         XCTAssertEqual(environment.service.items.count, 1)
     }
 
-    func testSaveFailureRollsBackDatabaseTimestampAndPreparedFiles() async throws {
+    func testRemoveMediaPreflightFailureCannotLeakIntoLaterSave() async throws {
         var timestamp = Date(timeIntervalSince1970: 1_000)
-        let saveGate = SaveGate()
+        let preflightGate = MediaPreflightGate()
         let environment = try makeEnvironment(
             now: { timestamp },
-            saveGate: saveGate
+            mediaPreflightGate: preflightGate
+        )
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(
+            source: .manual,
+            name: "Preflight removal"
+        )
+        let item = try environment.service.confirmDraft(id: draft.id)
+
+        timestamp = Date(timeIntervalSince1970: 2_000)
+        let first = try await environment.service.addMediaData(
+            Data("first".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .item,
+            ownerID: item.id
+        )
+        timestamp = Date(timeIntervalSince1970: 3_000)
+        let second = try await environment.service.addMediaData(
+            Data("second".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .item,
+            ownerID: item.id
+        )
+        let originalOwner = try XCTUnwrap(
+            environment.service.displayItems.first(where: { $0.id == item.id })
+        )
+        let originalFileURLs = [
+            environment.service.originalURL(for: first),
+            environment.service.originalURL(for: second)
+        ]
+
+        timestamp = Date(timeIntervalSince1970: 4_000)
+        preflightGate.failNext = .removeAfterDependencyResolution
+        do {
+            _ = try await environment.service.removeMedia(id: first.id)
+            XCTFail("Expected the last removeMedia preflight to fail")
+        } catch {
+            XCTAssertEqual(error as? InjectedFailure, .mediaPreflight)
+        }
+
+        XCTAssertEqual(
+            Set(environment.service.displayMedia.map(\.id)),
+            Set([first.id, second.id])
+        )
+        XCTAssertEqual(
+            environment.service.displayItems.first(where: { $0.id == item.id }),
+            originalOwner
+        )
+        XCTAssertEqual(
+            Set(try environment.container.mainContext.fetch(
+                FetchDescriptor<MediaAssetRecord>()
+            ).map(\.id)),
+            Set([first.id, second.id])
+        )
+        XCTAssertTrue(originalFileURLs.allSatisfy {
+            FileManager.default.fileExists(atPath: $0.path)
+        })
+
+        _ = try environment.service.createLocation(name: "Unrelated write")
+        try environment.service.reload()
+
+        XCTAssertEqual(
+            Set(environment.service.displayMedia.map(\.id)),
+            Set([first.id, second.id])
+        )
+        XCTAssertEqual(
+            environment.service.displayItems.first(where: { $0.id == item.id }),
+            originalOwner
+        )
+        XCTAssertTrue(originalFileURLs.allSatisfy {
+            FileManager.default.fileExists(atPath: $0.path)
+        })
+    }
+
+    func testInsertMediaPreflightFailureCleansPreparedFilesAndCannotLeak() async throws {
+        var timestamp = Date(timeIntervalSince1970: 1_000)
+        let preflightGate = MediaPreflightGate()
+        let environment = try makeEnvironment(
+            now: { timestamp },
+            mediaPreflightGate: preflightGate
         )
         defer { environment.removeFiles() }
         let draft = try environment.service.createDraft(source: .camera)
-        let originalTimestamp = draft.updatedAt
+        let originalOwner = try XCTUnwrap(environment.service.displayDrafts.first)
+        preflightGate.mediaRoot = environment.mediaRoot
 
         timestamp = Date(timeIntervalSince1970: 2_000)
-        saveGate.failNextSave = true
+        preflightGate.failNext = .insertAfterFilePreparationAndDependencyResolution
         do {
             _ = try await environment.service.addMediaData(
                 Data("prepared-file".utf8),
@@ -200,21 +280,85 @@ final class Goal1CoreTests: XCTestCase {
                 ownerKind: .draft,
                 ownerID: draft.id
             )
+            XCTFail("Expected the post-import media preflight to fail")
+        } catch {
+            XCTAssertEqual(error as? InjectedFailure, .mediaPreflight)
+        }
+
+        let preparedFileName = try XCTUnwrap(preflightGate.preparedFileNames.first)
+        XCTAssertTrue(environment.service.displayMedia.isEmpty)
+        XCTAssertEqual(environment.service.displayDrafts.first, originalOwner)
+        XCTAssertTrue(
+            try environment.container.mainContext.fetch(
+                FetchDescriptor<MediaAssetRecord>()
+            ).isEmpty
+        )
+        XCTAssertEqual(try mediaFileNames(at: environment.mediaRoot), [])
+
+        let recreatedURL = environment.mediaRoot.appendingPathComponent(preparedFileName)
+        try Data("reservation-check".utf8).write(to: recreatedURL)
+        let reservationCheck = await environment.service.cleanupOrphanedMediaFiles()
+        XCTAssertTrue(reservationCheck.removedFileNames.contains(preparedFileName))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: recreatedURL.path))
+
+        _ = try environment.service.createLocation(name: "Later write")
+        try environment.service.reload()
+        XCTAssertTrue(environment.service.displayMedia.isEmpty)
+        XCTAssertEqual(environment.service.displayDrafts.first, originalOwner)
+        XCTAssertTrue(
+            try environment.container.mainContext.fetch(
+                FetchDescriptor<MediaAssetRecord>()
+            ).isEmpty
+        )
+    }
+
+    func testMediaSaveFailureRollsBackOwnerPreparedFilesAndLaterSave() async throws {
+        var timestamp = Date(timeIntervalSince1970: 1_000)
+        let saveGate = SaveGate()
+        let environment = try makeEnvironment(
+            now: { timestamp },
+            saveGate: saveGate
+        )
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(
+            source: .camera,
+            name: "Save rollback"
+        )
+        let item = try environment.service.confirmDraft(id: draft.id)
+        let originalOwner = try XCTUnwrap(environment.service.displayItems.first)
+
+        timestamp = Date(timeIntervalSince1970: 2_000)
+        saveGate.failNextSave = true
+        do {
+            _ = try await environment.service.addMediaData(
+                Data("prepared-file".utf8),
+                contentTypeIdentifier: UTType.jpeg.identifier,
+                ownerKind: .item,
+                ownerID: item.id
+            )
             XCTFail("Expected the injected save failure")
         } catch {
             XCTAssertEqual(error as? InjectedFailure, .save)
         }
 
+        _ = try environment.service.createLocation(name: "Later save")
         try environment.service.reload()
         XCTAssertTrue(environment.service.mediaAssets.isEmpty)
         XCTAssertEqual(
-            environment.service.drafts.first(where: { $0.id == draft.id })?.updatedAt,
-            originalTimestamp
+            environment.service.items.first(where: { $0.id == item.id }),
+            originalOwner
+        )
+        XCTAssertNil(environment.service.items.first?.coverMediaID)
+        XCTAssertTrue(
+            try environment.container.mainContext.fetch(
+                FetchDescriptor<MediaAssetRecord>()
+            ).isEmpty
         )
         XCTAssertEqual(try mediaFileNames(at: environment.mediaRoot), [])
     }
 
     func testSaveSuccessReloadFailureKeepsCommittedMediaAndReopens() async throws {
+        var timestamp = Date(timeIntervalSince1970: 1_000)
         let baseURL = temporaryDirectory(prefix: "ReloadBoundary")
         try FileManager.default.createDirectory(
             at: baseURL,
@@ -223,6 +367,7 @@ final class Goal1CoreTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: baseURL) }
         let storeURL = baseURL.appendingPathComponent("HouseholdOS.store")
         let mediaRoot = baseURL.appendingPathComponent("Media", isDirectory: true)
+        let saveGate = SaveGate()
         let snapshotGate = SnapshotGate()
 
         var firstContainer: ModelContainer? = try PersistenceController.makeContainer(
@@ -231,26 +376,48 @@ final class Goal1CoreTests: XCTestCase {
         var firstService: ItemLibraryService? = ItemLibraryService(
             context: try XCTUnwrap(firstContainer).mainContext,
             mediaStore: try MediaFileStore(rootURL: mediaRoot),
+            now: { timestamp },
+            contextSave: { context in
+                _ = saveGate.consumeFailure()
+                try context.save()
+            },
             snapshotLoader: snapshotGate.load
         )
         try firstService?.bootstrap()
         let draft = try XCTUnwrap(
             firstService?.createDraft(source: .manual, name: "Reload boundary")
         )
+        let item = try XCTUnwrap(firstService?.confirmDraft(id: draft.id))
+        let saveBaseline = saveGate.saveAttempts
+        timestamp = Date(timeIntervalSince1970: 2_000)
         snapshotGate.failNextReloads(2)
 
         let asset = try await XCTUnwrap(firstService).addMediaData(
             Data("committed".utf8),
             contentTypeIdentifier: UTType.jpeg.identifier,
-            ownerKind: .draft,
-            ownerID: draft.id
+            ownerKind: .item,
+            ownerID: item.id
         )
         let assetID = asset.id
         let assetURL = try XCTUnwrap(firstService).originalURL(for: asset)
         guard case .savedButRefreshFailed = firstService?.lastCommitOutcome else {
             return XCTFail("Expected an explicit saved-but-refresh-failed outcome")
         }
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertEqual(firstService?.displayMedia.map(\.id), [assetID])
+        XCTAssertEqual(firstService?.displayItems.first?.coverMediaID, assetID)
+        XCTAssertEqual(firstService?.displayItems.first?.updatedAt, timestamp)
+        XCTAssertEqual(
+            try firstContainer?.mainContext.fetch(
+                FetchDescriptor<MediaAssetRecord>()
+            ).map(\.id),
+            [assetID]
+        )
         XCTAssertTrue(FileManager.default.fileExists(atPath: assetURL.path))
+
+        try firstService?.recoverSnapshot()
+        XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 1)
+        XCTAssertEqual(firstService?.displayMedia.map(\.id), [assetID])
 
         firstService = nil
         firstContainer = nil
@@ -264,6 +431,8 @@ final class Goal1CoreTests: XCTestCase {
         try reopenedService.bootstrap()
 
         XCTAssertEqual(reopenedService.mediaAssets.map(\.id), [assetID])
+        XCTAssertEqual(reopenedService.items.first?.coverMediaID, assetID)
+        XCTAssertEqual(reopenedService.items.first?.updatedAt, timestamp)
         XCTAssertTrue(
             FileManager.default.fileExists(
                 atPath: reopenedService.originalURL(
@@ -496,6 +665,47 @@ final class Goal1CoreTests: XCTestCase {
         try environment.service.recoverSnapshot()
         XCTAssertEqual(environment.service.displayItems.first?.status, .active)
         XCTAssertEqual(saveGate.saveAttempts, saveBaseline + 2)
+    }
+
+    func testRemoveMediaCleanupFailureKeepsCommittedDeleteTruthfulAndRetryable() async throws {
+        let snapshotGate = SnapshotGate()
+        let removal = RemovalController()
+        let environment = try makeEnvironment(
+            snapshotGate: snapshotGate,
+            removal: removal
+        )
+        defer { environment.removeFiles() }
+        let draft = try environment.service.createDraft(source: .manual)
+        let asset = try await environment.service.addMediaData(
+            Data("residual-file".utf8),
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+        let originalURL = environment.service.originalURL(for: asset)
+        removal.failFileNames = [asset.originalFileName]
+        snapshotGate.failNextReloads(2)
+
+        let result = try await environment.service.removeMedia(id: asset.id)
+
+        guard case .savedButRefreshFailed = result.outcome else {
+            return XCTFail("Expected committed media tombstone during refresh failure")
+        }
+        XCTAssertTrue(environment.service.displayMedia.isEmpty)
+        XCTAssertTrue(
+            try environment.container.mainContext.fetch(
+                FetchDescriptor<MediaAssetRecord>()
+            ).isEmpty
+        )
+        XCTAssertEqual(result.value.failures.map(\.fileName), [asset.originalFileName])
+        XCTAssertTrue(FileManager.default.fileExists(atPath: originalURL.path))
+
+        try environment.service.recoverSnapshot()
+        XCTAssertTrue(environment.service.displayMedia.isEmpty)
+        removal.failFileNames = []
+        let retry = await environment.service.cleanupOrphanedMediaFiles()
+        XCTAssertTrue(retry.removedFileNames.contains(asset.originalFileName))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: originalURL.path))
     }
 
     func testDraftDeleteCleanupFailureReturnsObservablePartialCompletion() async throws {
@@ -1095,6 +1305,7 @@ final class Goal1CoreTests: XCTestCase {
         now: @escaping () -> Date = Date.init,
         saveGate: SaveGate? = nil,
         snapshotGate: SnapshotGate? = nil,
+        mediaPreflightGate: MediaPreflightGate? = nil,
         removal: RemovalController? = nil,
         operationRecorder: OperationRecorder? = nil
     ) throws -> TestEnvironment {
@@ -1120,6 +1331,9 @@ final class Goal1CoreTests: XCTestCase {
                     throw InjectedFailure.reload
                 }
                 return try LibrarySnapshot.load(from: context)
+            },
+            mediaMutationPreflightCheck: { point in
+                try mediaPreflightGate?.check(point)
             }
         )
         try service.bootstrap()
@@ -1193,6 +1407,7 @@ private final class SnapshotGate {
 private enum InjectedFailure: LocalizedError, Equatable {
     case save
     case reload
+    case mediaPreflight
     case remove
 
     var errorDescription: String? {
@@ -1201,9 +1416,29 @@ private enum InjectedFailure: LocalizedError, Equatable {
             "Injected database save failure"
         case .reload:
             "Injected snapshot reload failure"
+        case .mediaPreflight:
+            "Injected media mutation preflight failure"
         case .remove:
             "Injected media removal failure"
         }
+    }
+}
+
+@MainActor
+private final class MediaPreflightGate {
+    var failNext: MediaMutationPreflightPoint?
+    var mediaRoot: URL?
+    private(set) var preparedFileNames: [String] = []
+
+    func check(_ point: MediaMutationPreflightPoint) throws {
+        guard failNext == point else { return }
+        failNext = nil
+        if let mediaRoot {
+            preparedFileNames = try FileManager.default.contentsOfDirectory(
+                atPath: mediaRoot.path
+            ).sorted()
+        }
+        throw InjectedFailure.mediaPreflight
     }
 }
 

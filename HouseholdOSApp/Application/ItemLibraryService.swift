@@ -78,6 +78,18 @@ private struct CommittedDisplayDelta {
 typealias LibraryContextSave = @MainActor (ModelContext) throws -> Void
 typealias LibrarySnapshotLoader = @MainActor (ModelContext) throws -> LibrarySnapshot
 
+enum MediaMutationPreflightPoint: Equatable {
+    case insertAfterFilePreparationAndDependencyResolution
+    case removeAfterDependencyResolution
+}
+
+typealias MediaMutationPreflightCheck = @MainActor (MediaMutationPreflightPoint) throws -> Void
+
+private enum ResolvedMediaOwner {
+    case draft(CaptureDraftRecord)
+    case item(ItemRecord)
+}
+
 @MainActor
 final class ItemLibraryService: ObservableObject {
     @Published private(set) var displayItems: [ItemValue] = []
@@ -100,6 +112,7 @@ final class ItemLibraryService: ObservableObject {
     private let now: () -> Date
     private let contextSave: LibraryContextSave
     private let snapshotLoader: LibrarySnapshotLoader
+    private let mediaMutationPreflightCheck: MediaMutationPreflightCheck
     private var snapshot = LibrarySnapshot(
         items: [],
         drafts: [],
@@ -116,13 +129,15 @@ final class ItemLibraryService: ObservableObject {
         contextSave: @escaping LibraryContextSave = { try $0.save() },
         snapshotLoader: @escaping LibrarySnapshotLoader = {
             try LibrarySnapshot.load(from: $0)
-        }
+        },
+        mediaMutationPreflightCheck: @escaping MediaMutationPreflightCheck = { _ in }
     ) {
         self.context = context
         self.mediaStore = mediaStore
         self.now = now
         self.contextSave = contextSave
         self.snapshotLoader = snapshotLoader
+        self.mediaMutationPreflightCheck = mediaMutationPreflightCheck
     }
 
     func bootstrap() throws {
@@ -409,38 +424,37 @@ final class ItemLibraryService: ObservableObject {
 
     @discardableResult
     func removeMedia(id: UUID) async throws -> LibraryWriteResult<MediaMaintenanceResult> {
-        guard let asset = try fetchMediaAssets().first(where: { $0.id == id }) else {
+        let mediaAssets = try fetchMediaAssets()
+        guard let asset = mediaAssets.first(where: { $0.id == id }) else {
             throw LibraryError.mediaNotFound
         }
         let files = storedFile(for: asset)
         let ownerKind = asset.ownerKind
         let ownerID = asset.ownerID
-        context.delete(asset)
+        let owner = try requireMediaOwner(kind: ownerKind, id: ownerID)
+        let replacementCoverID = mediaAssets
+            .filter { $0.ownerKind == .item && $0.ownerID == ownerID && $0.id != id }
+            .sorted(by: mediaSort)
+            .first?
+            .id
+        try mediaMutationPreflightCheck(.removeAfterDependencyResolution)
 
         let timestamp = now()
-        switch ownerKind {
-        case .draft:
-            try requireDraft(id: ownerID).updatedAt = timestamp
-        case .item:
-            let item = try requireItem(id: ownerID)
-            if item.coverMediaID == id {
-                item.coverMediaID = try fetchMedia(ownerKind: .item, ownerID: ownerID)
-                    .first(where: { $0.id != id })?
-                    .id
-            }
-            item.updatedAt = timestamp
-        }
+        context.delete(asset)
 
         let ownerValue: CommittedDisplayDelta
-        switch ownerKind {
-        case .draft:
-            let draft = try requireDraft(id: ownerID)
+        switch owner {
+        case .draft(let draft):
+            draft.updatedAt = timestamp
             ownerValue = CommittedDisplayDelta(
                 draftUpserts: [ownerID: DraftValue(draft)],
                 mediaTombstones: [id]
             )
-        case .item:
-            let item = try requireItem(id: ownerID)
+        case .item(let item):
+            if item.coverMediaID == id {
+                item.coverMediaID = replacementCoverID
+            }
+            item.updatedAt = timestamp
             ownerValue = CommittedDisplayDelta(
                 itemUpserts: [ownerID: ItemValue(item)],
                 mediaTombstones: [id]
@@ -560,15 +574,20 @@ final class ItemLibraryService: ObservableObject {
         ownerKind: MediaOwnerKind,
         ownerID: UUID
     ) async throws -> LibraryWriteResult<MediaValue> {
+        let owner: ResolvedMediaOwner
+        let ownedMedia: [MediaAssetRecord]
         do {
-            try validateOwner(kind: ownerKind, id: ownerID)
+            owner = try requireMediaOwner(kind: ownerKind, id: ownerID)
+            ownedMedia = try fetchMedia(ownerKind: ownerKind, ownerID: ownerID)
+            try mediaMutationPreflightCheck(
+                .insertAfterFilePreparationAndDependencyResolution
+            )
         } catch {
             lastMediaMaintenanceResult = await mediaStore.remove(storedFile)
             throw error
         }
 
         let timestamp = now()
-        let ownedMedia = try fetchMedia(ownerKind: ownerKind, ownerID: ownerID)
         let asset = MediaAssetRecord(
             id: id,
             ownerKind: ownerKind,
@@ -581,32 +600,27 @@ final class ItemLibraryService: ObservableObject {
         )
         context.insert(asset)
 
-        switch ownerKind {
-        case .draft:
-            try requireDraft(id: ownerID).updatedAt = timestamp
-        case .item:
-            let item = try requireItem(id: ownerID)
+        let mediaValue = MediaValue(asset)
+        let delta: CommittedDisplayDelta
+        switch owner {
+        case .draft(let draft):
+            draft.updatedAt = timestamp
+            delta = CommittedDisplayDelta(
+                draftUpserts: [ownerID: DraftValue(draft)],
+                mediaUpserts: [mediaValue.id: mediaValue]
+            )
+        case .item(let item):
             if item.coverMediaID == nil {
                 item.coverMediaID = asset.id
             }
             item.updatedAt = timestamp
+            delta = CommittedDisplayDelta(
+                itemUpserts: [ownerID: ItemValue(item)],
+                mediaUpserts: [mediaValue.id: mediaValue]
+            )
         }
 
         do {
-            let mediaValue = MediaValue(asset)
-            let delta: CommittedDisplayDelta
-            switch ownerKind {
-            case .draft:
-                delta = CommittedDisplayDelta(
-                    draftUpserts: [ownerID: DraftValue(try requireDraft(id: ownerID))],
-                    mediaUpserts: [mediaValue.id: mediaValue]
-                )
-            case .item:
-                delta = CommittedDisplayDelta(
-                    itemUpserts: [ownerID: ItemValue(try requireItem(id: ownerID))],
-                    mediaUpserts: [mediaValue.id: mediaValue]
-                )
-            }
             let outcome = try saveAndReload(delta: delta)
             await mediaStore.markPersisted(storedFile)
             return LibraryWriteResult(value: mediaValue, outcome: outcome)
@@ -618,11 +632,18 @@ final class ItemLibraryService: ObservableObject {
     }
 
     private func validateOwner(kind: MediaOwnerKind, id: UUID) throws {
+        _ = try requireMediaOwner(kind: kind, id: id)
+    }
+
+    private func requireMediaOwner(
+        kind: MediaOwnerKind,
+        id: UUID
+    ) throws -> ResolvedMediaOwner {
         switch kind {
         case .draft:
-            _ = try requireDraft(id: id)
+            return .draft(try requireDraft(id: id))
         case .item:
-            _ = try requireItem(id: id)
+            return .item(try requireItem(id: id))
         }
     }
 

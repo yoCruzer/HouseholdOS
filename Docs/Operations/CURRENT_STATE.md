@@ -62,7 +62,8 @@ Updated: 2026-08-31
 - UI test target: `HouseholdOSAppUITests`
 - Shared scheme: `HouseholdOSApp`
 - CI: not configured
-- App distribution: not configured
+- TestFlight readiness branch: `chore/testflight-readiness-goal1`
+- App distribution: project prepared; signed Archive and App Store Connect upload not performed
 
 ## Verified Environment
 
@@ -83,8 +84,13 @@ Updated: 2026-08-31
 - Minimum deployment target: iOS 17.0
 - Targeted device family: iPhone (`1`)
 - Product / display name: HouseholdOS
-- Temporary Bundle Identifier: `com.yocruzer.householdos.dev`
+- Bundle Identifier: `com.yocruzer.householdos`
+- Marketing Version: `0.1`
+- Build Number: `1`
+- App Icon Source: `AppIcon`
+- Signing style: Automatic
 - Apple Development Team: not configured
+- Non-exempt encryption: not used (`ITSAppUsesNonExemptEncryption = NO`)
 - Third-party dependencies: none
 - Entitlements: none added
 
@@ -200,7 +206,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 ## Known Limitations
 
 - Goal 1 has only been validated on an iPhone Simulator.
-- Real-device installation, paid signing and TestFlight have not been configured or verified.
+- Real-device installation, Apple Team selection, signed Archive and TestFlight upload
+  have not been performed or verified.
 - Real-device camera capture, denial handling and selection of a real Photos asset
   remain unverified; automated coverage validates fallback behavior, media storage
   and two 4032 × 3024 image imports at the service boundary.
@@ -211,10 +218,12 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
   not equivalent to real SwiftData or SQLite engine corruption.
 - No performance ceiling has been established for large libraries or sustained
   multi-image import.
-- The Bundle Identifier is temporary and has no external service bindings.
+- `com.yocruzer.householdos` is configured in the project but has not been validated
+  against an Owner-selected Apple Team or App Store Connect record.
 - CI is not configured.
 - Export, backup/recovery UI and real cross-version migration remain unimplemented.
-- App icon and formal brand assets are not included.
+- The provided App Icon is integrated and Simulator-compiled; appearance on a signed
+  real-device build remains unverified.
 
 ## Goal Planning
 
@@ -236,3 +245,11 @@ iOS 26.5 using Xcode 26.6. On 2026-08-31, GitHub reverified approved PR HEAD
 `d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992` as clean and mergeable. PR #3 was then
 marked Ready and merged to `main` using merge commit
 `0bf55833beb55cf96d00ecbe8db4c76c929cff22`. Goal 2 remains not started.
+
+On 2026-08-31, `chore/testflight-readiness-goal1` configured the formal App identity,
+Automatic signing without a Development Team, the provided 1024 × 1024 RGB App Icon,
+and the verified non-exempt-encryption declaration. Clean Debug and Release Simulator
+builds passed. The generated Debug and Release bundles contain compiled AppIcon files,
+`Assets.car`, Bundle ID `com.yocruzer.householdos`, version `0.1` (build `1`), display
+name `HouseholdOS`, and `ITSAppUsesNonExemptEncryption = false`. The focused smoke test
+passed 1/1 and the full suite passed 36/36 with no failures or skips.

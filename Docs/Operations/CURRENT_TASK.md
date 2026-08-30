@@ -4,26 +4,33 @@
 
 - Goal: Goal 1
 - Title: 建立可持续扩展的家庭物品库核心
-- Status: ACCEPTED / CLOSED
-- Lifecycle: GOAL_1_CLOSED
+- Goal status: ACCEPTED / CLOSED
+- Task status: AWAITING_OWNER_REVIEW
+- Lifecycle: TESTFLIGHT_READINESS_PREPARATION_COMPLETE
 - Review round: FIFTH_OWNER_REVIEW — APPROVE
-- Final branch: `goal/v1-household-library-core`
+- Goal 1 final branch: `goal/v1-household-library-core`
+- Readiness branch: `chore/testflight-readiness-goal1`
 - Base branch: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
+- Readiness starting HEAD: `a0cc1dbb3998053c3684724d85b3c85460a44f23`
 - Owner approval reference: `Goal 1 Closure + TestFlight Readiness Preparation`
 
 ## Authorization
 
 Owner 已在 Fifth Owner Review 对 approved HEAD
 `d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992` 给出 `APPROVE`，并明确授权将 PR #3
-标记 Ready 后使用 merge commit 合并到 `main`。该授权仅关闭 Goal 1；Goal 2 不得开始。
+标记 Ready 后使用 merge commit 合并到 `main`，并在独立分支完成第一次 TestFlight
+发布准备。该授权仅覆盖 Goal 1 closure 与 readiness preparation；Goal 2 不得开始。
 
 允许：
 
 - 核验 PR #3 approved HEAD 和可合并状态；
 - 将 PR #3 标记 Ready；
 - 使用 merge commit 合并 PR #3；
-- 记录 Goal 1 acceptance 和 closure。
+- 记录 Goal 1 acceptance 和 closure；
+- 配置 App Icon、正式 App identity、Automatic signing 和加密声明；
+- 执行 Simulator 构建与配置验证；
+- 提交并推送独立 readiness 分支。
 
 不允许：
 
@@ -31,6 +38,8 @@ Owner 已在 Fifth Owner Review 对 approved HEAD
 - 开始 Goal 2 或 Goal 3；
 - 改变 V1 三个 Goal 的产品定义；
 - 引入第三方服务、远程 AI、自建后端或账号体系。
+- 猜测或写入 Apple Development Team；
+- 创建 App Store Connect App Record、上传 TestFlight 或操作 Developer Portal。
 
 ## Starting Baseline
 
@@ -247,6 +256,16 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 - PR #3 state at merge: Ready, clean and mergeable
 - PR #3 merge method: merge commit
 - PR #3 merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
+- Goal 1 acceptance record commit: `a0cc1dbb3998053c3684724d85b3c85460a44f23`
+- Readiness branch: `chore/testflight-readiness-goal1`
+- App identity: `HouseholdOS`, `com.yocruzer.householdos`, version `0.1` (build `1`)
+- App Icon: 1024 × 1024 RGB source compiled as `AppIcon`; no added rounding mask
+- Signing: Automatic; `DEVELOPMENT_TEAM` intentionally absent
+- Encryption declaration: `ITSAppUsesNonExemptEncryption = NO`, based on code inspection
+- clean Debug Simulator build: PASS
+- clean Release Simulator build: PASS
+- Readiness focused smoke test: PASS — 1 test, 0 failures, 0 skips
+- Readiness full suite: PASS — 36 tests, 0 failures, 0 skips
 - Immutable display overlay/tombstones and explicit write outcomes: COMPLETE
 - Persistent Reload banner and Root FIFO transient notice queue: COMPLETE
 - Resolve-before-mutate media transaction boundary: COMPLETE
@@ -279,6 +298,10 @@ PR #3 passed Fifth Owner Review with `APPROVE`. Immediately before merge, GitHub
 reported the approved HEAD unchanged, Ready, clean and mergeable. PR #3 was merged to
 `main` using merge commit `0bf55833beb55cf96d00ecbe8db4c76c929cff22`.
 Goal 1 is accepted and closed. Goal 2 remains not started.
+
+TestFlight readiness preparation is complete on `chore/testflight-readiness-goal1`
+and awaits Owner review. No Apple Team, App Store Connect, upload or Developer Portal
+operation was performed.
 
 ## Stop Conditions
 

@@ -28,17 +28,20 @@ Status: ACTIVE
 ## Development
 
 - Goal 1 has only been built, tested, installed and launched on an iPhone Simulator.
-- Real-device installation and paid Apple signing are not configured or verified.
+- Real-device installation, Apple Team selection and paid Apple signing are not
+  configured or verified.
 - Real-device camera capture, permission-denied UI and selecting a real Photos asset
   have not been manually verified. Simulator coverage verifies the picker
   presentation/cancel path, unavailable-camera fallback, and valid-image
   import/thumbnail behavior at the service boundary.
 - File copying, camera encoding, thumbnail generation and thumbnail display decoding
   run outside MainActor, but real-device responsiveness has not been profiled.
-- `com.yocruzer.householdos.dev` is a temporary Bundle Identifier with no external service bindings.
+- `com.yocruzer.householdos` is configured but has not been validated against the
+  Owner's Apple Team or registered App Store Connect application.
 - No CI exists.
-- No TestFlight pipeline exists.
-- No formal App Icon or brand assets are included.
+- No signed Archive or TestFlight upload has been performed.
+- The provided App Icon compiles in Simulator builds; real-device and TestFlight
+  presentation remain unverified.
 
 ## Privacy
 

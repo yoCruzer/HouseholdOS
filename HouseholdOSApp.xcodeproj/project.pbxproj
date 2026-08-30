@@ -427,10 +427,12 @@
 		G10000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = HouseholdOS;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "HouseholdOS uses the camera only when you choose to photograph an item.";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -438,7 +440,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos;
 				PRODUCT_MODULE_NAME = HouseholdOSApp;
 				PRODUCT_NAME = HouseholdOS;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -451,10 +453,12 @@
 		G10000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = HouseholdOS;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "HouseholdOS uses the camera only when you choose to photograph an item.";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -462,7 +466,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos;
 				PRODUCT_MODULE_NAME = HouseholdOSApp;
 				PRODUCT_NAME = HouseholdOS;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

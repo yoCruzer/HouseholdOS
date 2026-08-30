@@ -1,26 +1,28 @@
 # Current State
 
-Status: GOAL_1_AWAITING_OWNER_REVIEW
-Updated: 2026-08-28
+Status: GOAL_1_ACCEPTED_CLOSED
+Updated: 2026-08-31
 
-## Active Goal
+## Closed Goal
 
 - Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
-- Status: AWAITING_OWNER_REVIEW
-- Review round: FIFTH_OWNER_REVIEW
+- Status: ACCEPTED / CLOSED
+- Review round: FIFTH_OWNER_REVIEW — APPROVE
 - Branch: `goal/v1-household-library-core`
 - Base: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner authorization: `HouseholdOS PR #3 — Media Transaction Boundary Hardening Prompt`
-- Draft PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
+- Owner authorization: `Goal 1 Closure + TestFlight Readiness Preparation`
+- Merged PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
 - First Owner Review: REQUEST_CHANGES
 - Second Owner Review: REQUEST_CHANGES
 - Third Owner Review: REQUEST_CHANGES
 - Closure Design Audit: APPROVED_WITH_AMENDMENTS
 - Fourth Owner Review: REQUEST_CHANGES
-- Current work: media transaction-boundary hardening and local verification complete
-- Next verification: fifth Owner review of Draft PR #3
-- Owner decision required: yes
+- Fifth Owner Review: APPROVE
+- Approved PR HEAD: `d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992`
+- Merge method: merge commit
+- Merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
+- Owner decision required: no
 
 ## Repository State
 
@@ -45,7 +47,11 @@ Updated: 2026-08-28
 - F0 merge method: merge commit
 - PR base/head: `main` <- `chore/f0-repository-xcode-foundation`
 - Acceptance record commit: this commit (`docs: record F0 owner acceptance`)
-- Final main HEAD: the acceptance record commit at the `main` branch tip; exact SHA is recorded in the final closure report
+- Goal 1 branch: `goal/v1-household-library-core`
+- Goal 1 approved PR head: `d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992`
+- Goal 1 merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
+- Goal 1 merge method: merge commit
+- Merged Goal 1 PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
 - Product Design Book: frozen at v1.0
 - Governance package: imported, approved and merged
 - Engineering Governance Snapshot v0.1: active for F0
@@ -175,6 +181,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
   notice coexistence is UI tested.
 - Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
   passed on iPhone 17 Pro / iOS 26.5.
+- Goal 1 passed Fifth Owner Review, PR #3 was merged through merge commit
+  `0bf55833beb55cf96d00ecbe8db4c76c929cff22`, and Goal 1 is accepted and closed.
 
 ## Key Frozen Decisions
 
@@ -210,7 +218,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Goal Planning
 
-- Goal 1: AWAITING FIFTH OWNER REVIEW
+- Goal 1: ACCEPTED / CLOSED
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -224,5 +232,7 @@ clean, remote-aligned PR head `9dbbdc91ca4484f3014a19432b201b302faea0b4`.
 On 2026-08-28, the 5-test transaction suite, 29-test Goal1Core suite and 36-test full
 suite passed with 0 failures and 0 skips. Clean Debug and Release builds, explicit
 install, launch (PID `53499`) and screenshot inspection passed on iPhone 17 Pro /
-iOS 26.5 using Xcode 26.6. Draft PR #3 remains open, Draft and unmerged, and awaits
-fifth Owner Review.
+iOS 26.5 using Xcode 26.6. On 2026-08-31, GitHub reverified approved PR HEAD
+`d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992` as clean and mergeable. PR #3 was then
+marked Ready and merged to `main` using merge commit
+`0bf55833beb55cf96d00ecbe8db4c76c929cff22`. Goal 2 remains not started.

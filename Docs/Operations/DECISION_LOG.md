@@ -75,7 +75,7 @@ Status: ACCEPTED
 ## D-011 — Versioned Local SwiftData Store
 
 Date: 2026-07-28
-Status: PROPOSED FOR OWNER REVIEW
+Status: ACCEPTED
 
 Goal 1 uses an explicit versioned SwiftData schema and migration plan for Item,
 CaptureDraft, MediaAsset, Category and Location records. The store is local-only and
@@ -85,7 +85,7 @@ this store through migration rather than require users to clear it.
 ## D-012 — Managed Originals and Transferable Media Ownership
 
 Date: 2026-07-28
-Status: PROPOSED FOR OWNER REVIEW
+Status: ACCEPTED
 
 Imported originals are copied unchanged into versioned Application Support storage;
 thumbnails are disposable derivatives. Each MediaAsset has one Draft or Item owner,
@@ -96,7 +96,7 @@ known files.
 ## D-013 — Observable and Retryable Media Maintenance
 
 Date: 2026-07-29
-Status: PROPOSED FOR OWNER REVIEW
+Status: ACCEPTED
 
 The structured database commit is authoritative for permanent record deletion.
 Managed-file cleanup runs after that commit, reports failures per file without
@@ -107,7 +107,7 @@ from orphan cleanup until the insert commits or rolls back.
 ## D-014 — Explicit Editor Persistence Boundaries
 
 Date: 2026-07-29
-Status: PROPOSED FOR OWNER REVIEW
+Status: ACCEPTED
 
 Item editor field changes commit only when the user chooses Save; Close discards
 unsaved field changes. Media operations and creation of reusable Location records
@@ -117,7 +117,7 @@ the editor, while Draft media and Location creation commit immediately.
 ## D-015 — Committed Writes Recover Without Repeating the Write
 
 Date: 2026-07-29
-Status: PROPOSED FOR OWNER REVIEW
+Status: ACCEPTED
 
 When a database write commits but the published snapshot cannot refresh, the committed
 transaction remains authoritative. HouseholdOS may retry snapshot loading, but it must
@@ -130,7 +130,7 @@ and clears the in-memory overlay, while relaunch starts from the database only.
 ## D-016 — Resolve Media Dependencies Before Mutation
 
 Date: 2026-08-28
-Status: PROPOSED FOR OWNER REVIEW
+Status: ACCEPTED
 
 Media operations resolve every throwing owner, media and cover dependency before the
 first SwiftData mutation. Once mutation starts, immutable display-value construction

@@ -4,30 +4,29 @@
 
 - Goal: Goal 1
 - Title: 建立可持续扩展的家庭物品库核心
-- Status: AWAITING_OWNER_REVIEW
-- Lifecycle: MEDIA_TRANSACTION_BOUNDARY_HARDENING_COMPLETE
-- Review round: FIFTH_OWNER_REVIEW
-- Working branch: `goal/v1-household-library-core`
+- Status: ACCEPTED / CLOSED
+- Lifecycle: GOAL_1_CLOSED
+- Review round: FIFTH_OWNER_REVIEW — APPROVE
+- Final branch: `goal/v1-household-library-core`
 - Base branch: `main`
 - Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
-- Owner approval reference: `HouseholdOS PR #3 — Media Transaction Boundary Hardening Prompt`
+- Owner approval reference: `Goal 1 Closure + TestFlight Readiness Preparation`
 
 ## Authorization
 
-本 Goal 使用 Owner 明确批准的 Goal 驱动自主执行方式，不拆回逐个传统 Stage
-审批。该授权仅覆盖本文件定义的 Goal 1；不得合并到 `main`，不得开始 Goal 2。
+Owner 已在 Fifth Owner Review 对 approved HEAD
+`d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992` 给出 `APPROVE`，并明确授权将 PR #3
+标记 Ready 后使用 merge commit 合并到 `main`。该授权仅关闭 Goal 1；Goal 2 不得开始。
 
 允许：
 
-- 在 Goal 1 内自主拆分和持续完成内部任务；
-- 创建并使用本 Goal 分支；
-- 实现、测试、构建和执行 Simulator 验证；
-- 创建范围清晰的 commits；
-- 推送分支并创建 PR。
+- 核验 PR #3 approved HEAD 和可合并状态；
+- 将 PR #3 标记 Ready；
+- 使用 merge commit 合并 PR #3；
+- 记录 Goal 1 acceptance 和 closure。
 
 不允许：
 
-- 合并到 `main`；
 - 删除远程分支；
 - 开始 Goal 2 或 Goal 3；
 - 改变 V1 三个 Goal 的产品定义；
@@ -243,6 +242,11 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 - Third Owner Review result: REQUEST_CHANGES
 - Closure Design Audit result: APPROVED_WITH_AMENDMENTS
 - Fourth Owner Review result: REQUEST_CHANGES
+- Fifth Owner Review result: APPROVE
+- Approved PR HEAD: `d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992`
+- PR #3 state at merge: Ready, clean and mergeable
+- PR #3 merge method: merge commit
+- PR #3 merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
 - Immutable display overlay/tombstones and explicit write outcomes: COMPLETE
 - Persistent Reload banner and Root FIFO transient notice queue: COMPLETE
 - Resolve-before-mutate media transaction boundary: COMPLETE
@@ -271,10 +275,10 @@ xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configurati
 
 ## Review State
 
-PR #3 is open and remains Draft. First through fourth Owner Reviews returned
-REQUEST_CHANGES. The Owner-approved media transaction-boundary hardening is complete
-on the existing PR branch and the branch is awaiting fifth Owner Review. Merge remains
-unauthorized. Goal 2 remains not started.
+PR #3 passed Fifth Owner Review with `APPROVE`. Immediately before merge, GitHub
+reported the approved HEAD unchanged, Ready, clean and mergeable. PR #3 was merged to
+`main` using merge commit `0bf55833beb55cf96d00ecbe8db4c76c929cff22`.
+Goal 1 is accepted and closed. Goal 2 remains not started.
 
 ## Stop Conditions
 
@@ -284,12 +288,9 @@ unauthorized. Goal 2 remains not started.
 
 ## Completion Updates
 
-完成时：
+Goal 1 completion updates are complete:
 
-- 更新 `Docs/Operations/CURRENT_STATE.md`；
-- 将本文件标为 `AWAITING_OWNER_REVIEW`；
-- 仅在形成永久决策时更新 `DECISION_LOG.md`；
-- 仅记录真实限制到 `KNOWN_LIMITATIONS.md`；
-- 推送 Goal 1 分支并更新既有 Draft PR #3；
-- 输出 `HouseholdOS PR #3 Fourth Review Transaction-Boundary Remediation Report`；
-- 停止并等待 Owner Review。
+- `Docs/Operations/CURRENT_STATE.md` records `ACCEPTED / CLOSED`;
+- D-011 through D-016 are accepted;
+- PR #3 merge commit is recorded;
+- Goal 2 remains explicitly not started.

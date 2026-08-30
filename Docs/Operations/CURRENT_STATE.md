@@ -1,7 +1,26 @@
 # Current State
 
-Status: F0_ACCEPTED
-Updated: 2026-07-26
+Status: GOAL_1_AWAITING_OWNER_REVIEW
+Updated: 2026-08-28
+
+## Active Goal
+
+- Goal: Goal 1 — 建立可持续扩展的家庭物品库核心
+- Status: AWAITING_OWNER_REVIEW
+- Review round: FIFTH_OWNER_REVIEW
+- Branch: `goal/v1-household-library-core`
+- Base: `main`
+- Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
+- Owner authorization: `HouseholdOS PR #3 — Media Transaction Boundary Hardening Prompt`
+- Draft PR: [#3](https://github.com/yoCruzer/HouseholdOS/pull/3)
+- First Owner Review: REQUEST_CHANGES
+- Second Owner Review: REQUEST_CHANGES
+- Third Owner Review: REQUEST_CHANGES
+- Closure Design Audit: APPROVED_WITH_AMENDMENTS
+- Fourth Owner Review: REQUEST_CHANGES
+- Current work: media transaction-boundary hardening and local verification complete
+- Next verification: fifth Owner review of Draft PR #3
+- Owner decision required: yes
 
 ## Repository State
 
@@ -34,6 +53,7 @@ Updated: 2026-07-26
 - Xcode project: `HouseholdOSApp.xcodeproj`
 - App target: `HouseholdOSApp`
 - Unit test target: `HouseholdOSAppTests`
+- UI test target: `HouseholdOSAppUITests`
 - Shared scheme: `HouseholdOSApp`
 - CI: not configured
 - App distribution: not configured
@@ -43,8 +63,8 @@ Updated: 2026-07-26
 - macOS: 26.5.2 (`25F84`)
 - Host architecture: `x86_64`
 - Active developer directory: `/Applications/Xcode.app/Contents/Developer`
-- Xcode: 26.5 (`17F42`)
-- Swift toolchain: Apple Swift 6.3.2
+- Xcode: 26.6 (`17F113`)
+- Swift toolchain: Apple Swift 6.3.3
 - Installed iOS Simulator runtime: iOS 26.5 (`23F77`)
 - Selected destination: iPhone 17 Pro, iOS 26.5
 - Selected destination ID: `4C8C76D9-41F0-4EB1-9881-836515666D9F`
@@ -129,6 +149,32 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - First local build, test, install, launch and visual Simulator baseline is verified.
 - F0 passed Owner Review and PR #2 was merged with merge commit `8844aab9deb9e10d46ed8ffba072874430715b07`.
 - F0 is accepted and closed.
+- Goal 1 established a versioned, local-only SwiftData schema for Item, CaptureDraft,
+  MediaAsset, Category and Location.
+- Goal 1 established managed original media files, derived thumbnails, explicit
+  Draft/Item ownership transfer, prepared-file reservation and retryable orphan cleanup.
+- Goal 1 delivered photo-library, available-camera and manual capture entry points,
+  draft recovery/confirmation, item search/filter/sort, edit, archive and permanent
+  delete flows.
+- PR #3 review remediation separated database commit failure from post-commit refresh
+  failure, made permanent media cleanup observable and retryable, moved media I/O,
+  encoding, thumbnail generation and display decoding off MainActor, and documented
+  truthful editor persistence boundaries.
+- PR #3 second-review remediation now keeps partial Draft/Item deletion outcomes
+  visible after dismissal and gives committed-but-unrefreshed writes a safe snapshot
+  recovery path that never repeats the original write.
+- PR #3 closure remediation now publishes immutable display values, preserves committed
+  upserts/tombstones across reload failures, and keeps refresh recovery separate from
+  FIFO transient media-cleanup notices.
+- PR #3 fourth-review remediation now resolves all throwing media dependencies before
+  the first SwiftData mutation, rolls back save failures, releases failed prepared-file
+  reservations and preserves committed media when only post-commit refresh fails.
+- The transaction-focused T1–T5 suite passed with 5 tests, Goal1Core passed with 29
+  tests, and the full suite passed with 36 tests (29 core and 7 UI).
+- FIFO transient-notice ordering is unit tested; combined refresh recovery and deletion
+  notice coexistence is UI tested.
+- Goal 1 clean Debug and Release Simulator builds, install, launch and visual review
+  passed on iPhone 17 Pro / iOS 26.5.
 
 ## Key Frozen Decisions
 
@@ -145,17 +191,38 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Known Limitations
 
-- F0 has only been validated on an iPhone Simulator.
+- Goal 1 has only been validated on an iPhone Simulator.
 - Real-device installation, paid signing and TestFlight have not been configured or verified.
+- Real-device camera capture, denial handling and selection of a real Photos asset
+  remain unverified; automated coverage validates fallback behavior, media storage
+  and two 4032 × 3024 image imports at the service boundary.
+- Media deletion failures are shown after record dismissal and retried by later orphan
+  maintenance, including startup maintenance; no user-facing maintenance dashboard
+  or manual retry control exists.
+- Refresh fault injection validates product control flow and read-only recovery; it is
+  not equivalent to real SwiftData or SQLite engine corruption.
+- No performance ceiling has been established for large libraries or sustained
+  multi-image import.
 - The Bundle Identifier is temporary and has no external service bindings.
 - CI is not configured.
-- No persistence, migration, media, export, backup or business capability exists yet.
+- Export, backup/recovery UI and real cross-version migration remain unimplemented.
 - App icon and formal brand assets are not included.
 
-## Next Stage Planning
+## Goal Planning
 
-F1: NOT DEFINED / NOT APPROVED / NOT STARTED.
+- Goal 1: AWAITING FIFTH OWNER REVIEW
+- Goal 2: NOT STARTED
+- Goal 3: NOT STARTED
+- Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
+  product-value execution unit.
 
 ## Last Verified Baseline
 
-F0 was approved by the Owner and merged through PR #2 using merge commit `8844aab9deb9e10d46ed8ffba072874430715b07`. The acceptance record is committed on `main`; F1 is not defined, approved or started.
+Goal 1 started from clean local and remote `main` at
+`581f970451033a0efd702202eb2845ed2a264360`. Fourth-review remediation started from
+clean, remote-aligned PR head `9dbbdc91ca4484f3014a19432b201b302faea0b4`.
+On 2026-08-28, the 5-test transaction suite, 29-test Goal1Core suite and 36-test full
+suite passed with 0 failures and 0 skips. Clean Debug and Release builds, explicit
+install, launch (PID `53499`) and screenshot inspection passed on iPhone 17 Pro /
+iOS 26.5 using Xcode 26.6. Draft PR #3 remains open, Draft and unmerged, and awaits
+fifth Owner Review.

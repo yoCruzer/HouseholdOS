@@ -71,3 +71,69 @@ Date: 2026-07-26
 Status: ACCEPTED
 
 `com.yocruzer.householdos.dev` is a temporary local and Simulator development identifier. It must not be bound to CloudKit, App Groups, Keychain Sharing, Associated Domains, Push Notifications or another long-lived external service. Formal branding, signing and identifier selection require a separate Owner decision.
+
+## D-011 — Versioned Local SwiftData Store
+
+Date: 2026-07-28
+Status: PROPOSED FOR OWNER REVIEW
+
+Goal 1 uses an explicit versioned SwiftData schema and migration plan for Item,
+CaptureDraft, MediaAsset, Category and Location records. The store is local-only and
+has no CloudKit configuration. Future Goal 2 and Goal 3 schema changes must extend
+this store through migration rather than require users to clear it.
+
+## D-012 — Managed Originals and Transferable Media Ownership
+
+Date: 2026-07-28
+Status: PROPOSED FOR OWNER REVIEW
+
+Imported originals are copied unchanged into versioned Application Support storage;
+thumbnails are disposable derivatives. Each MediaAsset has one Draft or Item owner,
+and Draft confirmation transfers that ownership without copying or re-encoding the
+original. Owner deletion removes managed files, and orphan cleanup never removes
+known files.
+
+## D-013 — Observable and Retryable Media Maintenance
+
+Date: 2026-07-29
+Status: PROPOSED FOR OWNER REVIEW
+
+The structured database commit is authoritative for permanent record deletion.
+Managed-file cleanup runs after that commit, reports failures per file without
+blocking startup or unrelated cleanup, and retries residual orphan files during
+later maintenance. Files prepared for an in-flight database insert are reserved
+from orphan cleanup until the insert commits or rolls back.
+
+## D-014 — Explicit Editor Persistence Boundaries
+
+Date: 2026-07-29
+Status: PROPOSED FOR OWNER REVIEW
+
+Item editor field changes commit only when the user chooses Save; Close discards
+unsaved field changes. Media operations and creation of reusable Location records
+commit immediately and are labeled as such. Draft fields continue to save on leaving
+the editor, while Draft media and Location creation commit immediately.
+
+## D-015 — Committed Writes Recover Without Repeating the Write
+
+Date: 2026-07-29
+Status: PROPOSED FOR OWNER REVIEW
+
+When a database write commits but the published snapshot cannot refresh, the committed
+transaction remains authoritative. HouseholdOS may retry snapshot loading, but it must
+not repeat the original create, confirm, update, archive or media write. If recovery
+still fails, the UI states that data was saved and offers a safe Reload action.
+Committed display recovery uses immutable value projections plus upserts and tombstones;
+it never depends on a post-commit entity fetch. A successful database snapshot absorbs
+and clears the in-memory overlay, while relaunch starts from the database only.
+
+## D-016 — Resolve Media Dependencies Before Mutation
+
+Date: 2026-08-28
+Status: PROPOSED FOR OWNER REVIEW
+
+Media operations resolve every throwing owner, media and cover dependency before the
+first SwiftData mutation. Once mutation starts, immutable display-value construction
+and `saveAndReload` form a tight non-throwing boundary until the database save path.
+Prepared files remain reserved until the structured insert commits or rolls back; a
+post-commit refresh failure never triggers rollback or deletion of committed media.

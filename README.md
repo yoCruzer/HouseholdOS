@@ -4,13 +4,16 @@ HouseholdOS 是一款本地优先、以拍照录入为主要入口的 iOS 家庭
 
 ## 当前状态
 
-仓库当前处于 **F0 — Repository & Xcode Foundation / Owner Review** 阶段：
+仓库当前处于 **Goal 1 — 家庭物品库核心 / Owner Review** 阶段：
 
 - 产品设计母本已冻结为 `HouseholdOS Product Design Book v1.0`。
 - Foundation、Planning 与 Operations 文档已建立。
-- 原生 iOS Xcode 工程、App Target、Unit Test Target 和 Shared Scheme 已建立。
-- F0 的本地 build、test 和 Simulator launch baseline 已通过验证。
-- 尚未开始任何 Swift 业务实现。
+- 原生 iOS Xcode 工程、App、Unit Test、UI Test Target 和 Shared Scheme 已建立。
+- 版本化 SwiftData、Item/Draft/Media/Category/Location 核心和本地媒体存储已建立。
+- 用户可以录入、保存草稿、确认、搜索、编辑、归档或删除家庭物品。
+- Goal 1 的持久化、媒体与恢复路径已有 unit、integration 和 UI 自动化覆盖；
+  Debug/Release build 和 Simulator 主流程已通过。
+- PR #3 的 closure remediation 已完成，PR 仍为 Draft、未合并，并等待下一轮 Owner Review。
 - 当前唯一获批任务见 `Docs/Operations/CURRENT_TASK.md`。
 
 ## 本地开发
@@ -24,11 +27,11 @@ open HouseholdOSApp.xcodeproj
 当前 Shared Scheme 为 `HouseholdOSApp`，最低部署版本为 iOS 17.0。当前已验证命令使用 iPhone 17 Pro / iOS 26.5 Simulator：
 
 ```sh
-xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configuration Debug -destination 'platform=iOS Simulator,id=4C8C76D9-41F0-4EB1-9881-836515666D9F' -derivedDataPath /private/tmp/HouseholdOS-F0-DerivedData clean build
-xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configuration Debug -destination 'platform=iOS Simulator,id=4C8C76D9-41F0-4EB1-9881-836515666D9F' -derivedDataPath /private/tmp/HouseholdOS-F0-DerivedData test
+xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configuration Debug -destination 'platform=iOS Simulator,id=4C8C76D9-41F0-4EB1-9881-836515666D9F' -derivedDataPath /private/tmp/HouseholdOS-Goal1-DerivedData clean build
+xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configuration Debug -destination 'platform=iOS Simulator,id=4C8C76D9-41F0-4EB1-9881-836515666D9F' -derivedDataPath /private/tmp/HouseholdOS-Goal1-DerivedData test
 ```
 
-F0 只建立工程和测试基线。持久化、业务模型和产品功能尚未实现，F1 也尚未批准。
+Goal 1 已完成实现并等待 Owner Review；不得自行进入 Goal 2 或合并到 `main`。
 
 ## 文档入口
 

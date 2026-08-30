@@ -2,249 +2,294 @@
 
 ## Identity
 
-- Stage: F0
-- Title: Repository & Xcode Foundation
-- Status: ACCEPTED
-- Lifecycle: CLOSED
-- Intended branch: `chore/f0-repository-xcode-foundation`
-- Actual branch: `chore/f0-repository-xcode-foundation`
+- Goal: Goal 1
+- Title: 建立可持续扩展的家庭物品库核心
+- Status: AWAITING_OWNER_REVIEW
+- Lifecycle: MEDIA_TRANSACTION_BOUNDARY_HARDENING_COMPLETE
+- Review round: FIFTH_OWNER_REVIEW
+- Working branch: `goal/v1-household-library-core`
 - Base branch: `main`
-- Owner approval reference: `Codex Execution Prompt — HouseholdOS F0 Repository & Xcode Foundation`
+- Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
+- Owner approval reference: `HouseholdOS PR #3 — Media Transaction Boundary Hardening Prompt`
 
-## Execution Record
+## Authorization
+
+本 Goal 使用 Owner 明确批准的 Goal 驱动自主执行方式，不拆回逐个传统 Stage
+审批。该授权仅覆盖本文件定义的 Goal 1；不得合并到 `main`，不得开始 Goal 2。
+
+允许：
+
+- 在 Goal 1 内自主拆分和持续完成内部任务；
+- 创建并使用本 Goal 分支；
+- 实现、测试、构建和执行 Simulator 验证；
+- 创建范围清晰的 commits；
+- 推送分支并创建 PR。
+
+不允许：
+
+- 合并到 `main`；
+- 删除远程分支；
+- 开始 Goal 2 或 Goal 3；
+- 改变 V1 三个 Goal 的产品定义；
+- 引入第三方服务、远程 AI、自建后端或账号体系。
+
+## Starting Baseline
 
 - Starting branch: `main`
-- Starting HEAD: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
-- Actual base HEAD: `2f3dd1ba1241470a8dac0eb939f39eee5af1e2b2`
-- Working branch: `chore/f0-repository-xcode-foundation`
-- Activation commit: `85fc499c11965271ee0d86eb8c985335ca2177fc`
-- Implementation commit: `00883987b7baffd2b46ed5dcde694610a9083709`
-- Approved PR head: `703890ddda2be35dae03cb67b981511e476275fd`
-- Merge commit: `8844aab9deb9e10d46ed8ffba072874430715b07`
-- Merged PR: [#2](https://github.com/yoCruzer/HouseholdOS/pull/2)
-- Merge method: merge commit
-- Acceptance record commit: this commit (`docs: record F0 owner acceptance`)
-- Final main HEAD: the acceptance record commit at the `main` branch tip; exact SHA is recorded in the final closure report
-- F1 status: NOT DEFINED / NOT APPROVED / NOT STARTED
-
-## Closure
-
-- Owner decision: APPROVED
-- F0 result: accepted and closed
-- PR #2 was marked Ready only after the approved head and review state were reverified.
-- PR #2 was merged with a normal merge commit.
-- Auto-merge, squash, rebase and remote branch deletion were not used.
-- Current approved implementation Stage: none
-- F1: NOT DEFINED / NOT APPROVED / NOT STARTED
-
-## Verification Results
-
-- Environment: PASS — Xcode 26.5, Swift 6.3.2 and iOS 26.5 Simulator runtime verified.
-- Project inspection: PASS — approved App target, Unit Test target and shared scheme discovered.
-- Effective settings: PASS — iOS 17.0, Swift 6.0, device family 1 and temporary Bundle Identifier confirmed.
-- Clean build: PASS — `BUILD SUCCEEDED`, exit status 0.
-- Full tests: PASS — `TEST SUCCEEDED`, 1 test, 0 failures, 0 skips, exit status 0.
-- Focused test: PASS — `TEST SUCCEEDED`, 1 test, 0 failures, 0 skips, exit status 0.
-- Simulator install: PASS after explicitly booting the selected device.
-- Simulator launch: PASS — PID returned and remained live after two seconds.
-- Visual review: PASS — `HouseholdOS` and `Foundation ready` confirmed.
-- Forbidden-scope scan: PASS.
-- `git diff --check`: PASS.
-- Unverified: real-device installation, paid signing, TestFlight and CI.
-- F1: NOT STARTED / NOT APPROVED.
-
-## Objective
-
-在不实现任何业务模型、持久化或产品功能的前提下，建立一个可以在本机稳定构建、运行最小测试并由后续 Stage 继续演进的原生 iOS Xcode 工程基线。
-
-F0 结束时必须新增以下可验证能力：
-
-> HouseholdOS 已拥有明确的平台和工程配置、可编译的最小 SwiftUI App Target、可运行的 Unit Test Target、稳定 Scheme、实际环境记录和首个 build/test baseline。
-
-## Technical Baseline
-
-- Platform: Native iOS
-- UI: SwiftUI
-- Language: Swift
-- Language mode: Swift 6
-- Minimum deployment target: iOS 17.0
-- Dependency policy: Apple native frameworks only
-- Device family: iPhone (`TARGETED_DEVICE_FAMILY = 1`)
+- Starting HEAD: `581f970451033a0efd702202eb2845ed2a264360`
+- `origin/main`: `581f970451033a0efd702202eb2845ed2a264360`
+- Ahead / behind at start: `0 / 0`
+- Starting worktree: clean
+- Remote conflict check: only merged historical G0 and F0 branches; no active product branch
 - Project: `HouseholdOSApp.xcodeproj`
-- App Target: `HouseholdOSApp`
-- Unit Test Target: `HouseholdOSAppTests`
-- Shared Scheme: `HouseholdOSApp`
-- Product / Display Name: `HouseholdOS`
-- Temporary Bundle Identifier: `com.yocruzer.householdos.dev`
+- Scheme: `HouseholdOSApp`
+- App target: `HouseholdOSApp`
+- Unit test target: `HouseholdOSAppTests`
+- Minimum deployment target: iOS 17.0
+- Swift language mode: 6.0
+- Target device family: iPhone
+- Third-party dependencies: none
+
+## Environment Reverification
+
+- Date: 2026-07-28
+- macOS: 26.5.2 (`25F84`)
+- Host architecture: `x86_64`
+- Xcode: 26.6 (`17F113`)
+- Swift: 6.3.3
+- Installed iOS Simulator runtime: iOS 26.5 (`23F77`)
+- Selected Simulator: iPhone 17 Pro
+- Selected destination ID: `4C8C76D9-41F0-4EB1-9881-836515666D9F`
+- F0 clean build: PASS
+- F0 full test suite: PASS — 1 test, 0 failures, 0 skips
+
+## Goal Statement
+
+让用户能够真实地录入、保存、查找和维护家里的物品，并建立 Goal 2 与 Goal 3
+可以继续演进的核心产品基础。
+
+完成后应形成：
+
+```text
+拍摄或创建一件家庭物品
+        ↓
+信息不完整时保存为草稿
+        ↓
+稍后继续补充和编辑
+        ↓
+确认进入正式物品库
+        ↓
+通过列表、分类或搜索重新找到
+        ↓
+查看、编辑、归档或删除
+        ↓
+App 重启后数据仍然存在
+```
+
+## V1 Continuity Analysis
+
+### Stable Item Identity
+
+Goal 1 使用稳定 UUID 作为正式 Item 身份。Goal 3 的购买、维修、体验和生命周期
+记录将通过该身份关联，不复制 Item，也不把未来字段提前塞入 Item。
+
+### Draft to Item
+
+单件和未来批量录入共享同一 `CaptureDraft` 语义和确认操作。确认以 Draft ID
+为幂等边界，在同一持久化保存中创建 Item、转移媒体所有权并清理 Draft；正式写入
+失败时必须保留可重试草稿。
+
+### Media Ownership
+
+媒体文件与结构化记录分离。每个媒体记录只有一个明确 owner（Draft 或 Item），
+确认时只转移 owner，不复制或重编码原始文件。Goal 2 的连续拍摄直接创建多个现有
+Draft 和 Media，不建立第二套 Batch Media。
+
+### Capture Path
+
+相机、照片选择和手工入口最终都进入相同 Draft 创建、编辑和确认路径。Goal 2
+只需在该路径前增加 Capture Session 与连续创建能力。
+
+### Location Evolution
+
+Goal 1 使用稳定 Location 身份和可选 location ID，不把位置散落为任意字符串。
+Goal 2 可在保留现有 Location ID 和数据的前提下增加父子关系、类型和批量继承。
+
+### Household Context
+
+Goal 1 的 Item、Draft 和 Location 保存稳定 household ID，但不提前实现成员、
+权限或共享。Goal 2 可增加本地 Household Member 与归属关系。
+
+### Goal 3 Facts
+
+Goal 1 不实现购买、维修、体验或生命周期历史；这些后续事实以 Item ID 关联。
+Item 只保存 Goal 1 必要快照，避免未来整体重建。
+
+### Export and Migration
+
+采用版本化 SwiftData Schema，媒体使用稳定相对文件名。Goal 2/3 可通过轻量迁移
+增加字段和关系；完整导出延后，但当前边界不会要求清空数据库。
+
+### UI Coupling
+
+创建、更新、确认、归档、删除、搜索和媒体清理集中在可测试的应用服务与数据边界，
+不由单个 SwiftUI View 独占。
 
 ## Included Scope
 
-1. Add `Docs/Operations/ENGINEERING_GOVERNANCE_SNAPSHOT.md` from the Owner-approved Governance Snapshot v0.1.
-2. Activate F0 through this Stage Definition.
-3. Create a native iOS `.xcodeproj` with the approved project, target and shared scheme names.
-4. Establish the minimal architecture-aligned directory structure.
-5. Add a minimal SwiftUI app lifecycle and Foundation placeholder view.
-6. Add an XCTest Unit Test Target with one deterministic module smoke test.
-7. Validate project discovery and actual build settings.
-8. Build, run unit tests, install and launch on an available iPhone Simulator.
-9. Scan for prohibited F0 scope.
-10. Record the actual environment and validation baseline in repository documentation.
-11. Create clear commits, push the F0 branch and open a Draft PR to `main`.
+1. 版本化 SwiftData 本地持久化和内存测试容器。
+2. 最小 Item、CaptureDraft、MediaAsset、Category 和 Location 模型。
+3. Item 与 Draft 的 CRUD、时间戳和数据完整性规则。
+4. 幂等且避免半完成正式状态的 Draft -> Item 确认。
+5. 原始图片文件保存、缩略图、owner 转移和可恢复清理。
+6. 系统照片选择器、可用设备上的相机入口和手工录入。
+7. 单件草稿创建、保存、继续编辑、删除和确认。
+8. 草稿箱列表、详情、空状态和正式数据区分。
+9. 正式物品列表、详情、编辑、归档和永久删除。
+10. 文本搜索、分类浏览、最近添加和基础排序。
+11. 最小 Location 实体、创建与选择。
+12. 启动恢复、Simulator 主流程和关键数据操作验证。
 
 ## Explicit Non-goals
 
-- SwiftData, `ModelContainer`, Schema or migrations.
-- Repository or Domain Entity definitions.
-- Item, CaptureDraft, WishItem, Household, Member or LocationNode.
-- Acquisition, LifecycleEvent, CostEvent, UsageRecord, MaintenanceRecord or ExperienceNote.
-- Camera, Photo Library, media storage, drafts, search, export or backup.
-- OCR, AI, CloudKit, iCloud or household sharing.
-- App Group, Push Notifications, App Intents, Widget, Share Extension or Spotlight.
-- Third-party dependencies, GitHub Actions, TestFlight or release configuration.
-- Real-device signing or a formal Apple Development Team.
-- Formal App Icon, branding or Design System.
-- F1 or any later Stage implementation.
-- Marking the Draft PR Ready, enabling auto-merge or merging the PR.
+- 连续拍摄、多件 Capture Session、批量草稿或批量编辑。
+- 完整房间、柜体、抽屉、容器层级和 Spaces 浏览。
+- Household Member UI、账号、权限、CloudKit 或跨 Apple ID 共享。
+- OCR、AI 识别、AI 分类或任何第三方远程服务。
+- 购买、成本、维修、保修、使用体验和生命周期历史。
+- 洞察 Dashboard、完整导出、备份和恢复 UI。
+- App Store、TestFlight、正式签名、品牌和发布准备。
+- 通用事件溯源、插件系统或大型未来抽象。
 
-## Referenced SSOT
+## Implementation Plan
 
-- `AGENTS.md`
-- `Docs/Operations/ENGINEERING_GOVERNANCE_SNAPSHOT.md`
-- `Docs/Operations/CURRENT_STATE.md`
-- `Docs/Foundation/ARCHITECTURE.md`
-- `Docs/Foundation/V1_SCOPE.md`
-- `Docs/Foundation/PRODUCT_BOUNDARY.md`
-- `Docs/Planning/IMPLEMENTATION_PLAN.md`
-- `Docs/Planning/STAGE_DEFINITIONS.md`
-- `Docs/Planning/TEST_STRATEGY.md`
-- `Docs/Operations/DECISION_LOG.md`
-- `Docs/Operations/KNOWN_LIMITATIONS.md`
+1. 激活 Goal 1 状态并记录连续性边界。
+2. 建立版本化持久化、核心模型、媒体存储和应用服务。
+3. 先用自动测试锁定 CRUD、确认、失败边界、搜索和清理语义。
+4. 建立照片/相机/手工录入、草稿箱、物品库与编辑导航。
+5. 执行聚焦测试、全量测试、clean build、Release build 和 Simulator 主流程。
+6. 更新事实文档，创建范围清晰 commits，推送并创建 PR。
 
 ## Acceptance Criteria
 
-1. The F0 branch was created from the verified latest `main`.
-2. Governance Snapshot v0.1 is present in the repository.
-3. `CURRENT_TASK.md` correctly activates F0.
-4. Native `HouseholdOSApp.xcodeproj` exists.
-5. `HouseholdOSApp` App Target exists.
-6. `HouseholdOSAppTests` Unit Test Target exists.
-7. A discoverable Shared Scheme exists and includes the test target.
-8. Deployment target, Swift version, device family and temporary Bundle Identifier match the approved baseline.
-9. The minimal SwiftUI app builds successfully.
-10. The Unit Test actually runs and passes.
-11. Simulator install and launch smoke succeeds.
-12. No SwiftData, business models, CloudKit, third-party dependencies or later-Stage features are present.
-13. `CURRENT_STATE.md` records the real environment and verification baseline.
-14. Final status is `AWAITING_OWNER_REVIEW`.
-15. `git diff --check` passes.
-16. Commits are scoped and auditable.
-17. The F0 branch is pushed.
-18. A Draft PR targeting `main` is created.
-19. The final worktree is clean.
-20. The PR is not merged and F1 is not started.
+### User
+
+1. 可以创建物品或从图片开始录入。
+2. 可以为记录添加至少一张图片。
+3. 信息不完整时可以保存草稿。
+4. 可以重新打开并编辑草稿。
+5. 可以将有效草稿确认为正式物品。
+6. 可以在物品库查看正式物品。
+7. 可以通过搜索或分类重新找到物品。
+8. 可以编辑正式物品。
+9. 可以归档或永久删除物品。
+10. App 重启后仍能读取已保存数据。
+11. 图片缺失、相机不可用或权限拒绝时仍可手工继续。
+
+### Engineering
+
+1. Item 和 Draft CRUD 有自动化测试。
+2. Draft 确认、幂等和无效输入边界有自动化测试。
+3. 持久化重开读取有自动化测试。
+4. 搜索、分类和排序核心逻辑有自动化测试。
+5. Media owner 转移、删除和孤儿清理语义有自动化测试。
+6. 时间戳、归档和数据完整性约束有自动化测试。
+7. clean Debug build 通过。
+8. 完整测试通过。
+9. Release 配置基础构建通过。
+10. Simulator 安装、启动和主要流程验证通过。
+11. `git diff --check` 通过，最终工作区清晰。
+12. 状态文档与代码一致。
+
+### Continuity
+
+1. Goal 2 复用同一 Draft、Media 和确认路径。
+2. Goal 2 不需要清空数据库或创建平行 Item/Draft/Media。
+3. Location 能通过迁移增加层级和批量上下文。
+4. Goal 3 能围绕稳定 Item ID 增加长期事实。
+5. 核心业务逻辑与 UI 解耦。
 
 ## Required Verification
 
-### Environment
+使用 iPhone 17 Pro / iOS 26.5 Simulator，Derived Data 写入仓库外：
 
-- `xcode-select -p`
-- `xcodebuild -version`
-- `xcrun swift --version`
-- `xcodebuild -showsdks`
-- `xcrun simctl list runtimes`
-- `xcrun simctl list devices available`
+```sh
+xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configuration Debug \
+  -destination 'platform=iOS Simulator,id=4C8C76D9-41F0-4EB1-9881-836515666D9F' \
+  -derivedDataPath /private/tmp/HouseholdOS-Goal1-DerivedData clean build
 
-### Project Inspection
+xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -configuration Debug \
+  -destination 'platform=iOS Simulator,id=4C8C76D9-41F0-4EB1-9881-836515666D9F' \
+  -derivedDataPath /private/tmp/HouseholdOS-Goal1-DerivedData test
+```
 
-- `xcodebuild -list -project HouseholdOSApp.xcodeproj`
-- `xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -showdestinations`
-- `xcodebuild -project HouseholdOSApp.xcodeproj -scheme HouseholdOSApp -showBuildSettings`
+另需执行：
 
-### Build and Tests
+- 聚焦核心服务和持久化测试；
+- Release Simulator build；
+- App 安装、启动和截图检查；
+- 草稿、确认、搜索、编辑、归档/删除和重启恢复手工检查；
+- `git diff --check`；
+- `git status --short`；
+- remote/ahead/behind 核验。
 
-- Use an actual available iPhone Simulator destination.
-- Write Derived Data outside the repository.
-- Run a clean App build and require `BUILD SUCCEEDED`.
-- Run the XCTest suite and require `TEST SUCCEEDED`.
-- Report actual tests, failures, skips, destination, runtime and exit status.
+## Completion Evidence
 
-### Simulator Launch
+- Goal activation commit: `9627268`
+- Persistence and service core commit: `6ea3852`
+- User flows and UI regression commit: `7f45a0d`
+- First Owner Review result: REQUEST_CHANGES
+- Second Owner Review result: REQUEST_CHANGES
+- Third Owner Review result: REQUEST_CHANGES
+- Closure Design Audit result: APPROVED_WITH_AMENDMENTS
+- Fourth Owner Review result: REQUEST_CHANGES
+- Immutable display overlay/tombstones and explicit write outcomes: COMPLETE
+- Persistent Reload banner and Root FIFO transient notice queue: COMPLETE
+- Resolve-before-mutate media transaction boundary: COMPLETE
+- Focused media transaction T1–T5 tests: PASS — 5 tests, 0 failures, 0 skips
+- Focused Goal1Core tests: PASS — 29 tests, 0 failures, 0 skips
+- Full suite: PASS — 36 tests (29 core and 7 UI), 0 failures, 0 skips
+- FIFO transient-notice ordering: unit tested
+- Combined recovery and deletion-notice coexistence: UI tested
+- End-to-end UI journey: PASS — capture fallback, draft save/relaunch,
+  confirmation, search, editor Close/Save semantics, edit/relaunch, archive exclusion
+  and archived inclusion
+- clean Debug Simulator build: PASS
+- clean Release Simulator build: PASS
+- Simulator install and launch: PASS — PID `53499`
+- Final screenshot inspection: PASS — Items empty state, search, filters, add and
+  three-tab navigation rendered without startup error
+- 4032 × 3024 image validation: PASS — two imports, unique files, thumbnails,
+  owner/order integrity and non-main-thread media operations
+- Persistence failure validation: PASS — preflight isolation, unrelated-save checks,
+  save rollback/file cleanup, committed save with refresh failure, reopen recovery and
+  idempotent confirmation
+- Media maintenance validation: PASS — per-file failure isolation, `.incoming-*`
+  cleanup, prepared-file reservation, startup availability and later retry
+- `git diff --check`: PASS before completion documentation
+- Third-party dependencies, CloudKit, account, remote service and Goal 2 scope: none
 
-- Install the built app using `simctl`.
-- Launch the app using `simctl`.
-- Report build, test, install, launch and visual inspection separately.
+## Review State
 
-### Repository Checks
-
-- Scan for SwiftData, CoreData, CloudKit, third-party packages, entitlements, protected-resource usage descriptions, GitHub Actions, business entities and Repository definitions.
-- `git diff --check`
-- `git status --short`
-- `git diff --stat`
-- `git diff --name-status`
-- `git log --oneline --decorate -5`
-- Require an empty final `git status --short`.
-
-## Documentation Updates
-
-- Update `Docs/Operations/CURRENT_STATE.md` with only verified repository, environment and validation facts.
-- Finish this file at `Status: AWAITING_OWNER_REVIEW` and `Lifecycle: OPEN`.
-- Append `D-009 — Native iOS Xcode Foundation` and `D-010 — Temporary Development Identifier` only if environment validation supports them.
-- Update `Docs/Operations/KNOWN_LIMITATIONS.md` with confirmed limitations only.
-- Minimally update `README.md` with open, scheme, deployment target, build/test commands and F0 boundary.
-
-## Git Authorization
-
-Allowed:
-
-- Fetch and safely fast-forward local `main`.
-- Create and switch to `chore/f0-repository-xcode-foundation`.
-- Modify files within F0 scope.
-- Create scoped commits.
-- Push the F0 branch.
-- Create a Draft PR targeting `main`.
-
-Not allowed:
-
-- Direct development on `main`.
-- Force push, rebase or shared-history rewriting.
-- Delete remote branches.
-- Mark the PR Ready, merge it or enable auto-merge.
-- Create a release or tag.
-- Modify the repository license.
-- Start F1.
+PR #3 is open and remains Draft. First through fourth Owner Reviews returned
+REQUEST_CHANGES. The Owner-approved media transaction-boundary hardening is complete
+on the existing PR branch and the branch is awaiting fifth Owner Review. Merge remains
+unauthorized. Goal 2 remains not started.
 
 ## Stop Conditions
 
-Stop if:
+除 Owner Prompt 已明确解决的 Goal 驱动授权外，沿用 `AGENTS.md` 和 Goal Prompt
+中的停止条件。尤其在需要改变冻结核心语义、不可逆迁移、外部服务、隐私策略变化、
+未知工作区修改或无法排除的数据完整性风险时停止。
 
-1. The worktree contains changes of unknown ownership.
-2. Remote `main` contains unknown product implementation or another active Stage.
-3. The installed Xcode cannot support iOS 17.0.
-4. The Swift toolchain cannot support Swift 6.
-5. No iPhone Simulator runtime can run the Unit Test.
-6. A native Xcode project requires a third-party generator.
-7. Build or tests fail and cannot be reliably fixed inside F0.
-8. A real Apple Developer Team, formal Bundle Identifier or entitlements become necessary.
-9. SwiftData or business models become necessary.
-10. Foundation Documents conflict with the Owner-approved F0 Prompt.
-11. A destructive Git operation becomes necessary.
-12. Actual build or test execution cannot be confirmed.
+## Completion Updates
 
-## Completion Report
+完成时：
 
-Report:
-
-1. Stage result and recommendation.
-2. Starting and ending branch, HEAD, ahead/behind and worktree state.
-3. Environment and actual Simulator destination.
-4. Project configuration.
-5. Completed scope.
-6. Explicitly unimplemented and prohibited scope.
-7. All changed files.
-8. Project inspection, build, test, Simulator and repository-check results.
-9. Documentation updates.
-10. Commits, push and Draft PR details.
-11. Every Acceptance Criterion as PASS or FAIL.
-12. Confirmed limitations.
-13. Deviations and decisions.
-14. F1 status and recommended next action.
+- 更新 `Docs/Operations/CURRENT_STATE.md`；
+- 将本文件标为 `AWAITING_OWNER_REVIEW`；
+- 仅在形成永久决策时更新 `DECISION_LOG.md`；
+- 仅记录真实限制到 `KNOWN_LIMITATIONS.md`；
+- 推送 Goal 1 分支并更新既有 Draft PR #3；
+- 输出 `HouseholdOS PR #3 Fourth Review Transaction-Boundary Remediation Report`；
+- 停止并等待 Owner Review。

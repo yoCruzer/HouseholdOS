@@ -11,10 +11,31 @@
 		A10000000000000000000002 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* RootView.swift */; };
 		A10000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* Assets.xcassets */; };
 		A10000000000000000000004 /* HouseholdOSAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* HouseholdOSAppTests.swift */; };
+		A10000000000000000000005 /* LibraryTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000007 /* LibraryTypes.swift */; };
+		A10000000000000000000006 /* LibrarySearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* LibrarySearch.swift */; };
+		A10000000000000000000007 /* PersistenceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* PersistenceModels.swift */; };
+		A10000000000000000000008 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000A /* PersistenceController.swift */; };
+		A10000000000000000000009 /* MediaFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000B /* MediaFileStore.swift */; };
+		A1000000000000000000000A /* ItemLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* ItemLibraryService.swift */; };
+		A1000000000000000000000B /* Goal1CoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000D /* Goal1CoreTests.swift */; };
+		A1000000000000000000000C /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* AppRuntime.swift */; };
+		A1000000000000000000000D /* CoreFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* CoreFieldsView.swift */; };
+		A1000000000000000000000E /* MediaControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* MediaControls.swift */; };
+		A1000000000000000000000F /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* CaptureView.swift */; };
+		A10000000000000000000010 /* DraftViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* DraftViews.swift */; };
+		A10000000000000000000011 /* ItemViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* ItemViews.swift */; };
+		A10000000000000000000012 /* Goal1UserJourneyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* Goal1UserJourneyUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		A20000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E10000000000000000000001;
+			remoteInfo = HouseholdOSApp;
+		};
+		A20000000000000000000002 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F10000000000000000000001 /* Project object */;
 			proxyType = 1;
@@ -30,6 +51,21 @@
 		B10000000000000000000004 /* HouseholdOSAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdOSAppTests.swift; sourceTree = "<group>"; };
 		B10000000000000000000005 /* HouseholdOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HouseholdOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000006 /* HouseholdOSAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HouseholdOSAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000007 /* LibraryTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTypes.swift; sourceTree = "<group>"; };
+		B10000000000000000000008 /* LibrarySearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySearch.swift; sourceTree = "<group>"; };
+		B10000000000000000000009 /* PersistenceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceModels.swift; sourceTree = "<group>"; };
+		B1000000000000000000000A /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		B1000000000000000000000B /* MediaFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFileStore.swift; sourceTree = "<group>"; };
+		B1000000000000000000000C /* ItemLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemLibraryService.swift; sourceTree = "<group>"; };
+		B1000000000000000000000D /* Goal1CoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal1CoreTests.swift; sourceTree = "<group>"; };
+		B1000000000000000000000E /* AppRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntime.swift; sourceTree = "<group>"; };
+		B1000000000000000000000F /* CoreFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/CoreFieldsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* MediaControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/MediaControls.swift; sourceTree = "<group>"; };
+		B10000000000000000000011 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capture/CaptureView.swift; sourceTree = "<group>"; };
+		B10000000000000000000012 /* DraftViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drafts/DraftViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000013 /* ItemViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Items/ItemViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000014 /* Goal1UserJourneyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal1UserJourneyUITests.swift; sourceTree = "<group>"; };
+		B10000000000000000000015 /* HouseholdOSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HouseholdOSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +83,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D10000000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -55,6 +98,7 @@
 			children = (
 				C10000000000000000000002 /* HouseholdOSApp */,
 				C1000000000000000000000B /* HouseholdOSAppTests */,
+				C1000000000000000000000D /* HouseholdOSAppUITests */,
 				C1000000000000000000000C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -79,6 +123,7 @@
 			children = (
 				B10000000000000000000001 /* HouseholdOSApp.swift */,
 				B10000000000000000000002 /* RootView.swift */,
+				B1000000000000000000000E /* AppRuntime.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -86,6 +131,7 @@
 		C10000000000000000000004 /* Application */ = {
 			isa = PBXGroup;
 			children = (
+				B1000000000000000000000C /* ItemLibraryService.swift */,
 			);
 			path = Application;
 			sourceTree = "<group>";
@@ -93,6 +139,8 @@
 		C10000000000000000000005 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				B10000000000000000000007 /* LibraryTypes.swift */,
+				B10000000000000000000008 /* LibrarySearch.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -100,6 +148,9 @@
 		C10000000000000000000006 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				B10000000000000000000009 /* PersistenceModels.swift */,
+				B1000000000000000000000A /* PersistenceController.swift */,
+				B1000000000000000000000B /* MediaFileStore.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -107,6 +158,11 @@
 		C10000000000000000000007 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				B1000000000000000000000F /* CoreFieldsView.swift */,
+				B10000000000000000000010 /* MediaControls.swift */,
+				B10000000000000000000011 /* CaptureView.swift */,
+				B10000000000000000000012 /* DraftViews.swift */,
+				B10000000000000000000013 /* ItemViews.swift */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -137,6 +193,7 @@
 			isa = PBXGroup;
 			children = (
 				B10000000000000000000004 /* HouseholdOSAppTests.swift */,
+				B1000000000000000000000D /* Goal1CoreTests.swift */,
 			);
 			path = HouseholdOSAppTests;
 			sourceTree = "<group>";
@@ -146,8 +203,17 @@
 			children = (
 				B10000000000000000000005 /* HouseholdOS.app */,
 				B10000000000000000000006 /* HouseholdOSAppTests.xctest */,
+				B10000000000000000000015 /* HouseholdOSAppUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C1000000000000000000000D /* HouseholdOSAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000014 /* Goal1UserJourneyUITests.swift */,
+			);
+			path = HouseholdOSAppUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -188,6 +254,24 @@
 			productReference = B10000000000000000000006 /* HouseholdOSAppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		E10000000000000000000003 /* HouseholdOSAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = H10000000000000000000004 /* Build configuration list for PBXNativeTarget "HouseholdOSAppUITests" */;
+			buildPhases = (
+				D10000000000000000000007 /* Sources */,
+				D10000000000000000000008 /* Frameworks */,
+				D10000000000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A30000000000000000000002 /* PBXTargetDependency */,
+			);
+			name = HouseholdOSAppUITests;
+			productName = HouseholdOSAppUITests;
+			productReference = B10000000000000000000015 /* HouseholdOSAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -203,6 +287,10 @@
 					};
 					E10000000000000000000002 = {
 						CreatedOnToolsVersion = 26.5;
+						TestTargetID = E10000000000000000000001;
+					};
+					E10000000000000000000003 = {
+						CreatedOnToolsVersion = 26.6;
 						TestTargetID = E10000000000000000000001;
 					};
 				};
@@ -222,6 +310,7 @@
 			targets = (
 				E10000000000000000000001 /* HouseholdOSApp */,
 				E10000000000000000000002 /* HouseholdOSAppTests */,
+				E10000000000000000000003 /* HouseholdOSAppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -242,6 +331,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D10000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -251,6 +347,18 @@
 			files = (
 				A10000000000000000000001 /* HouseholdOSApp.swift in Sources */,
 				A10000000000000000000002 /* RootView.swift in Sources */,
+				A10000000000000000000005 /* LibraryTypes.swift in Sources */,
+				A10000000000000000000006 /* LibrarySearch.swift in Sources */,
+				A10000000000000000000007 /* PersistenceModels.swift in Sources */,
+				A10000000000000000000008 /* PersistenceController.swift in Sources */,
+				A10000000000000000000009 /* MediaFileStore.swift in Sources */,
+				A1000000000000000000000A /* ItemLibraryService.swift in Sources */,
+				A1000000000000000000000C /* AppRuntime.swift in Sources */,
+				A1000000000000000000000D /* CoreFieldsView.swift in Sources */,
+				A1000000000000000000000E /* MediaControls.swift in Sources */,
+				A1000000000000000000000F /* CaptureView.swift in Sources */,
+				A10000000000000000000010 /* DraftViews.swift in Sources */,
+				A10000000000000000000011 /* ItemViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,6 +367,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000004 /* HouseholdOSAppTests.swift in Sources */,
+				A1000000000000000000000B /* Goal1CoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D10000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000012 /* Goal1UserJourneyUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -269,6 +386,11 @@
 			isa = PBXTargetDependency;
 			target = E10000000000000000000001 /* HouseholdOSApp */;
 			targetProxy = A20000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		A30000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E10000000000000000000001 /* HouseholdOSApp */;
+			targetProxy = A20000000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -309,6 +431,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = HouseholdOS;
+				INFOPLIST_KEY_NSCameraUsageDescription = "HouseholdOS uses the camera only when you choose to photograph an item.";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -332,6 +455,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = HouseholdOS;
+				INFOPLIST_KEY_NSCameraUsageDescription = "HouseholdOS uses the camera only when you choose to photograph an item.";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -382,6 +506,38 @@
 			};
 			name = Release;
 		};
+		G10000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos.dev.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = HouseholdOSApp;
+			};
+			name = Debug;
+		};
+		G10000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos.dev.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = HouseholdOSApp;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -408,6 +564,15 @@
 			buildConfigurations = (
 				G10000000000000000000005 /* Debug */,
 				G10000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		H10000000000000000000004 /* Build configuration list for PBXNativeTarget "HouseholdOSAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				G10000000000000000000007 /* Debug */,
+				G10000000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

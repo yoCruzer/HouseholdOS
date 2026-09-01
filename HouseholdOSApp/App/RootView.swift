@@ -6,9 +6,9 @@ enum RootTab: Hashable {
     case capture
 }
 
-enum DeletedRecordKind: String, Hashable {
-    case draft = "Draft"
-    case item = "Item"
+enum DeletedRecordKind: Hashable {
+    case draft
+    case item
 }
 
 enum TransientNoticeKey: Hashable {
@@ -50,14 +50,24 @@ struct MediaDeletionNotice {
         result: MediaMaintenanceResult
     ) -> TransientNotice? {
         guard !result.isComplete else { return nil }
-        return TransientNotice(
-            id: .recordDeletion(kind, recordID),
-            title: "\(kind.rawValue) record deleted",
-            message: "The \(kind.rawValue.lowercased()) record was deleted, but some "
-                + "local photo files could not be removed. HouseholdOS will retry "
-                + "during later maintenance or the next launch. There is no manual "
-                + "maintenance control at this time."
-        )
+        switch kind {
+        case .draft:
+            return TransientNotice(
+                id: .recordDeletion(kind, recordID),
+                title: String(localized: "Draft record deleted"),
+                message: String(
+                    localized: "The draft record was deleted, but some local photo files could not be removed. HouseholdOS will retry during later maintenance or the next launch. There is no manual maintenance control at this time."
+                )
+            )
+        case .item:
+            return TransientNotice(
+                id: .recordDeletion(kind, recordID),
+                title: String(localized: "Item record deleted"),
+                message: String(
+                    localized: "The item record was deleted, but some local photo files could not be removed. HouseholdOS will retry during later maintenance or the next launch. There is no manual maintenance control at this time."
+                )
+            )
+        }
     }
 }
 
@@ -69,9 +79,10 @@ struct MediaRemovalNotice {
         guard !result.isComplete else { return nil }
         return TransientNotice(
             id: .mediaRemoval(mediaID),
-            title: "Photo record deleted",
-            message: "The photo record was deleted, but some local photo files remain. "
-                + "HouseholdOS will retry them during later maintenance or the next launch."
+            title: String(localized: "Photo record deleted"),
+            message: String(
+                localized: "The photo record was deleted, but some local photo files remain. HouseholdOS will retry them during later maintenance or the next launch."
+            )
         )
     }
 }
@@ -94,6 +105,7 @@ struct RootView: View {
             )
             .tabItem {
                 Label("Items", systemImage: "shippingbox")
+                    .accessibilityIdentifier("tab.items")
             }
             .tag(RootTab.items)
 
@@ -104,6 +116,7 @@ struct RootView: View {
             )
             .tabItem {
                 Label("Drafts", systemImage: "tray.full")
+                    .accessibilityIdentifier("tab.drafts")
             }
             .badge(library.displayDrafts.count)
             .tag(RootTab.drafts)
@@ -115,6 +128,7 @@ struct RootView: View {
             )
             .tabItem {
                 Label("Add", systemImage: "plus.circle.fill")
+                    .accessibilityIdentifier("tab.add")
             }
             .tag(RootTab.capture)
         }
@@ -146,14 +160,18 @@ struct RootView: View {
                 .accessibilityIdentifier("library.refreshBanner.title")
             if !deferredRecovery {
                 Text(
-                    "Your data is saved. The current display has not refreshed. "
-                        + "Reload only reads the library and will not repeat the change."
+                    "Your data is saved. The current display has not refreshed. Reload only reads the library and will not repeat the change."
                 )
                 .font(.footnote)
                 .accessibilityIdentifier("library.refreshBanner.message")
             }
             HStack {
-                Button(isReloading ? "Reloading…" : "Reload", action: retrySnapshot)
+                Button(
+                    isReloading
+                        ? String(localized: "Reloading…")
+                        : String(localized: "Reload"),
+                    action: retrySnapshot
+                )
                     .buttonStyle(.borderedProminent)
                     .disabled(isReloading)
                     .accessibilityIdentifier("library.refreshBanner.reload")

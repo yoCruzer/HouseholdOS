@@ -15,7 +15,9 @@ struct HouseholdOSApp: App {
                     systemImage: "externaldrive.badge.exclamationmark",
                     description: Text(
                         runtime.startupError
-                            ?? "The local library is unavailable. Your files were not deleted."
+                            ?? String(
+                                localized: "The local library is unavailable. Your files were not deleted."
+                            )
                     )
                 )
                 .padding()

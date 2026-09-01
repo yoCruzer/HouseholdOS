@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import SwiftData
+import UIKit
 
 @MainActor
 final class AppRuntime: ObservableObject {
@@ -106,8 +107,14 @@ final class AppRuntime: ObservableObject {
                 source: .manual,
                 name: kind == "item" ? "Residual Item" : "Residual Draft"
             )
+            let photoData = UIGraphicsImageRenderer(
+                size: CGSize(width: 160, height: 220)
+            ).jpegData(withCompressionQuality: 0.95) { context in
+                UIColor.systemIndigo.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: 160, height: 220))
+            }
             _ = try await library.addMediaData(
-                Data("ui-test-photo".utf8),
+                photoData,
                 contentTypeIdentifier: "public.jpeg",
                 ownerKind: .draft,
                 ownerID: draft.id

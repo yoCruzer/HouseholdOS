@@ -1,0 +1,22 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSCameraUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HouseholdOS uses the camera only when you choose to photograph an item."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅当你选择为物品拍照时，HouseholdOS 才会使用相机。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

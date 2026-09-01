@@ -484,7 +484,7 @@ final class ItemLibraryService: ObservableObject {
             categoryID: categoryID,
             includeArchived: includeArchived,
             sort: sort,
-            categoryName: categoryName,
+            categoryName: categoryDisplayName,
             locationName: locationName
         )
     }
@@ -492,6 +492,14 @@ final class ItemLibraryService: ObservableObject {
     func categoryName(for id: UUID?) -> String? {
         guard let id else { return nil }
         return displayCategories.first(where: { $0.id == id })?.name
+    }
+
+    func categoryDisplayName(for id: UUID?) -> String? {
+        guard let id,
+              let category = displayCategories.first(where: { $0.id == id }) else {
+            return nil
+        }
+        return SystemCategoryLocalization.displayName(for: category)
     }
 
     func locationName(for id: UUID?) -> String? {
@@ -728,7 +736,7 @@ final class ItemLibraryService: ObservableObject {
         }
 
         let message = refreshError?.localizedDescription
-            ?? "The saved library could not be refreshed."
+            ?? String(localized: "The saved library could not be refreshed.")
         let outcome = LibraryCommitOutcome.savedButRefreshFailed(
             message
         )

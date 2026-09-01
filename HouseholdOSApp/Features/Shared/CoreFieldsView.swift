@@ -14,14 +14,20 @@ struct CoreFieldsView: View {
 
     var body: some View {
         Section("Basics") {
-            TextField(nameIsRequired ? "Name (required)" : "Name", text: $name)
+            TextField(
+                nameIsRequired
+                    ? String(localized: "Name (required)")
+                    : String(localized: "Name"),
+                text: $name
+            )
                 .textInputAutocapitalization(.words)
                 .accessibilityIdentifier("record.name")
 
             Picker("Category", selection: $categoryID) {
                 Text("Uncategorized").tag(UUID?.none)
                 ForEach(library.displayCategories, id: \.id) { category in
-                    Text(category.name).tag(Optional(category.id))
+                    Text(SystemCategoryLocalization.displayName(for: category))
+                        .tag(Optional(category.id))
                 }
             }
             .accessibilityIdentifier("record.category")
@@ -55,5 +61,20 @@ struct CoreFieldsView: View {
                 .lineLimit(3 ... 8)
                 .accessibilityIdentifier("record.note")
         }
+    }
+}
+
+struct SaveSuccessBadge: View {
+    let accessibilityIdentifier: String
+
+    var body: some View {
+        Label("Saved", systemImage: "checkmark.circle.fill")
+            .font(.headline)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(.green, in: Capsule())
+            .shadow(radius: 4, y: 2)
+            .accessibilityIdentifier(accessibilityIdentifier)
     }
 }

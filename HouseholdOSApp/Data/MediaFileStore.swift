@@ -35,7 +35,9 @@ enum MediaFileStoreError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .moveAndCleanupFailed(let move, let cleanup):
-            "The media import failed (\(move)), and its staging file could not be removed (\(cleanup))."
+            String(
+                localized: "The media import failed, and its staging file could not be removed."
+            ) + " \(move) \(cleanup)"
         }
     }
 }

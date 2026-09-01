@@ -16,6 +16,7 @@ struct DraftInboxView: View {
                 if library.displayDrafts.isEmpty {
                     ContentUnavailableView {
                         Label("No drafts", systemImage: "tray")
+                            .accessibilityIdentifier("drafts.empty.title")
                     } description: {
                         Text("Incomplete captures will stay here until you finish them.")
                     } actions: {
@@ -34,6 +35,7 @@ struct DraftInboxView: View {
                 }
             }
             .navigationTitle("Drafts")
+            .accessibilityIdentifier("drafts.screen")
             .navigationDestination(for: UUID.self) { draftID in
                 DraftEditorView(
                     draftID: draftID,
@@ -80,12 +82,16 @@ private struct DraftRow: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(draft.name.isEmpty ? "Untitled draft" : draft.name)
+                Text(
+                    draft.name.isEmpty
+                        ? String(localized: "Untitled draft")
+                        : draft.name
+                )
                     .font(.headline)
                 Text(draft.updatedAt, format: .relative(presentation: .named))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                if let category = library.categoryName(for: draft.categoryID) {
+                if let category = library.categoryDisplayName(for: draft.categoryID) {
                     Text(category)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -117,7 +123,12 @@ struct DraftEditorView: View {
     @State private var showsRemovePhotoConfirmation = false
     @State private var pendingMediaID: UUID?
     @State private var isProcessingMedia = false
+    @State private var showsSaveSuccess = false
     @State private var errorMessage: String?
+    @State private var viewedMedia: MediaValue?
+    @State private var isPresentingTransientOverlay = false
+    @State private var photoResultGate = CaptureResultGate()
+    @State private var cameraResultGate = CaptureResultGate()
 
     var body: some View {
         Group {
@@ -133,14 +144,21 @@ struct DraftEditorView: View {
                         addLocation: addLocation
                     )
 
-                    MediaGridView(assets: assets) { asset in
-                        pendingMediaID = asset.id
-                        showsRemovePhotoConfirmation = true
-                    }
+                    MediaGridView(
+                        assets: assets,
+                        view: { asset in
+                            isPresentingTransientOverlay = true
+                            viewedMedia = asset
+                        },
+                        remove: { asset in
+                            pendingMediaID = asset.id
+                            showsRemovePhotoConfirmation = true
+                        }
+                    )
 
                     Section {
                         Button {
-                            showsPhotoPicker = true
+                            openPhotoLibrary()
                         } label: {
                             Label("Add from Photos", systemImage: "photo.badge.plus")
                         }
@@ -173,8 +191,7 @@ struct DraftEditorView: View {
 
                     Section("Saving") {
                         Text(
-                            "Draft fields are saved when you leave this screen. "
-                                + "Photos and newly created locations are saved immediately."
+                            "Draft fields are saved when you leave this screen. Photos and newly created locations are saved immediately."
                         )
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -186,7 +203,7 @@ struct DraftEditorView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Save") {
-                            _ = saveDraft()
+                            _ = saveDraft(showSuccess: true)
                         }
                         .accessibilityIdentifier("draft.save")
                     }
@@ -209,14 +226,29 @@ struct DraftEditorView: View {
                 )
             }
         }
-        .onAppear(perform: loadFieldsIfNeeded)
+        .overlay(alignment: .top) {
+            if showsSaveSuccess {
+                SaveSuccessBadge(accessibilityIdentifier: "draft.saveSuccess")
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onAppear {
+            loadFieldsIfNeeded()
+            isPresentingTransientOverlay = false
+        }
         .onDisappear {
-            if draft != nil {
+            if draft != nil, !isPresentingTransientOverlay {
                 _ = saveDraft(showError: false)
             }
         }
         .sheet(isPresented: $showsPhotoPicker) {
             PhotoLibraryPicker(completion: handlePhotoResult)
+        }
+        .fullScreenCover(item: $viewedMedia) { asset in
+            OriginalPhotoViewer(asset: asset) {
+                viewedMedia = nil
+            }
         }
         .fullScreenCover(isPresented: $showsCamera) {
             CameraPicker(completion: handleCameraResult)
@@ -235,13 +267,14 @@ struct DraftEditorView: View {
                 )
                 .accessibilityIdentifier("draft.delete.confirm")
             } else {
-                Button("Remove Photo", role: .destructive, action: removePendingPhoto)
+                Button("Delete Photo", role: .destructive, action: removePendingPhoto)
+                    .accessibilityIdentifier("draft.photo.delete.confirm")
             }
         }
         .alert("Couldn’t save", isPresented: errorBinding) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "Please try again.")
+            Text(errorMessage ?? String(localized: "Please try again."))
         }
     }
 
@@ -254,7 +287,7 @@ struct DraftEditorView: View {
     }
 
     private var cameraAvailable: Bool {
-        UIImagePickerController.isSourceTypeAvailable(.camera)
+        CameraAvailability.isAvailable
     }
 
     private var errorBinding: Binding<Bool> {
@@ -278,8 +311,8 @@ struct DraftEditorView: View {
 
     private var confirmationTitle: String {
         showsDeleteConfirmation
-            ? "Delete this draft and its photos?"
-            : "Remove this photo permanently?"
+            ? String(localized: "Delete this draft and its photos?")
+            : String(localized: "Delete this photo permanently?")
     }
 
     private func loadFieldsIfNeeded() {
@@ -292,15 +325,29 @@ struct DraftEditorView: View {
     }
 
     @discardableResult
-    private func saveDraft(showError: Bool = true) -> Bool {
+    private func saveDraft(
+        showError: Bool = true,
+        showSuccess: Bool = false
+    ) -> Bool {
         do {
-            try library.updateDraft(
+            _ = try library.updateDraft(
                 id: draftID,
                 name: name,
                 categoryID: categoryID,
                 locationID: locationID,
                 note: note
             )
+            if showSuccess {
+                withAnimation {
+                    showsSaveSuccess = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    withAnimation {
+                        showsSaveSuccess = false
+                    }
+                }
+            }
             return true
         } catch {
             if showError {
@@ -361,18 +408,32 @@ struct DraftEditorView: View {
     private func openCamera() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .denied, .restricted:
-            errorMessage = "Camera access is unavailable. You can use Photos or continue without one."
+            errorMessage = String(
+                localized: "Camera access is unavailable. You can use Photos or continue without one."
+            )
         case .authorized, .notDetermined:
+            cameraResultGate.beginCapture()
+            isPresentingTransientOverlay = true
             showsCamera = true
         @unknown default:
-            errorMessage = "Camera access is unavailable."
+            errorMessage = String(localized: "Camera access is unavailable.")
         }
+    }
+
+    private func openPhotoLibrary() {
+        photoResultGate.beginCapture()
+        isPresentingTransientOverlay = true
+        showsPhotoPicker = true
     }
 
     private func handlePhotoResult(
         _ result: Result<PickedMediaFile?, MediaPickerError>
     ) {
         showsPhotoPicker = false
+        guard photoResultGate.claimResult() else {
+            discardDuplicatePickedMediaResult(result)
+            return
+        }
         switch result {
         case .success(.none):
             return
@@ -401,6 +462,10 @@ struct DraftEditorView: View {
         _ result: Result<PickedMediaFile?, MediaPickerError>
     ) {
         showsCamera = false
+        guard cameraResultGate.claimResult() else {
+            discardDuplicatePickedMediaResult(result)
+            return
+        }
         switch result {
         case .success(.none):
             return

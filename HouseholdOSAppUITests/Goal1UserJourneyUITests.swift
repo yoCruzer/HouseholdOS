@@ -6,6 +6,48 @@ final class Goal1UserJourneyUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    func testDraftAutosavesAfterPhotoPickerCancellationAndRealDeparture() throws {
+        let app = englishApp()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launch()
+
+        app.tabBars.buttons["tab.add"].tap()
+        XCTAssertTrue(app.buttons["capture.manual"].waitForExistence(timeout: 10))
+        app.buttons["capture.manual"].tap()
+
+        let nameField = app.textFields["record.name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.tap()
+        nameField.typeText("Overlay Autosave")
+
+        app.collectionViews.firstMatch.swipeUp()
+        let addFromPhotos = app.buttons["Add from Photos"]
+        XCTAssertTrue(addFromPhotos.waitForExistence(timeout: 5))
+        addFromPhotos.tap()
+
+        let pickerCancel = app.buttons["Cancel"]
+        if pickerCancel.waitForExistence(timeout: 5) {
+            pickerCancel.tap()
+        } else {
+            app.swipeDown()
+        }
+        XCTAssertTrue(app.navigationBars["Draft"].waitForExistence(timeout: 5))
+
+        let backToAdd = app.navigationBars["Draft"].buttons["Add"]
+        XCTAssertTrue(backToAdd.waitForExistence(timeout: 5))
+        backToAdd.tap()
+
+        app.tabBars.buttons["tab.drafts"].tap()
+        let savedDraft = app.staticTexts["Overlay Autosave"]
+        XCTAssertTrue(savedDraft.waitForExistence(timeout: 10))
+        savedDraft.tap()
+        XCTAssertEqual(
+            app.textFields["record.name"].value as? String,
+            "Overlay Autosave"
+        )
+    }
+
     func testDraftToSearchEditArchiveAndRelaunchJourney() throws {
         let app = englishApp()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"

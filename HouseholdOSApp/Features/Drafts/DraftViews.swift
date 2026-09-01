@@ -126,7 +126,6 @@ struct DraftEditorView: View {
     @State private var showsSaveSuccess = false
     @State private var errorMessage: String?
     @State private var viewedMedia: MediaValue?
-    @State private var isPresentingTransientOverlay = false
     @State private var photoResultGate = CaptureResultGate()
     @State private var cameraResultGate = CaptureResultGate()
 
@@ -147,7 +146,6 @@ struct DraftEditorView: View {
                     MediaGridView(
                         assets: assets,
                         view: { asset in
-                            isPresentingTransientOverlay = true
                             viewedMedia = asset
                         },
                         remove: { asset in
@@ -235,7 +233,6 @@ struct DraftEditorView: View {
         }
         .onAppear {
             loadFieldsIfNeeded()
-            isPresentingTransientOverlay = false
         }
         .onDisappear {
             if draft != nil, !isPresentingTransientOverlay {
@@ -288,6 +285,10 @@ struct DraftEditorView: View {
 
     private var cameraAvailable: Bool {
         CameraAvailability.isAvailable
+    }
+
+    private var isPresentingTransientOverlay: Bool {
+        showsPhotoPicker || showsCamera || viewedMedia != nil
     }
 
     private var errorBinding: Binding<Bool> {
@@ -413,7 +414,6 @@ struct DraftEditorView: View {
             )
         case .authorized, .notDetermined:
             cameraResultGate.beginCapture()
-            isPresentingTransientOverlay = true
             showsCamera = true
         @unknown default:
             errorMessage = String(localized: "Camera access is unavailable.")
@@ -422,7 +422,6 @@ struct DraftEditorView: View {
 
     private func openPhotoLibrary() {
         photoResultGate.beginCapture()
-        isPresentingTransientOverlay = true
         showsPhotoPicker = true
     }
 

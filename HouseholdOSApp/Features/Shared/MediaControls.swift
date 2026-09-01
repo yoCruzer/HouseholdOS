@@ -154,20 +154,125 @@ enum CapturedPhotoFile {
     }
 }
 
+private final class CameraSessionController: @unchecked Sendable {
+    let captureSession = AVCaptureSession()
+    let photoOutput = AVCapturePhotoOutput()
+
+    private let sessionQueue = DispatchQueue(
+        label: "com.yocruzer.householdos.camera-session",
+        qos: .userInitiated
+    )
+    private let stateLock = NSLock()
+    private var wantsRunning = false
+    private var isConfigured = false
+
+    func start(
+        completion: @escaping
+            @MainActor @Sendable (Result<Void, MediaPickerError>) -> Void
+    ) {
+        setWantsRunning(true)
+        sessionQueue.async { [self] in
+            do {
+                try configureIfNeeded()
+                guard wantsSessionRunning() else {
+                    return
+                }
+                captureSession.startRunning()
+                guard wantsSessionRunning() else {
+                    captureSession.stopRunning()
+                    return
+                }
+                Task { @MainActor in
+                    completion(.success(()))
+                }
+            } catch let error as MediaPickerError {
+                deliver(error: error, completion: completion)
+            } catch {
+                deliver(
+                    error: .cameraConfigurationFailed(error.localizedDescription),
+                    completion: completion
+                )
+            }
+        }
+    }
+
+    func stop() {
+        setWantsRunning(false)
+        sessionQueue.async { [self] in
+            if captureSession.isRunning {
+                captureSession.stopRunning()
+            }
+        }
+    }
+
+    private func configureIfNeeded() throws {
+        guard !isConfigured else {
+            return
+        }
+        guard let camera = AVCaptureDevice.default(
+            .builtInWideAngleCamera,
+            for: .video,
+            position: .back
+        ) else {
+            throw MediaPickerError.cameraUnavailable
+        }
+
+        let input = try AVCaptureDeviceInput(device: camera)
+        captureSession.beginConfiguration()
+        defer { captureSession.commitConfiguration() }
+        captureSession.sessionPreset = .photo
+        guard captureSession.canAddInput(input),
+              captureSession.canAddOutput(photoOutput) else {
+            throw MediaPickerError.cameraUnavailable
+        }
+        captureSession.addInput(input)
+        captureSession.addOutput(photoOutput)
+        photoOutput.maxPhotoQualityPrioritization = .quality
+        isConfigured = true
+    }
+
+    private func deliver(
+        error: MediaPickerError,
+        completion: @escaping
+            @MainActor @Sendable (Result<Void, MediaPickerError>) -> Void
+    ) {
+        guard wantsSessionRunning() else {
+            return
+        }
+        Task { @MainActor in
+            completion(.failure(error))
+        }
+    }
+
+    private func setWantsRunning(_ value: Bool) {
+        stateLock.lock()
+        wantsRunning = value
+        stateLock.unlock()
+    }
+
+    private func wantsSessionRunning() -> Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return wantsRunning
+    }
+}
+
 @MainActor
 final class CameraCaptureViewController: UIViewController,
     @preconcurrency AVCapturePhotoCaptureDelegate {
     private let completion:
         @MainActor @Sendable (Result<PickedMediaFile?, MediaPickerError>) -> Void
-    private let captureSession = AVCaptureSession()
-    private let photoOutput = AVCapturePhotoOutput()
+    private let cameraSession = CameraSessionController()
     private let previewView = UIView()
-    private lazy var previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+    private lazy var previewLayer = AVCaptureVideoPreviewLayer(
+        session: cameraSession.captureSession
+    )
     private let shutterButton = UIButton(type: .system)
     private let cancelButton = UIButton(type: .system)
     private let resultGate = CaptureResultGate()
-    private var isConfigured = false
+    private var isSessionReady = false
     private var isCapturing = false
+    private var isViewActive = true
 
     init(
         completion: @escaping
@@ -197,12 +302,10 @@ final class CameraCaptureViewController: UIViewController,
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        let session = captureSession
-        Task.detached(priority: .userInitiated) {
-            if session.isRunning {
-                session.stopRunning()
-            }
-        }
+        isViewActive = false
+        isSessionReady = false
+        shutterButton.isEnabled = false
+        cameraSession.stop()
     }
 
     private func configureInterface() {
@@ -298,46 +401,23 @@ final class CameraCaptureViewController: UIViewController,
                 return
             }
 
-            do {
-                try configureSession()
-                shutterButton.isEnabled = true
-                let session = captureSession
-                Task.detached(priority: .userInitiated) {
-                    session.startRunning()
+            guard isViewActive else {
+                return
+            }
+            cameraSession.start { [weak self] result in
+                guard let self, isViewActive else {
+                    return
                 }
-            } catch let error as MediaPickerError {
-                finish(.failure(error))
-            } catch {
-                finish(.failure(.cameraConfigurationFailed(error.localizedDescription)))
+                switch result {
+                case .success:
+                    isSessionReady = true
+                    updateVideoOrientation()
+                    shutterButton.isEnabled = true
+                case .failure(let error):
+                    finish(.failure(error))
+                }
             }
         }
-    }
-
-    private func configureSession() throws {
-        guard !isConfigured else {
-            return
-        }
-        guard let camera = AVCaptureDevice.default(
-            .builtInWideAngleCamera,
-            for: .video,
-            position: .back
-        ) else {
-            throw MediaPickerError.cameraUnavailable
-        }
-
-        let input = try AVCaptureDeviceInput(device: camera)
-        captureSession.beginConfiguration()
-        defer { captureSession.commitConfiguration() }
-        captureSession.sessionPreset = .photo
-        guard captureSession.canAddInput(input),
-              captureSession.canAddOutput(photoOutput) else {
-            throw MediaPickerError.cameraUnavailable
-        }
-        captureSession.addInput(input)
-        captureSession.addOutput(photoOutput)
-        photoOutput.maxPhotoQualityPrioritization = .quality
-        isConfigured = true
-        updateVideoOrientation()
     }
 
     private func updateVideoOrientation() {
@@ -361,17 +441,17 @@ final class CameraCaptureViewController: UIViewController,
            connection.isVideoRotationAngleSupported(angle) {
             connection.videoRotationAngle = angle
         }
-        if let connection = photoOutput.connection(with: .video),
+        if let connection = cameraSession.photoOutput.connection(with: .video),
            connection.isVideoRotationAngleSupported(angle) {
             connection.videoRotationAngle = angle
         }
     }
 
     @objc private func capturePhoto() {
-        guard isConfigured, captureSession.isRunning, !isCapturing else {
+        guard isSessionReady, !isCapturing else {
             return
         }
-        guard photoOutput.availablePhotoCodecTypes.contains(.jpeg) else {
+        guard cameraSession.photoOutput.availablePhotoCodecTypes.contains(.jpeg) else {
             finish(.failure(.cameraJPEGUnavailable))
             return
         }
@@ -382,7 +462,7 @@ final class CameraCaptureViewController: UIViewController,
             format: [AVVideoCodecKey: AVVideoCodecType.jpeg]
         )
         settings.photoQualityPrioritization = .quality
-        photoOutput.capturePhoto(with: settings, delegate: self)
+        cameraSession.photoOutput.capturePhoto(with: settings, delegate: self)
     }
 
     @objc private func cancel() {
@@ -423,7 +503,10 @@ final class CameraCaptureViewController: UIViewController,
             discardDuplicatePickedMediaResult(result)
             return
         }
+        isViewActive = false
+        isSessionReady = false
         shutterButton.isEnabled = false
+        cameraSession.stop()
         completion(result)
     }
 }

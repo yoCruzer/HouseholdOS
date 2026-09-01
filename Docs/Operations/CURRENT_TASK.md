@@ -4,7 +4,7 @@
 
 - Goal context: Goal 1 remains `ACCEPTED / CLOSED`
 - Title: TestFlight Round 1 Device Quality Stabilization
-- Task status: AWAITING_OWNER_REVIEW
+- Task status: AWAITING_CHATGPT_REVIEW
 - Lifecycle: DEVICE_QUALITY_STABILIZATION
 - Readiness base branch: `chore/testflight-readiness-goal1`
 - Readiness base HEAD: `79879e969fc5e702b852495c1cb3905d4fde8e0d`
@@ -151,4 +151,11 @@
 - Device acceptance remains pending for real camera permission/capture, true optical
   preview/final agreement, true orientation, one physical shutter-to-one-Draft and
   real-photo relaunch persistence.
+- Independent-review closure remediation: Draft overlay suppression is derived from
+  the live Photos/Camera/viewer presentation bindings; camera session configure,
+  start and stop run on one serial execution boundary and the shutter becomes enabled
+  only after `startRunning()` returns; CI checks the committed HEAD with
+  `git show --check --oneline HEAD`.
+- Picker-cancel autosave targeted regression: passed. Final local full suite: 45 passed,
+  0 failed, 0 skipped. Clean Debug and Release Simulator builds: passed.
 - Goal 2 was not started. No PR merge or TestFlight upload was performed.

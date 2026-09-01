@@ -38,7 +38,7 @@ jobs:
           xcrun simctl bootstatus "$SIMULATOR_ID" -b
 
       - name: Repository checks
-        run: git diff --check
+        run: git show --check --oneline HEAD
 
       - name: Debug build and full test suite
         run: |

@@ -1,7 +1,7 @@
 # Current State
 
-Status: TESTFLIGHT_ROUND1_AWAITING_OWNER_REVIEW
-Updated: 2026-09-01
+Status: TESTFLIGHT_ROUND1_AWAITING_CHATGPT_REVIEW
+Updated: 2026-09-02
 
 ## Closed Goal
 
@@ -47,6 +47,11 @@ Updated: 2026-09-01
   shutter-to-one-Draft acceptance remain Owner device tests.
 - Remote CI evidence is recorded in the stabilization Draft PR checks rather than
   duplicated as a mutable run identifier in this state file.
+- Independent-review remediation derives Draft transient-overlay state directly from
+  active presentation bindings, serializes camera configuration/start/stop and enables
+  the shutter only after `startRunning()` completes, and makes CI validate committed
+  whitespace with `git show --check --oneline HEAD`. The autosave picker-cancel
+  regression passes, and the final local suite passes 45/45.
 
 ## Repository State
 

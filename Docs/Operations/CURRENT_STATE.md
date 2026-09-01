@@ -1,7 +1,7 @@
 # Current State
 
-Status: GOAL_1_ACCEPTED_CLOSED
-Updated: 2026-08-31
+Status: TESTFLIGHT_ROUND1_AWAITING_OWNER_REVIEW
+Updated: 2026-09-01
 
 ## Closed Goal
 
@@ -23,6 +23,30 @@ Updated: 2026-08-31
 - Merge method: merge commit
 - Merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
 - Owner decision required: no
+
+## TestFlight Round 1 Candidate
+
+- Goal 1 remains `ACCEPTED / CLOSED`; Goal 2 remains `NOT STARTED`.
+- Readiness base: `chore/testflight-readiness-goal1@79879e969fc5e702b852495c1cb3905d4fde8e0d`.
+- Stabilization branch: `fix/testflight-round1-device-quality`.
+- Implementation commits: `6d1986c` and `3bcffa8`.
+- Candidate scope: modern launch metadata, English and Simplified Chinese localization,
+  original-photo viewing and explicit deletion, persistence-driven Save feedback,
+  one-shot capture delivery, minimal AVFoundation still-photo capture, disk-backed
+  relaunch regressions and opt-in Simulator CI.
+- SwiftData schema and the existing media transaction/ownership model are unchanged.
+- Clean Debug and Release Simulator builds pass. Both built products contain
+  `UILaunchScreen`; localization resources compile into the App bundle.
+- Round 1 focused regressions pass 5/5. The second full-suite run passed 43/44;
+  its sole failure was an XCTest duplicate-wrapper selector in the photo delete
+  confirmation sheet. The selector was corrected and that remaining high-value
+  viewer/delete/relaunch method then passed 1/1. English and zh-Hans smoke tests pass.
+- Clean install, launch and screenshot review pass on exact iPhone 16 and iPhone 17
+  Pro Max Simulators running iOS 26.5, with full-screen content and normal safe areas.
+- Real-device camera, optical preview/final agreement, orientation and one physical
+  shutter-to-one-Draft acceptance remain Owner device tests.
+- Remote CI evidence is recorded in the stabilization Draft PR checks rather than
+  duplicated as a mutable run identifier in this state file.
 
 ## Repository State
 
@@ -61,7 +85,8 @@ Updated: 2026-08-31
 - Unit test target: `HouseholdOSAppTests`
 - UI test target: `HouseholdOSAppUITests`
 - Shared scheme: `HouseholdOSApp`
-- CI: not configured
+- CI: `.github/workflows/ios-ci.yml` provides manual Simulator validation and
+  opt-in automatic execution through `HOUSEHOLDOS_AUTO_CI`
 - TestFlight readiness branch: `chore/testflight-readiness-goal1`
 - App distribution: project prepared; signed Archive and App Store Connect upload not performed
 
@@ -89,7 +114,7 @@ Updated: 2026-08-31
 - Build Number: `1`
 - App Icon Source: `AppIcon`
 - Signing style: Automatic
-- Apple Development Team: not configured
+- Apple Development Team: `83SKX2PM7B` (Owner-provided project change)
 - Non-exempt encryption: not used (`ITSAppUsesNonExemptEncryption = NO`)
 - Third-party dependencies: none
 - Entitlements: none added
@@ -205,9 +230,9 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Known Limitations
 
-- Goal 1 has only been validated on an iPhone Simulator.
-- Real-device installation, Apple Team selection, signed Archive and TestFlight upload
-  have not been performed or verified.
+- Goal 1 and the Round 1 candidate have only been validated on iPhone Simulators.
+- Owner Team `83SKX2PM7B` is selected; real-device installation, signed Archive and
+  TestFlight upload have not been performed or verified.
 - Real-device camera capture, denial handling and selection of a real Photos asset
   remain unverified; automated coverage validates fallback behavior, media storage
   and two 4032 × 3024 image imports at the service boundary.
@@ -219,8 +244,9 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 - No performance ceiling has been established for large libraries or sustained
   multi-image import.
 - `com.yocruzer.householdos` is configured in the project but has not been validated
-  against an Owner-selected Apple Team or App Store Connect record.
-- CI is not configured.
+  through real-device provisioning or an App Store Connect record.
+- Simulator CI is configured for manual dispatch and opt-in automatic execution; it
+  deliberately excludes signing and TestFlight upload.
 - Export, backup/recovery UI and real cross-version migration remain unimplemented.
 - The provided App Icon is integrated and Simulator-compiled; appearance on a signed
   real-device build remains unverified.

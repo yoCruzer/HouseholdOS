@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import SwiftData
 import UIKit
 import UniformTypeIdentifiers
@@ -737,8 +738,13 @@ final class Goal1CoreTests: XCTestCase {
                 result: draftDelete.value
             )
         )
-        XCTAssertEqual(notice.title, "Draft record deleted")
-        XCTAssertTrue(notice.message.contains("will retry"))
+        XCTAssertEqual(notice.title, String(localized: "Draft record deleted"))
+        XCTAssertEqual(
+            notice.message,
+            String(
+                localized: "The draft record was deleted, but some local photo files could not be removed. HouseholdOS will retry during later maintenance or the next launch. There is no manual maintenance control at this time."
+            )
+        )
         XCTAssertFalse(notice.message.localizedCaseInsensitiveContains("delete failed"))
 
         removal.failFileNames = []
@@ -783,8 +789,13 @@ final class Goal1CoreTests: XCTestCase {
                 result: itemDelete.value
             )
         )
-        XCTAssertEqual(notice.title, "Item record deleted")
-        XCTAssertTrue(notice.message.contains("next launch"))
+        XCTAssertEqual(notice.title, String(localized: "Item record deleted"))
+        XCTAssertEqual(
+            notice.message,
+            String(
+                localized: "The item record was deleted, but some local photo files could not be removed. HouseholdOS will retry during later maintenance or the next launch. There is no manual maintenance control at this time."
+            )
+        )
         XCTAssertFalse(notice.message.localizedCaseInsensitiveContains("delete failed"))
 
         removal.failFileNames = []
@@ -1236,7 +1247,11 @@ final class Goal1CoreTests: XCTestCase {
         )
         XCTAssertEqual(
             environment.service.visibleItems(
-                query: "electronics",
+                query: try XCTUnwrap(
+                    environment.service.categoryDisplayName(
+                        for: DefaultCategoryDefinition.all[0].id
+                    )
+                ),
                 categoryID: nil,
                 includeArchived: false,
                 sort: .newest
@@ -1261,6 +1276,190 @@ final class Goal1CoreTests: XCTestCase {
             ).map(\.name),
             ["Hammer", "Blue Camera"]
         )
+    }
+
+    func testRound1DuplicateCaptureCompletionCreatesOneDraftAndOneMedia() async throws {
+        let environment = try makeEnvironment()
+        defer { environment.removeFiles() }
+        let gate = CaptureResultGate()
+        gate.beginCapture()
+        let jpegData = UIGraphicsImageRenderer(
+            size: CGSize(width: 120, height: 160)
+        ).jpegData(withCompressionQuality: 0.95) { context in
+            UIColor.systemBlue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 120, height: 160))
+        }
+
+        for _ in 0 ..< 2 where gate.claimResult() {
+            let draft = try environment.service.createDraft(source: .camera)
+            _ = try await environment.service.addMediaData(
+                jpegData,
+                contentTypeIdentifier: UTType.jpeg.identifier,
+                ownerKind: .draft,
+                ownerID: draft.id
+            )
+        }
+
+        XCTAssertEqual(environment.service.drafts.count, 1)
+        XCTAssertEqual(environment.service.mediaAssets.count, 1)
+        XCTAssertEqual(
+            environment.service.mediaAssets.first?.ownerID,
+            environment.service.drafts.first?.id
+        )
+    }
+
+    func testRound1CaptureResultGateAcceptsOneResultPerCapture() {
+        let gate = CaptureResultGate()
+
+        gate.beginCapture()
+        XCTAssertTrue(gate.claimResult())
+        XCTAssertFalse(gate.claimResult())
+
+        gate.beginCapture()
+        XCTAssertTrue(gate.claimResult())
+        XCTAssertFalse(gate.claimResult())
+    }
+
+    func testRound1SystemCategoryLocalizationPreservesIdentityAndCustomNames() {
+        let householdID = UUID()
+        let definition = DefaultCategoryDefinition.all[0]
+        let systemCategory = CategoryValue(
+            id: definition.id,
+            householdID: householdID,
+            name: definition.name,
+            sortOrder: definition.sortOrder,
+            isSystem: true
+        )
+        let customCategory = CategoryValue(
+            id: UUID(),
+            householdID: householdID,
+            name: "工作室",
+            sortOrder: 100,
+            isSystem: false
+        )
+
+        XCTAssertEqual(
+            SystemCategoryLocalization.displayName(for: systemCategory),
+            String(localized: "Electronics", comment: "System category name")
+        )
+        XCTAssertEqual(
+            SystemCategoryLocalization.displayName(for: customCategory),
+            "工作室"
+        )
+        XCTAssertEqual(systemCategory.id, definition.id)
+        XCTAssertEqual(systemCategory.name, definition.name)
+    }
+
+    func testRound1CapturedPhotoFileUsesJPEGBytesExtensionAndType() throws {
+        let jpegData = UIGraphicsImageRenderer(
+            size: CGSize(width: 80, height: 60)
+        ).jpegData(withCompressionQuality: 1) { context in
+            UIColor.systemGreen.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 80, height: 60))
+        }
+        let pickedFile = try CapturedPhotoFile.writeJPEGData(jpegData)
+        defer { try? FileManager.default.removeItem(at: pickedFile.temporaryURL) }
+
+        XCTAssertEqual(pickedFile.temporaryURL.pathExtension, "jpg")
+        XCTAssertEqual(pickedFile.contentTypeIdentifier, UTType.jpeg.identifier)
+        let source = try XCTUnwrap(
+            CGImageSourceCreateWithURL(pickedFile.temporaryURL as CFURL, nil)
+        )
+        XCTAssertEqual(CGImageSourceGetType(source) as String?, UTType.jpeg.identifier)
+
+        XCTAssertThrowsError(
+            try CapturedPhotoFile.writeJPEGData(Data("not-jpeg".utf8))
+        ) { error in
+            guard case MediaPickerError.invalidCameraData = error else {
+                XCTFail("Expected invalid camera JPEG data")
+                return
+            }
+        }
+    }
+
+    func testRound1DraftItemAndPhotoDeletionPersistAcrossReopen() async throws {
+        let baseURL = temporaryDirectory(prefix: "Round1Reopen")
+        try FileManager.default.createDirectory(
+            at: baseURL,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: baseURL) }
+        let storeURL = baseURL.appendingPathComponent("HouseholdOS.store")
+        let mediaRoot = baseURL.appendingPathComponent("Media", isDirectory: true)
+        let jpegData = UIGraphicsImageRenderer(
+            size: CGSize(width: 180, height: 240)
+        ).jpegData(withCompressionQuality: 0.95) { context in
+            UIColor.systemOrange.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 180, height: 240))
+        }
+
+        var container: ModelContainer? = try PersistenceController.makeContainer(
+            storeURL: storeURL
+        )
+        var service: ItemLibraryService? = ItemLibraryService(
+            context: try XCTUnwrap(container).mainContext,
+            mediaStore: try MediaFileStore(rootURL: mediaRoot)
+        )
+        try service?.bootstrap()
+        let draft = try XCTUnwrap(
+            service?.createDraft(source: .photoLibrary, name: "Round 1 Photo")
+        )
+        let optionalMedia = try await service?.addMediaData(
+            jpegData,
+            contentTypeIdentifier: UTType.jpeg.identifier,
+            ownerKind: .draft,
+            ownerID: draft.id
+        )
+        let media = try XCTUnwrap(optionalMedia)
+        let mediaID = media.id
+        let originalURL = try XCTUnwrap(service?.originalURL(for: media))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: originalURL.path))
+        service = nil
+        container = nil
+
+        container = try PersistenceController.makeContainer(storeURL: storeURL)
+        service = ItemLibraryService(
+            context: try XCTUnwrap(container).mainContext,
+            mediaStore: try MediaFileStore(rootURL: mediaRoot)
+        )
+        try service?.bootstrap()
+        XCTAssertEqual(service?.drafts.map(\.id), [draft.id])
+        XCTAssertEqual(service?.mediaAssets.first?.ownerKind, .draft)
+        XCTAssertEqual(service?.mediaAssets.first?.ownerID, draft.id)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: originalURL.path))
+
+        let item = try XCTUnwrap(service?.confirmDraft(id: draft.id))
+        let itemID = item.id
+        service = nil
+        container = nil
+
+        container = try PersistenceController.makeContainer(storeURL: storeURL)
+        service = ItemLibraryService(
+            context: try XCTUnwrap(container).mainContext,
+            mediaStore: try MediaFileStore(rootURL: mediaRoot)
+        )
+        try service?.bootstrap()
+        XCTAssertTrue(service?.drafts.isEmpty == true)
+        XCTAssertEqual(service?.items.map(\.id), [itemID])
+        XCTAssertEqual(service?.mediaAssets.first?.ownerKind, .item)
+        XCTAssertEqual(service?.mediaAssets.first?.ownerID, itemID)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: originalURL.path))
+
+        _ = try await service?.removeMedia(id: mediaID)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: originalURL.path))
+        service = nil
+        container = nil
+
+        let finalContainer = try PersistenceController.makeContainer(storeURL: storeURL)
+        let finalService = ItemLibraryService(
+            context: finalContainer.mainContext,
+            mediaStore: try MediaFileStore(rootURL: mediaRoot)
+        )
+        try finalService.bootstrap()
+        XCTAssertEqual(finalService.items.map(\.id), [itemID])
+        XCTAssertTrue(finalService.mediaAssets.isEmpty)
+        XCTAssertNil(finalService.items.first?.coverMediaID)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: originalURL.path))
     }
 
     func testDataCanBeReadAfterContainerReopens() throws {

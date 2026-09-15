@@ -1,7 +1,7 @@
 # Current State
 
-Status: TESTFLIGHT_ROUND1_AWAITING_CHATGPT_REVIEW
-Updated: 2026-09-02
+Status: TESTFLIGHT_ROUND1_ACCEPTED_CLOSED
+Updated: 2026-09-15
 
 ## Closed Goal
 
@@ -24,11 +24,16 @@ Updated: 2026-09-02
 - Merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
 - Owner decision required: no
 
-## TestFlight Round 1 Candidate
+## TestFlight Round 1 Closure
 
 - Goal 1 remains `ACCEPTED / CLOSED`; Goal 2 remains `NOT STARTED`.
+- TestFlight Round 1 Device Quality Stabilization: `ACCEPTED / CLOSED`.
+- ChatGPT closure review: `APPROVE`.
 - Readiness base: `chore/testflight-readiness-goal1@79879e969fc5e702b852495c1cb3905d4fde8e0d`.
 - Stabilization branch: `fix/testflight-round1-device-quality`.
+- Reviewed production-code HEAD: `5d0c4c347f4069432d94459b1c3c204c748a68b6`.
+- Final closure branch HEAD: this documentation-only closure commit; it does not
+  represent a separate product-code review.
 - Implementation commits: `6d1986c` and `3bcffa8`.
 - Candidate scope: modern launch metadata, English and Simplified Chinese localization,
   original-photo viewing and explicit deletion, persistence-driven Save feedback,
@@ -43,10 +48,12 @@ Updated: 2026-09-02
   viewer/delete/relaunch method then passed 1/1. English and zh-Hans smoke tests pass.
 - Clean install, launch and screenshot review pass on exact iPhone 16 and iPhone 17
   Pro Max Simulators running iOS 26.5, with full-screen content and normal safe areas.
-- Real-device camera, optical preview/final agreement, orientation and one physical
-  shutter-to-one-Draft acceptance remain Owner device tests.
-- Remote CI evidence is recorded in the stabilization Draft PR checks rather than
-  duplicated as a mutable run identifier in this state file.
+- Real-device camera permission/capture, optical preview/final agreement, orientation,
+  one physical shutter-to-one-Draft behavior and real-photo relaunch persistence are
+  deferred to the later consolidated Device Validation Pack and are not marked PASS.
+- Manual GitHub Actions run `33572746681` was GREEN against reviewed production-code
+  HEAD `5d0c4c347f4069432d94459b1c3c204c748a68b6`. Intentionally skipped opt-in PR CI
+  does not invalidate that result.
 - Independent-review remediation derives Draft transient-overlay state directly from
   active presentation bindings, serializes camera configuration/start/stop and enables
   the shutter only after `startRunning()` completes, and makes CI validate committed
@@ -259,6 +266,8 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 ## Goal Planning
 
 - Goal 1: ACCEPTED / CLOSED
+- TestFlight Round 1 Device Quality Stabilization: ACCEPTED / CLOSED
+- Foundation Architecture Validation Program: NOT STARTED
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous

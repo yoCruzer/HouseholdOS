@@ -3,15 +3,16 @@
 ## Identity
 
 - Goal context: Goal 1 remains `ACCEPTED / CLOSED`
-- Title: TestFlight Round 1 Device Quality Stabilization
-- Task status: AWAITING_CHATGPT_REVIEW
-- Lifecycle: DEVICE_QUALITY_STABILIZATION
+- Title: TestFlight Round 1 Closure & Canonical Baseline
+- Task status: ACCEPTED / CLOSED
+- Lifecycle: CLOSED
 - Readiness base branch: `chore/testflight-readiness-goal1`
 - Readiness base HEAD: `79879e969fc5e702b852495c1cb3905d4fde8e0d`
 - Working branch: `fix/testflight-round1-device-quality`
-- Pull request base/head: `chore/testflight-readiness-goal1` <- `fix/testflight-round1-device-quality`
+- Pull request base/head: `main` <- `fix/testflight-round1-device-quality`
 - Goal 2: NOT STARTED
-- Owner authorization: `HouseholdOS — TestFlight Round 1 Device Quality Stabilization`
+- Foundation Architecture Validation Program: NOT STARTED
+- Owner authorization: `HouseholdOS — TestFlight Round 1 Closure & Canonical Baseline`
 
 ## Starting Baseline
 
@@ -49,7 +50,7 @@
 - 生命周期、成本、统计或大型 UI redesign。
 - 第三方 SDK 或 Swift package。
 - 重写 SwiftData schema、`ItemLibraryService` 或 `MediaFileStore`。
-- TestFlight upload、App Store Connect 操作或 PR merge。
+- TestFlight upload 或 App Store Connect 操作。
 
 ## Acceptance Criteria
 
@@ -122,7 +123,7 @@
 
 ## Stop Conditions
 
-沿用 `AGENTS.md`。尤其在需要改变冻结核心语义、SwiftData schema、隐私/同步策略、引入第三方依赖、执行不可逆迁移、修改 Stage 外重要模块或无法排除数据完整性风险时停止。不得 merge PR、上传 TestFlight 或开始 Goal 2。
+沿用 `AGENTS.md`。尤其在需要改变冻结核心语义、SwiftData schema、隐私/同步策略、引入第三方依赖、执行不可逆迁移、修改 Stage 外重要模块或无法排除数据完整性风险时停止。不得上传 TestFlight、开始 Foundation Architecture Validation Program 或开始 Goal 2。
 
 ## Completion Record
 
@@ -158,4 +159,15 @@
   `git show --check --oneline HEAD`.
 - Picker-cancel autosave targeted regression: passed. Final local full suite: 45 passed,
   0 failed, 0 skipped. Clean Debug and Release Simulator builds: passed.
-- Goal 2 was not started. No PR merge or TestFlight upload was performed.
+- ChatGPT closure review: `APPROVE`.
+- TestFlight Round 1 Device Quality Stabilization: `ACCEPTED / CLOSED`.
+- Reviewed production-code HEAD: `5d0c4c347f4069432d94459b1c3c204c748a68b6`.
+- The closure commit changes operational documentation only and does not represent a
+  separate product-code review.
+- Manual GitHub Actions run `33572746681` was GREEN against reviewed production-code
+  HEAD `5d0c4c347f4069432d94459b1c3c204c748a68b6`; opt-in PR runs may be intentionally skipped.
+- Real camera permission/capture, optical preview/final agreement, real orientation,
+  one physical shutter-to-one-Draft behavior and real-photo relaunch persistence are
+  deferred to the consolidated later Device Validation Pack and are not marked PASS.
+- Goal 2 and the Foundation Architecture Validation Program were not started. No
+  TestFlight upload was performed.

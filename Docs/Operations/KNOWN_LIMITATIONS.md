@@ -32,9 +32,12 @@ Status: ACTIVE
   Pro Max Simulator layout smoke passes, but this is not real-device acceptance.
 - Owner Team `83SKX2PM7B` is selected in the project; real-device installation and paid
   Apple signing remain unverified.
-- Real-device camera capture, permission-denied UI and selecting a real Photos asset
-  have not been manually verified. Simulator coverage verifies the picker
-  presentation/cancel path, unavailable-camera fallback, and valid-image
+- Real-device camera permission/capture, true optical preview/final-photo agreement,
+  real orientation, one physical shutter producing exactly one Draft, real-photo
+  relaunch persistence, permission-denied UI and selecting a real Photos asset have
+  not been manually verified. These items are deferred to the consolidated later
+  Device Validation Pack and are not marked PASS. Simulator coverage verifies the
+  picker presentation/cancel path, unavailable-camera fallback, and valid-image
   import/thumbnail behavior at the service boundary.
 - File copying, camera encoding, thumbnail generation and thumbnail display decoding
   run outside MainActor, but real-device responsiveness has not been profiled.

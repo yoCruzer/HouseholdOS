@@ -14,6 +14,8 @@ struct CaptureView: View {
     @State private var showsCamera = false
     @State private var isImportingMedia = false
     @State private var errorMessage: String?
+    @State private var photoResultGate = CaptureResultGate()
+    @State private var cameraResultGate = CaptureResultGate()
 
     var body: some View {
         NavigationStack {
@@ -25,27 +27,31 @@ struct CaptureView: View {
                             .foregroundStyle(.indigo)
                         Text("Add one household item")
                             .font(.largeTitle.bold())
+                            .accessibilityIdentifier("capture.title")
                         Text(
-                            "Start with a photo or an empty draft. "
-                                + "You can fill in the details later."
+                            "Start with a photo or an empty draft. You can fill in the details later."
                         )
                         .foregroundStyle(.secondary)
                     }
 
                     captureButton(
-                        title: "Choose a photo",
-                        subtitle: "Keep the selected original in HouseholdOS",
+                        title: String(localized: "Choose a photo"),
+                        subtitle: String(
+                            localized: "Keep the selected original in HouseholdOS"
+                        ),
                         systemImage: "photo.on.rectangle",
-                        action: { showsPhotoPicker = true }
+                        action: openPhotoLibrary
                     )
                     .disabled(isImportingMedia)
                     .accessibilityIdentifier("capture.photoLibrary")
 
                     captureButton(
-                        title: "Take a photo",
+                        title: String(localized: "Take a photo"),
                         subtitle: cameraAvailable
-                            ? "Capture now and continue in a saved draft"
-                            : "Camera is unavailable on this device",
+                            ? String(
+                                localized: "Capture now and continue in a saved draft"
+                            )
+                            : String(localized: "Camera is unavailable on this device"),
                         systemImage: "camera",
                         action: openCamera
                     )
@@ -53,8 +59,8 @@ struct CaptureView: View {
                     .accessibilityIdentifier("capture.camera")
 
                     captureButton(
-                        title: "Start without a photo",
-                        subtitle: "Create a saved draft immediately",
+                        title: String(localized: "Start without a photo"),
+                        subtitle: String(localized: "Create a saved draft immediately"),
                         systemImage: "square.and.pencil",
                         action: startManualDraft
                     )
@@ -66,8 +72,7 @@ struct CaptureView: View {
                     }
 
                     Label(
-                        "A formal item only requires a name. "
-                            + "Photos, category, location and notes stay optional.",
+                        "A formal item only requires a name. Photos, category, location and notes stay optional.",
                         systemImage: "checkmark.shield"
                     )
                     .font(.footnote)
@@ -106,13 +111,16 @@ struct CaptureView: View {
             ) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text(errorMessage ?? "Try again or continue without a photo.")
+                Text(
+                    errorMessage
+                        ?? String(localized: "Try again or continue without a photo.")
+                )
             }
         }
     }
 
     private var cameraAvailable: Bool {
-        UIImagePickerController.isSourceTypeAvailable(.camera)
+        CameraAvailability.isAvailable
     }
 
     private var errorBinding: Binding<Bool> {
@@ -160,14 +168,24 @@ struct CaptureView: View {
         }
     }
 
+    private func openPhotoLibrary() {
+        photoResultGate.beginCapture()
+        showsPhotoPicker = true
+    }
+
     private func openCamera() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .denied, .restricted:
-            errorMessage = "Camera access is unavailable. Choose a photo or start without one."
+            errorMessage = String(
+                localized: "Camera access is unavailable. Choose a photo or start without one."
+            )
         case .authorized, .notDetermined:
+            cameraResultGate.beginCapture()
             showsCamera = true
         @unknown default:
-            errorMessage = "Camera access is unavailable. Choose a photo or start without one."
+            errorMessage = String(
+                localized: "Camera access is unavailable. Choose a photo or start without one."
+            )
         }
     }
 
@@ -175,6 +193,10 @@ struct CaptureView: View {
         _ result: Result<PickedMediaFile?, MediaPickerError>
     ) {
         showsPhotoPicker = false
+        guard photoResultGate.claimResult() else {
+            discardDuplicatePickedMediaResult(result)
+            return
+        }
         switch result {
         case .success(.none):
             return
@@ -198,7 +220,9 @@ struct CaptureView: View {
                         ownerID: draft.id
                     )
                 } catch {
-                    errorMessage = "The draft was saved, but the photo could not be added."
+                    errorMessage = String(
+                        localized: "The draft was saved, but the photo could not be added."
+                    )
                     await discardPickedMediaFile(pickedFile)
                     presentEditor(for: draft.id)
                     return
@@ -215,6 +239,10 @@ struct CaptureView: View {
         _ result: Result<PickedMediaFile?, MediaPickerError>
     ) {
         showsCamera = false
+        guard cameraResultGate.claimResult() else {
+            discardDuplicatePickedMediaResult(result)
+            return
+        }
         switch result {
         case .success(.none):
             return
@@ -238,7 +266,9 @@ struct CaptureView: View {
                         ownerID: draft.id
                     )
                 } catch {
-                    errorMessage = "The draft was saved, but the photo could not be added."
+                    errorMessage = String(
+                        localized: "The draft was saved, but the photo could not be added."
+                    )
                     await discardPickedMediaFile(pickedFile)
                     presentEditor(for: draft.id)
                     return
@@ -255,4 +285,5 @@ struct CaptureView: View {
         editingDraftID = draftID
         showsDraftEditor = true
     }
+
 }

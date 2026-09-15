@@ -22,6 +22,7 @@ struct ItemLibraryView: View {
                             emptyTitle,
                             systemImage: searchText.isEmpty ? "shippingbox" : "magnifyingglass"
                         )
+                        .accessibilityIdentifier("items.empty.title")
                     } description: {
                         Text(emptyDescription)
                     } actions: {
@@ -52,6 +53,7 @@ struct ItemLibraryView: View {
                 }
             }
             .navigationTitle("Items")
+            .accessibilityIdentifier("items.screen")
             .searchable(
                 text: $searchText,
                 placement: .navigationBarDrawer(displayMode: .always),
@@ -87,16 +89,18 @@ struct ItemLibraryView: View {
 
     private var emptyTitle: String {
         if library.displayItems.isEmpty {
-            return "No items yet"
+            return String(localized: "No items yet")
         }
-        return "No matching items"
+        return String(localized: "No matching items")
     }
 
     private var emptyDescription: String {
         if library.displayItems.isEmpty {
-            return "Confirmed drafts will appear in your household library."
+            return String(
+                localized: "Confirmed drafts will appear in your household library."
+            )
         }
-        return "Try another search, category or archive setting."
+        return String(localized: "Try another search, category or archive setting.")
     }
 
     private var filterMenu: some View {
@@ -104,7 +108,8 @@ struct ItemLibraryView: View {
             Picker("Category", selection: $selectedCategoryID) {
                 Text("All Categories").tag(UUID?.none)
                 ForEach(library.displayCategories, id: \.id) { category in
-                    Text(category.name).tag(Optional(category.id))
+                    Text(SystemCategoryLocalization.displayName(for: category))
+                        .tag(Optional(category.id))
                 }
             }
 
@@ -165,7 +170,7 @@ private struct ItemRow: View {
                     }
                 }
 
-                if let category = library.categoryName(for: item.categoryID) {
+                if let category = library.categoryDisplayName(for: item.categoryID) {
                     Text(category)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -191,6 +196,7 @@ struct ItemDetailView: View {
     @State private var showsEditor = false
     @State private var showsDeleteConfirmation = false
     @State private var errorMessage: String?
+    @State private var viewedMedia: MediaValue?
 
     var body: some View {
         Group {
@@ -201,7 +207,11 @@ struct ItemDetailView: View {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 12) {
                                     ForEach(assets, id: \.id) { asset in
-                                        MediaThumbnailView(asset: asset, size: 180)
+                                        MediaThumbnailButton(
+                                            asset: asset,
+                                            size: 180,
+                                            view: { viewedMedia = $0 }
+                                        )
                                     }
                                 }
                                 .padding(.vertical, 4)
@@ -213,15 +223,19 @@ struct ItemDetailView: View {
                         LabeledContent("Name", value: item.name)
                         LabeledContent(
                             "Category",
-                            value: library.categoryName(for: item.categoryID) ?? "Uncategorized"
+                            value: library.categoryDisplayName(for: item.categoryID)
+                                ?? String(localized: "Uncategorized")
                         )
                         LabeledContent(
                             "Location",
-                            value: library.locationName(for: item.locationID) ?? "Not recorded"
+                            value: library.locationName(for: item.locationID)
+                                ?? String(localized: "Not recorded")
                         )
                         LabeledContent(
                             "Status",
-                            value: item.status == .archived ? "Archived" : "Active"
+                            value: item.status == .archived
+                                ? String(localized: "Archived")
+                                : String(localized: "Active")
                         )
                     }
 
@@ -256,7 +270,9 @@ struct ItemDetailView: View {
                                 toggleArchive()
                             } label: {
                                 Label(
-                                    item.status == .archived ? "Restore Item" : "Archive Item",
+                                    item.status == .archived
+                                        ? String(localized: "Restore Item")
+                                        : String(localized: "Archive Item"),
                                     systemImage: item.status == .archived
                                         ? "arrow.uturn.backward"
                                         : "archivebox"
@@ -285,6 +301,11 @@ struct ItemDetailView: View {
                     systemImage: "shippingbox",
                     description: Text("It may have been deleted.")
                 )
+            }
+        }
+        .fullScreenCover(item: $viewedMedia) { asset in
+            OriginalPhotoViewer(asset: asset) {
+                viewedMedia = nil
             }
         }
         .confirmationDialog(
@@ -359,7 +380,12 @@ struct ItemEditorView: View {
     @State private var showsRemovePhotoConfirmation = false
     @State private var pendingMediaID: UUID?
     @State private var isProcessingMedia = false
+    @State private var isSaving = false
+    @State private var showsSaveSuccess = false
     @State private var errorMessage: String?
+    @State private var viewedMedia: MediaValue?
+    @State private var photoResultGate = CaptureResultGate()
+    @State private var cameraResultGate = CaptureResultGate()
 
     var body: some View {
         Form {
@@ -373,14 +399,18 @@ struct ItemEditorView: View {
                 addLocation: addLocation
             )
 
-            MediaGridView(assets: assets) { asset in
-                pendingMediaID = asset.id
-                showsRemovePhotoConfirmation = true
-            }
+            MediaGridView(
+                assets: assets,
+                view: { viewedMedia = $0 },
+                remove: { asset in
+                    pendingMediaID = asset.id
+                    showsRemovePhotoConfirmation = true
+                }
+            )
 
             Section {
                 Button {
-                    showsPhotoPicker = true
+                    openPhotoLibrary()
                 } label: {
                     Label("Add from Photos", systemImage: "photo.badge.plus")
                 }
@@ -398,9 +428,7 @@ struct ItemEditorView: View {
 
             Section("Saving") {
                 Text(
-                    "Field changes are saved only when you tap Save. "
-                        + "Photos and newly created locations are saved immediately. "
-                        + "Close discards unsaved field changes."
+                    "Field changes are saved only when you tap Save. Photos and newly created locations are saved immediately. Close discards unsaved field changes."
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -418,6 +446,7 @@ struct ItemEditorView: View {
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save", action: save)
+                    .disabled(isSaving)
                     .accessibilityIdentifier("item.save")
             }
         }
@@ -425,21 +454,34 @@ struct ItemEditorView: View {
         .sheet(isPresented: $showsPhotoPicker) {
             PhotoLibraryPicker(completion: handlePhotoResult)
         }
+        .fullScreenCover(item: $viewedMedia) { asset in
+            OriginalPhotoViewer(asset: asset) {
+                viewedMedia = nil
+            }
+        }
         .fullScreenCover(isPresented: $showsCamera) {
             CameraPicker(completion: handleCameraResult)
                 .ignoresSafeArea()
         }
         .confirmationDialog(
-            "Remove this photo permanently?",
+            "Delete this photo permanently?",
             isPresented: $showsRemovePhotoConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Remove Photo", role: .destructive, action: removePendingPhoto)
+            Button("Delete Photo", role: .destructive, action: removePendingPhoto)
+                .accessibilityIdentifier("item.photo.delete.confirm")
         }
         .alert("Couldn’t save item", isPresented: errorBinding) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(errorMessage ?? "Please try again.")
+            Text(errorMessage ?? String(localized: "Please try again."))
+        }
+        .overlay(alignment: .top) {
+            if showsSaveSuccess {
+                SaveSuccessBadge(accessibilityIdentifier: "item.saveSuccess")
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
     }
 
@@ -452,7 +494,7 @@ struct ItemEditorView: View {
     }
 
     private var cameraAvailable: Bool {
-        UIImagePickerController.isSourceTypeAvailable(.camera)
+        CameraAvailability.isAvailable
     }
 
     private var errorBinding: Binding<Bool> {
@@ -472,16 +514,24 @@ struct ItemEditorView: View {
     }
 
     private func save() {
+        isSaving = true
         do {
-            try library.updateItem(
+            _ = try library.updateItem(
                 id: itemID,
                 name: name,
                 categoryID: categoryID,
                 locationID: locationID,
                 note: note
             )
-            dismiss()
+            withAnimation {
+                showsSaveSuccess = true
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                dismiss()
+            }
         } catch {
+            isSaving = false
             errorMessage = error.localizedDescription
         }
     }
@@ -514,18 +564,30 @@ struct ItemEditorView: View {
     private func openCamera() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .denied, .restricted:
-            errorMessage = "Camera access is unavailable. You can use Photos instead."
+            errorMessage = String(
+                localized: "Camera access is unavailable. You can use Photos instead."
+            )
         case .authorized, .notDetermined:
+            cameraResultGate.beginCapture()
             showsCamera = true
         @unknown default:
-            errorMessage = "Camera access is unavailable."
+            errorMessage = String(localized: "Camera access is unavailable.")
         }
+    }
+
+    private func openPhotoLibrary() {
+        photoResultGate.beginCapture()
+        showsPhotoPicker = true
     }
 
     private func handlePhotoResult(
         _ result: Result<PickedMediaFile?, MediaPickerError>
     ) {
         showsPhotoPicker = false
+        guard photoResultGate.claimResult() else {
+            discardDuplicatePickedMediaResult(result)
+            return
+        }
         switch result {
         case .success(.none):
             return
@@ -554,6 +616,10 @@ struct ItemEditorView: View {
         _ result: Result<PickedMediaFile?, MediaPickerError>
     ) {
         showsCamera = false
+        guard cameraResultGate.claimResult() else {
+            discardDuplicatePickedMediaResult(result)
+            return
+        }
         switch result {
         case .success(.none):
             return

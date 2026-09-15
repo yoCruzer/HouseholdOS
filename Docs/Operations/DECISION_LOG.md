@@ -137,3 +137,15 @@ first SwiftData mutation. Once mutation starts, immutable display-value construc
 and `saveAndReload` form a tight non-throwing boundary until the database save path.
 Prepared files remain reserved until the structured insert commits or rolls back; a
 post-commit refresh failure never triggers rollback or deletion of committed media.
+
+## D-017 — Formal Release Identity with Owner-Controlled Signing
+
+Date: 2026-08-31
+Status: ACCEPTED
+
+The App release identity is `HouseholdOS` with Bundle Identifier
+`com.yocruzer.householdos`, Marketing Version `0.1` and Build Number `1`. Signing stays
+Automatic, but the repository does not guess or store a Development Team; the Owner
+selects the Apple Team in Xcode before the first signed Archive. This decision does not
+authorize App Store Connect, TestFlight upload, certificate, provisioning-profile or
+Apple Developer Portal operations.

@@ -103,15 +103,15 @@ extension LibraryError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .draftNotFound:
-            "This draft no longer exists."
+            String(localized: "This draft no longer exists.")
         case .itemNotFound:
-            "This item no longer exists."
+            String(localized: "This item no longer exists.")
         case .mediaNotFound:
-            "This photo no longer exists."
+            String(localized: "This photo no longer exists.")
         case .nameRequired:
-            "Add a name before moving this draft into the item library."
+            String(localized: "Add a name before moving this draft into the item library.")
         case .locationNameRequired:
-            "Location name cannot be empty."
+            String(localized: "Location name cannot be empty.")
         }
     }
 }

@@ -19,12 +19,16 @@
 		A1000000000000000000000A /* ItemLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* ItemLibraryService.swift */; };
 		A1000000000000000000000B /* Goal1CoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000D /* Goal1CoreTests.swift */; };
 		A1000000000000000000000C /* AppRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* AppRuntime.swift */; };
-		A1000000000000000000000D /* CoreFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* CoreFieldsView.swift */; };
-		A1000000000000000000000E /* MediaControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* MediaControls.swift */; };
-		A1000000000000000000000F /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* CaptureView.swift */; };
-		A10000000000000000000010 /* DraftViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* DraftViews.swift */; };
-		A10000000000000000000011 /* ItemViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* ItemViews.swift */; };
+		A1000000000000000000000D /* Shared/CoreFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* Shared/CoreFieldsView.swift */; };
+		A1000000000000000000000E /* Shared/MediaControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* Shared/MediaControls.swift */; };
+		A1000000000000000000000F /* Capture/CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Capture/CaptureView.swift */; };
+		A10000000000000000000010 /* Drafts/DraftViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* Drafts/DraftViews.swift */; };
+		A10000000000000000000011 /* Items/ItemViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* Items/ItemViews.swift */; };
 		A10000000000000000000012 /* Goal1UserJourneyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* Goal1UserJourneyUITests.swift */; };
+		A10000000000000000000013 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* Localization.swift */; };
+		A10000000000000000000014 /* CaptureResultGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000017 /* CaptureResultGate.swift */; };
+		A10000000000000000000015 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000018 /* Localizable.xcstrings */; };
+		A10000000000000000000016 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000019 /* InfoPlist.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,13 +63,17 @@
 		B1000000000000000000000C /* ItemLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemLibraryService.swift; sourceTree = "<group>"; };
 		B1000000000000000000000D /* Goal1CoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal1CoreTests.swift; sourceTree = "<group>"; };
 		B1000000000000000000000E /* AppRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntime.swift; sourceTree = "<group>"; };
-		B1000000000000000000000F /* CoreFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/CoreFieldsView.swift; sourceTree = "<group>"; };
-		B10000000000000000000010 /* MediaControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/MediaControls.swift; sourceTree = "<group>"; };
-		B10000000000000000000011 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capture/CaptureView.swift; sourceTree = "<group>"; };
-		B10000000000000000000012 /* DraftViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drafts/DraftViews.swift; sourceTree = "<group>"; };
-		B10000000000000000000013 /* ItemViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Items/ItemViews.swift; sourceTree = "<group>"; };
+		B1000000000000000000000F /* Shared/CoreFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/CoreFieldsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* Shared/MediaControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/MediaControls.swift; sourceTree = "<group>"; };
+		B10000000000000000000011 /* Capture/CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capture/CaptureView.swift; sourceTree = "<group>"; };
+		B10000000000000000000012 /* Drafts/DraftViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drafts/DraftViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000013 /* Items/ItemViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Items/ItemViews.swift; sourceTree = "<group>"; };
 		B10000000000000000000014 /* Goal1UserJourneyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal1UserJourneyUITests.swift; sourceTree = "<group>"; };
 		B10000000000000000000015 /* HouseholdOSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HouseholdOSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000016 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		B10000000000000000000017 /* CaptureResultGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureResultGate.swift; sourceTree = "<group>"; };
+		B10000000000000000000018 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		B10000000000000000000019 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +139,7 @@
 		C10000000000000000000004 /* Application */ = {
 			isa = PBXGroup;
 			children = (
+				B10000000000000000000017 /* CaptureResultGate.swift */,
 				B1000000000000000000000C /* ItemLibraryService.swift */,
 			);
 			path = Application;
@@ -158,11 +167,11 @@
 		C10000000000000000000007 /* Features */ = {
 			isa = PBXGroup;
 			children = (
-				B1000000000000000000000F /* CoreFieldsView.swift */,
-				B10000000000000000000010 /* MediaControls.swift */,
-				B10000000000000000000011 /* CaptureView.swift */,
-				B10000000000000000000012 /* DraftViews.swift */,
-				B10000000000000000000013 /* ItemViews.swift */,
+				B1000000000000000000000F /* Shared/CoreFieldsView.swift */,
+				B10000000000000000000010 /* Shared/MediaControls.swift */,
+				B10000000000000000000011 /* Capture/CaptureView.swift */,
+				B10000000000000000000012 /* Drafts/DraftViews.swift */,
+				B10000000000000000000013 /* Items/ItemViews.swift */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -177,6 +186,7 @@
 		C10000000000000000000009 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				B10000000000000000000016 /* Localization.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -185,6 +195,8 @@
 			isa = PBXGroup;
 			children = (
 				B10000000000000000000003 /* Assets.xcassets */,
+				B10000000000000000000019 /* InfoPlist.xcstrings */,
+				B10000000000000000000018 /* Localizable.xcstrings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -301,6 +313,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				"zh-Hans",
 				Base,
 			);
 			mainGroup = C10000000000000000000001;
@@ -321,6 +334,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000003 /* Assets.xcassets in Resources */,
+				A10000000000000000000016 /* InfoPlist.xcstrings in Resources */,
+				A10000000000000000000015 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -353,12 +368,14 @@
 				A10000000000000000000008 /* PersistenceController.swift in Sources */,
 				A10000000000000000000009 /* MediaFileStore.swift in Sources */,
 				A1000000000000000000000A /* ItemLibraryService.swift in Sources */,
+				A10000000000000000000014 /* CaptureResultGate.swift in Sources */,
 				A1000000000000000000000C /* AppRuntime.swift in Sources */,
-				A1000000000000000000000D /* CoreFieldsView.swift in Sources */,
-				A1000000000000000000000E /* MediaControls.swift in Sources */,
-				A1000000000000000000000F /* CaptureView.swift in Sources */,
-				A10000000000000000000010 /* DraftViews.swift in Sources */,
-				A10000000000000000000011 /* ItemViews.swift in Sources */,
+				A1000000000000000000000D /* Shared/CoreFieldsView.swift in Sources */,
+				A1000000000000000000000E /* Shared/MediaControls.swift in Sources */,
+				A1000000000000000000000F /* Capture/CaptureView.swift in Sources */,
+				A10000000000000000000010 /* Drafts/DraftViews.swift in Sources */,
+				A10000000000000000000011 /* Items/ItemViews.swift in Sources */,
+				A10000000000000000000013 /* Localization.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -427,18 +444,23 @@
 		G10000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 83SKX2PM7B;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = HouseholdOS;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "HouseholdOS uses the camera only when you choose to photograph an item.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos;
 				PRODUCT_MODULE_NAME = HouseholdOSApp;
 				PRODUCT_NAME = HouseholdOS;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -451,18 +473,23 @@
 		G10000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 83SKX2PM7B;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = HouseholdOS;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "HouseholdOS uses the camera only when you choose to photograph an item.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yocruzer.householdos;
 				PRODUCT_MODULE_NAME = HouseholdOSApp;
 				PRODUCT_NAME = HouseholdOS;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

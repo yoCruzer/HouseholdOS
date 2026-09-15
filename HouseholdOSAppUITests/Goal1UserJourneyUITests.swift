@@ -6,8 +6,50 @@ final class Goal1UserJourneyUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    func testDraftAutosavesAfterPhotoPickerCancellationAndRealDeparture() throws {
+        let app = englishApp()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launch()
+
+        app.tabBars.buttons["tab.add"].tap()
+        XCTAssertTrue(app.buttons["capture.manual"].waitForExistence(timeout: 10))
+        app.buttons["capture.manual"].tap()
+
+        let nameField = app.textFields["record.name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.tap()
+        nameField.typeText("Overlay Autosave")
+
+        app.collectionViews.firstMatch.swipeUp()
+        let addFromPhotos = app.buttons["Add from Photos"]
+        XCTAssertTrue(addFromPhotos.waitForExistence(timeout: 5))
+        addFromPhotos.tap()
+
+        let pickerCancel = app.buttons["Cancel"]
+        if pickerCancel.waitForExistence(timeout: 5) {
+            pickerCancel.tap()
+        } else {
+            app.swipeDown()
+        }
+        XCTAssertTrue(app.navigationBars["Draft"].waitForExistence(timeout: 5))
+
+        let backToAdd = app.navigationBars["Draft"].buttons["Add"]
+        XCTAssertTrue(backToAdd.waitForExistence(timeout: 5))
+        backToAdd.tap()
+
+        app.tabBars.buttons["tab.drafts"].tap()
+        let savedDraft = app.staticTexts["Overlay Autosave"]
+        XCTAssertTrue(savedDraft.waitForExistence(timeout: 10))
+        savedDraft.tap()
+        XCTAssertEqual(
+            app.textFields["record.name"].value as? String,
+            "Overlay Autosave"
+        )
+    }
+
     func testDraftToSearchEditArchiveAndRelaunchJourney() throws {
-        let app = XCUIApplication()
+        let app = englishApp()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
         app.launch()
@@ -35,6 +77,10 @@ final class Goal1UserJourneyUITests: XCTestCase {
         nameField.tap()
         nameField.typeText("Cordless Drill")
         app.buttons["draft.save"].tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["draft.saveSuccess"]
+                .waitForExistence(timeout: 5)
+        )
 
         app.terminate()
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "0"
@@ -87,6 +133,10 @@ final class Goal1UserJourneyUITests: XCTestCase {
         reopenedNameField.tap()
         reopenedNameField.typeText(" Impact")
         app.buttons["item.save"].tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["item.saveSuccess"]
+                .waitForExistence(timeout: 5)
+        )
         XCTAssertTrue(app.staticTexts["Cordless Drill Impact"].waitForExistence(timeout: 5))
 
         app.terminate()
@@ -191,7 +241,7 @@ final class Goal1UserJourneyUITests: XCTestCase {
     }
 
     func testCreateDraftRefreshFailureRecoversWithoutUnavailableOrDuplicate() throws {
-        let app = XCUIApplication()
+        let app = englishApp()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_REFRESH_FAILURE_COUNT"] = "2"
@@ -289,8 +339,146 @@ final class Goal1UserJourneyUITests: XCTestCase {
         XCTAssertFalse(draft.waitForExistence(timeout: 2))
     }
 
+    func testEnglishLocalizationSmoke() throws {
+        let app = localizedApp(language: "en", locale: "en_US")
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launch()
+
+        let itemsTab = app.tabBars.buttons["tab.items"]
+        let draftsTab = app.tabBars.buttons["tab.drafts"]
+        let addTab = app.tabBars.buttons["tab.add"]
+        XCTAssertTrue(itemsTab.waitForExistence(timeout: 10))
+        XCTAssertEqual(itemsTab.label, "Items")
+        XCTAssertEqual(draftsTab.label, "Drafts")
+        XCTAssertEqual(addTab.label, "Add")
+        XCTAssertTrue(app.staticTexts["No items yet"].exists)
+
+        addTab.tap()
+        XCTAssertTrue(app.staticTexts["capture.title"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["capture.title"].label, "Add one household item")
+        app.buttons["capture.manual"].tap()
+        XCTAssertTrue(app.buttons["draft.save"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["draft.save"].label, "Save")
+        app.buttons["More actions"].tap()
+        XCTAssertTrue(app.buttons["draft.delete"].exists)
+        XCTAssertFalse(app.staticTexts["物品"].exists)
+        XCTAssertFalse(app.staticTexts["草稿"].exists)
+    }
+
+    func testSimplifiedChineseLocalizationSmoke() throws {
+        let app = localizedApp(language: "zh-Hans", locale: "zh_CN")
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"] = "draft"
+        app.launch()
+
+        let itemsTab = app.tabBars.buttons["tab.items"]
+        let draftsTab = app.tabBars.buttons["tab.drafts"]
+        let addTab = app.tabBars.buttons["tab.add"]
+        XCTAssertTrue(itemsTab.waitForExistence(timeout: 10))
+        XCTAssertEqual(itemsTab.label, "物品")
+        XCTAssertEqual(draftsTab.label, "草稿")
+        XCTAssertEqual(addTab.label, "添加")
+        XCTAssertTrue(app.staticTexts["还没有物品"].exists)
+
+        addTab.tap()
+        XCTAssertTrue(app.staticTexts["capture.title"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["capture.title"].label, "添加一件家庭物品")
+        app.buttons["capture.manual"].tap()
+        XCTAssertTrue(app.buttons["draft.save"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["draft.save"].label, "保存")
+
+        let categoryPicker = app.buttons["record.category"]
+        XCTAssertTrue(categoryPicker.waitForExistence(timeout: 5))
+        categoryPicker.tap()
+        XCTAssertTrue(app.buttons["电子产品"].waitForExistence(timeout: 5))
+        app.buttons["电子产品"].tap()
+
+        draftsTab.tap()
+        let seededDraft = app.staticTexts["Residual Draft"]
+        XCTAssertTrue(seededDraft.waitForExistence(timeout: 10))
+        seededDraft.tap()
+        let viewPhoto = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "media.view.")
+        ).firstMatch
+        let deletePhoto = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "media.delete.")
+        ).firstMatch
+        XCTAssertTrue(viewPhoto.waitForExistence(timeout: 5))
+        XCTAssertEqual(viewPhoto.label, "查看照片")
+        XCTAssertTrue(deletePhoto.exists)
+        XCTAssertEqual(deletePhoto.label, "删除照片")
+        XCTAssertFalse(app.staticTexts["Items"].exists)
+        XCTAssertFalse(app.staticTexts["Drafts"].exists)
+    }
+
+    func testOriginalPhotoViewerAndDeletionPersistAcrossRelaunch() throws {
+        let app = englishApp()
+        app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"] = "draft"
+        app.launch()
+
+        app.tabBars.buttons["tab.drafts"].tap()
+        let draft = app.staticTexts["Residual Draft"]
+        XCTAssertTrue(draft.waitForExistence(timeout: 10))
+        draft.tap()
+        let viewPhoto = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "media.view.")
+        ).firstMatch
+        XCTAssertTrue(viewPhoto.waitForExistence(timeout: 5))
+        app.collectionViews.firstMatch.swipeUp()
+        XCTAssertTrue(viewPhoto.isHittable)
+        viewPhoto.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["photoViewer.image"]
+                .waitForExistence(timeout: 5)
+        )
+        let closePhoto = app.buttons["photoViewer.close"]
+        closePhoto.tap()
+        XCTAssertTrue(closePhoto.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(
+            app.descendants(matching: .any)["photoViewer.image"]
+                .waitForNonExistence(timeout: 5)
+        )
+
+        let deletePhoto = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "media.delete.")
+        ).firstMatch
+        XCTAssertTrue(deletePhoto.waitForExistence(timeout: 5))
+        let deleteIsHittable = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isHittable == true"),
+            object: deletePhoto
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [deleteIsHittable], timeout: 5),
+            .completed
+        )
+        deletePhoto.tap()
+        let confirmDelete = app.sheets.buttons["Delete Photo"].firstMatch
+        XCTAssertTrue(confirmDelete.waitForExistence(timeout: 5))
+        confirmDelete.tap()
+        XCTAssertFalse(deletePhoto.waitForExistence(timeout: 3))
+
+        app.terminate()
+        app.launchEnvironment.removeValue(
+            forKey: "HOUSEHOLDOS_UI_TEST_SEED_DELETION_KIND"
+        )
+        app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "0"
+        app.launch()
+        app.tabBars.buttons["tab.drafts"].tap()
+        XCTAssertTrue(draft.waitForExistence(timeout: 10))
+        draft.tap()
+        XCTAssertFalse(
+            app.buttons.matching(
+                NSPredicate(format: "identifier BEGINSWITH %@", "media.delete.")
+            ).firstMatch.exists
+        )
+    }
+
     private func deletionFixtureApp(kind: String) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = englishApp()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_FAIL_MEDIA_REMOVAL"] = "1"
@@ -299,7 +487,7 @@ final class Goal1UserJourneyUITests: XCTestCase {
     }
 
     private func refreshFailureApp(count: Int) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = englishApp()
         app.launchEnvironment["HOUSEHOLDOS_UI_TESTING"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_RESET"] = "1"
         app.launchEnvironment["HOUSEHOLDOS_UI_TEST_REFRESH_FAILURE_COUNT"] = "\(count)"
@@ -314,5 +502,18 @@ final class Goal1UserJourneyUITests: XCTestCase {
                 "retry during later maintenance"
             )
         ).firstMatch
+    }
+
+    private func englishApp() -> XCUIApplication {
+        localizedApp(language: "en", locale: "en_US")
+    }
+
+    private func localizedApp(language: String, locale: String) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-AppleLanguages", "(\(language))",
+            "-AppleLocale", locale
+        ]
+        return app
     }
 }

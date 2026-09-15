@@ -27,18 +27,27 @@ Status: ACTIVE
 
 ## Development
 
-- Goal 1 has only been built, tested, installed and launched on an iPhone Simulator.
-- Real-device installation and paid Apple signing are not configured or verified.
-- Real-device camera capture, permission-denied UI and selecting a real Photos asset
-  have not been manually verified. Simulator coverage verifies the picker
-  presentation/cancel path, unavailable-camera fallback, and valid-image
+- Goal 1 and the TestFlight Round 1 stabilization candidate have only been built,
+  tested, installed and launched on iPhone Simulators. Exact iPhone 16 and iPhone 17
+  Pro Max Simulator layout smoke passes, but this is not real-device acceptance.
+- Owner Team `83SKX2PM7B` is selected in the project; real-device installation and paid
+  Apple signing remain unverified.
+- Real-device camera permission/capture, true optical preview/final-photo agreement,
+  real orientation, one physical shutter producing exactly one Draft, real-photo
+  relaunch persistence, permission-denied UI and selecting a real Photos asset have
+  not been manually verified. These items are deferred to the consolidated later
+  Device Validation Pack and are not marked PASS. Simulator coverage verifies the
+  picker presentation/cancel path, unavailable-camera fallback, and valid-image
   import/thumbnail behavior at the service boundary.
 - File copying, camera encoding, thumbnail generation and thumbnail display decoding
   run outside MainActor, but real-device responsiveness has not been profiled.
-- `com.yocruzer.householdos.dev` is a temporary Bundle Identifier with no external service bindings.
-- No CI exists.
-- No TestFlight pipeline exists.
-- No formal App Icon or brand assets are included.
+- `com.yocruzer.householdos` is configured but has not been validated through
+  real-device provisioning or a registered App Store Connect application.
+- Simulator CI exists with manual dispatch and opt-in automatic execution through the
+  `HOUSEHOLDOS_AUTO_CI` repository variable; it does not sign or upload builds.
+- No signed Archive or TestFlight upload has been performed.
+- The provided App Icon compiles in Simulator builds; real-device and TestFlight
+  presentation remain unverified.
 
 ## Privacy
 

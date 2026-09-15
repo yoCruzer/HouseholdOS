@@ -1,7 +1,7 @@
 # Current State
 
-Status: GOAL_1_ACCEPTED_CLOSED
-Updated: 2026-08-31
+Status: TESTFLIGHT_ROUND1_ACCEPTED_CLOSED
+Updated: 2026-09-15
 
 ## Closed Goal
 
@@ -23,6 +23,42 @@ Updated: 2026-08-31
 - Merge method: merge commit
 - Merge commit: `0bf55833beb55cf96d00ecbe8db4c76c929cff22`
 - Owner decision required: no
+
+## TestFlight Round 1 Closure
+
+- Goal 1 remains `ACCEPTED / CLOSED`; Goal 2 remains `NOT STARTED`.
+- TestFlight Round 1 Device Quality Stabilization: `ACCEPTED / CLOSED`.
+- ChatGPT closure review: `APPROVE`.
+- Readiness base: `chore/testflight-readiness-goal1@79879e969fc5e702b852495c1cb3905d4fde8e0d`.
+- Stabilization branch: `fix/testflight-round1-device-quality`.
+- Reviewed production-code HEAD: `5d0c4c347f4069432d94459b1c3c204c748a68b6`.
+- Final closure branch HEAD: this documentation-only closure commit; it does not
+  represent a separate product-code review.
+- Implementation commits: `6d1986c` and `3bcffa8`.
+- Candidate scope: modern launch metadata, English and Simplified Chinese localization,
+  original-photo viewing and explicit deletion, persistence-driven Save feedback,
+  one-shot capture delivery, minimal AVFoundation still-photo capture, disk-backed
+  relaunch regressions and opt-in Simulator CI.
+- SwiftData schema and the existing media transaction/ownership model are unchanged.
+- Clean Debug and Release Simulator builds pass. Both built products contain
+  `UILaunchScreen`; localization resources compile into the App bundle.
+- Round 1 focused regressions pass 5/5. The second full-suite run passed 43/44;
+  its sole failure was an XCTest duplicate-wrapper selector in the photo delete
+  confirmation sheet. The selector was corrected and that remaining high-value
+  viewer/delete/relaunch method then passed 1/1. English and zh-Hans smoke tests pass.
+- Clean install, launch and screenshot review pass on exact iPhone 16 and iPhone 17
+  Pro Max Simulators running iOS 26.5, with full-screen content and normal safe areas.
+- Real-device camera permission/capture, optical preview/final agreement, orientation,
+  one physical shutter-to-one-Draft behavior and real-photo relaunch persistence are
+  deferred to the later consolidated Device Validation Pack and are not marked PASS.
+- Manual GitHub Actions run `33572746681` was GREEN against reviewed production-code
+  HEAD `5d0c4c347f4069432d94459b1c3c204c748a68b6`. Intentionally skipped opt-in PR CI
+  does not invalidate that result.
+- Independent-review remediation derives Draft transient-overlay state directly from
+  active presentation bindings, serializes camera configuration/start/stop and enables
+  the shutter only after `startRunning()` completes, and makes CI validate committed
+  whitespace with `git show --check --oneline HEAD`. The autosave picker-cancel
+  regression passes, and the final local suite passes 45/45.
 
 ## Repository State
 
@@ -61,8 +97,10 @@ Updated: 2026-08-31
 - Unit test target: `HouseholdOSAppTests`
 - UI test target: `HouseholdOSAppUITests`
 - Shared scheme: `HouseholdOSApp`
-- CI: not configured
-- App distribution: not configured
+- CI: `.github/workflows/ios-ci.yml` provides manual Simulator validation and
+  opt-in automatic execution through `HOUSEHOLDOS_AUTO_CI`
+- TestFlight readiness branch: `chore/testflight-readiness-goal1`
+- App distribution: project prepared; signed Archive and App Store Connect upload not performed
 
 ## Verified Environment
 
@@ -83,8 +121,13 @@ Updated: 2026-08-31
 - Minimum deployment target: iOS 17.0
 - Targeted device family: iPhone (`1`)
 - Product / display name: HouseholdOS
-- Temporary Bundle Identifier: `com.yocruzer.householdos.dev`
-- Apple Development Team: not configured
+- Bundle Identifier: `com.yocruzer.householdos`
+- Marketing Version: `0.1`
+- Build Number: `1`
+- App Icon Source: `AppIcon`
+- Signing style: Automatic
+- Apple Development Team: `83SKX2PM7B` (Owner-provided project change)
+- Non-exempt encryption: not used (`ITSAppUsesNonExemptEncryption = NO`)
 - Third-party dependencies: none
 - Entitlements: none added
 
@@ -199,8 +242,9 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 ## Known Limitations
 
-- Goal 1 has only been validated on an iPhone Simulator.
-- Real-device installation, paid signing and TestFlight have not been configured or verified.
+- Goal 1 and the Round 1 candidate have only been validated on iPhone Simulators.
+- Owner Team `83SKX2PM7B` is selected; real-device installation, signed Archive and
+  TestFlight upload have not been performed or verified.
 - Real-device camera capture, denial handling and selection of a real Photos asset
   remain unverified; automated coverage validates fallback behavior, media storage
   and two 4032 × 3024 image imports at the service boundary.
@@ -211,14 +255,19 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
   not equivalent to real SwiftData or SQLite engine corruption.
 - No performance ceiling has been established for large libraries or sustained
   multi-image import.
-- The Bundle Identifier is temporary and has no external service bindings.
-- CI is not configured.
+- `com.yocruzer.householdos` is configured in the project but has not been validated
+  through real-device provisioning or an App Store Connect record.
+- Simulator CI is configured for manual dispatch and opt-in automatic execution; it
+  deliberately excludes signing and TestFlight upload.
 - Export, backup/recovery UI and real cross-version migration remain unimplemented.
-- App icon and formal brand assets are not included.
+- The provided App Icon is integrated and Simulator-compiled; appearance on a signed
+  real-device build remains unverified.
 
 ## Goal Planning
 
 - Goal 1: ACCEPTED / CLOSED
+- TestFlight Round 1 Device Quality Stabilization: ACCEPTED / CLOSED
+- Foundation Architecture Validation Program: NOT STARTED
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -236,3 +285,11 @@ iOS 26.5 using Xcode 26.6. On 2026-08-31, GitHub reverified approved PR HEAD
 `d2e513804b7e9e2306a5f0aa7041b3b5eb7c3992` as clean and mergeable. PR #3 was then
 marked Ready and merged to `main` using merge commit
 `0bf55833beb55cf96d00ecbe8db4c76c929cff22`. Goal 2 remains not started.
+
+On 2026-08-31, `chore/testflight-readiness-goal1` configured the formal App identity,
+Automatic signing without a Development Team, the provided 1024 × 1024 RGB App Icon,
+and the verified non-exempt-encryption declaration. Clean Debug and Release Simulator
+builds passed. The generated Debug and Release bundles contain compiled AppIcon files,
+`Assets.car`, Bundle ID `com.yocruzer.householdos`, version `0.1` (build `1`), display
+name `HouseholdOS`, and `ITSAppUsesNonExemptEncryption = false`. The focused smoke test
+passed 1/1 and the full suite passed 36/36 with no failures or skips.

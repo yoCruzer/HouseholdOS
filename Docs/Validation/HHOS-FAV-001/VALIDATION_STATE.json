@@ -5,20 +5,22 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "ca3fd7005fb1daf493519a443a5602420ec14ff5",
+  "last_good_commit": "dde8d4619493a15a3590e5a1712ccc7d89d6d160",
   "gates": {
     "G0": {
       "status": "RUNNING",
       "evidence": [
         "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending",
-        "ValidationCore compiles on macOS 14 target and iOS 17 Simulator target using installed SDK; isolated App UI still pending"
+        "ValidationCore compiles on macOS 14 target and iOS 17 Simulator target using installed SDK; isolated App UI still pending",
+        "Independent iOS App builds for arm64/x86_64 Simulator at iOS 17 deployment target, actual SDK 26.5. Initial synthetic iOS local-chain self-test PASS; relaunch verification in progress."
       ]
     },
     "G1": {
       "status": "RUNNING",
       "evidence": [
         "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending",
-        "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync"
+        "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync",
+        "Two independent local libraries have different persisted IDs; two replicas confirm same Draft to same Item ID (SharedChainTests)."
       ]
     },
     "G2": {
@@ -26,46 +28,60 @@
       "evidence": [
         "SchemaTests 1/1",
         "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending",
-        "Affected SchemaTests + LocalChainTests rerun 4/4 after sync sidecar additions"
+        "Affected SchemaTests + LocalChainTests rerun 4/4 after sync sidecar additions",
+        "LocalChain stages typed wire Draft and Media intents in the same business save; shared chain affected 8/8 PASS."
       ]
     },
     "G3": {
       "status": "RUNNING",
       "evidence": [
-        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending"
+        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
+        "SharedChainTests 3/3: blank client receives actual recovery preview using same CKRecord codec/core; lost ACK and usage action retry; native iOS synthetic chain initial report PASS."
       ]
     },
     "G4": {
       "status": "RUNNING",
       "evidence": [
-        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending"
+        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
+        "ProtocolBoundaryTests 5/5: three-way independent-field merge, coupled-money conflict, raw future-field retention and write protection, inbound commit failure blocks checkpoint, paged fetch gate."
       ]
     },
     "G5": {
       "status": "RUNNING",
       "evidence": [
-        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending"
+        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
+        "Parent deletion hides early and late children; old in-flight ACK cannot replace tombstone; offline conflict retained. More re-add/child-generation cases pending."
       ]
     },
     "G6": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "PhotosBoundaryTests 3/3 LOGIC plus real local byte restoration; Photos mapping APIs compiled but not invoked on a library",
+        "Affected Photos/Backup/LocalChain 11/11 PASS; JPEG original bytes, normalized privacy-stripped preview; HEIC runtime fixture pending"
+      ]
     },
     "G7": {
       "status": "NOT_STARTED",
       "evidence": []
     },
     "G8": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "BackupRestoreTests 5/5 PASS on actual SQLite/SwiftData: consistent snapshot, hash/manifest validation, generation pointer, retained source/conflicts/intents, cleared engine/device state, injected export/switch interruption, missing original rejection, package path/symlink/version/size checks",
+        "iOS initial self-test validates one complete restored representation; process reopen running"
+      ]
     },
     "P1": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "Original and recovery preview backup eligibility false exclusion flag; recreatable thumbnail excluded (real file flags). This does not claim completed system backup."
+      ]
     },
     "integration": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "Shared business chain to blank client uses same reducer; no persistent Photos permission fallback through real backup restore verified. Old backup cloud admission not complete."
+      ]
     }
   },
   "external_blockers": [
@@ -73,7 +89,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Integrate LocalChain business writes with WireRecord/SyncCore in same transaction; add isolated iOS App; complete G1-G8/P1 assertion mapping and remaining tests",
+  "next_safe_action": "Read Simulator reopen report; complete remaining sync/media policy/restore-admission risks and native live controls, migration/journal process failures, then final evidence audit and one independent review",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -89,7 +105,8 @@
     "xcode": "26.6 (17F113)",
     "swift": "6.3.3",
     "host": "Intel macOS",
-    "available_iOS_runtime": "26.5"
+    "available_iOS_runtime": "26.5",
+    "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
   "tested_fingerprints": {
     "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",
@@ -109,16 +126,14 @@
     "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2"
   },
   "remaining_implementation": [
-    "Business LocalChain currently writes a placeholder payload and unbound-local scope; must connect to shared WireRecord and durable per-library scope before integration acceptance",
-    "Persist unique local library identity independently of legacy DefaultHousehold; preserve legacy records",
-    "Real PhotoKit cloud mapping/caching and picker UI, support and precision states",
-    "Three-way ancestor merge, coupled fields, future field protection, parent/child tombstone rules, A-B-A and late callbacks, paging and incoming persistence-failure checkpoint tests",
-    "Deterministic service adapter sharing codec/reducer including conditional saves, ACK loss, partial failures, true usage identity",
-    "Journal OS process termination, actual save error and protected-data/capacity classifications, refresh outcome, migration failures",
-    "Media revision ACK/download guards and policy/planner/quota tests",
-    "Snapshot backup and staged generation restore with security/path/hash/limits and fault tests",
-    "Basic device backup file eligibility assertions",
-    "Full per-assertion contract evidence map, final focused candidate suite/build, one independent read-only review, impact map and Owner pack",
-    "Publish one Draft PR only after approval block cleared"
+    "Read and retain Simulator reopen report; final native build fingerprint must cover changed Photos adapter and UI",
+    "Complete parent incarnation guard so re-add cannot revive old children or send old child intents; account A-B-A/session lifetime and partial service results coverage",
+    "Integrate shared CloudAdapter conflict resolution/retry handling, scoped state and pending queues; Owner-configured live controls must be usable without code edits or automatic provisioning",
+    "Restore cloud admission must fetch current tombstones before any restored upload, preserving explicit re-add choices",
+    "Media representation revision guard, CKAsset upload/read version checks, policy planner, quota/retry/budget handling, HEIC fixture, small preview candidate comparison",
+    "Journal actual subprocess termination, actual SwiftData save error, refresh outcome and protected/capacity/corruption classifications; migration repeat/failure evidence and observable schema identity",
+    "Backup consistency under export mutation attempt, physical interruption validation, source fixture integrity proof; Full fidelity limits and retired representations audit",
+    "Per-assertion contract evidence mapping; final candidate suite/build once; one independent read-only review; complete impact map and Owner Action Pack",
+    "Publication remains blocked by automatic approval review; explicit confirmation request is pending, no alternate channel or retry used"
   ]
 }

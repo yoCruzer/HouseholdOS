@@ -16,7 +16,7 @@ final class LocalChainTests: XCTestCase {
         try reopened.recover()
         XCTAssertEqual(try reopened.confirm(draftID), draftID)
         XCTAssertEqual(try reopened.confirm(draftID), draftID)
-        XCTAssertEqual(try reopened.counts(), ["drafts": 0, "items": 1, "media": 1, "profiles": 1, "outbox": 2])
+        XCTAssertEqual(try reopened.counts(), ["drafts": 0, "items": 1, "media": 1, "profiles": 1, "outbox": 3])
         XCTAssertEqual(try reopened.context.fetch(FetchDescriptor<MediaAssetRecord>()).first?.id, mediaID)
         XCTAssertEqual(try reopened.context.fetch(FetchDescriptor<WardrobeProfile>()).first?.id, profileID)
         let representation = try XCTUnwrap(reopened.context.fetch(FetchDescriptor<MediaRepresentation>()).first)
@@ -34,7 +34,7 @@ final class LocalChainTests: XCTestCase {
             try reopened.recover()
             let committed = [.afterSave, .finalize, .cleanup].contains(fault)
             XCTAssertEqual(try reopened.counts()["drafts"], committed ? 1 : 0, fault.rawValue)
-            XCTAssertEqual(try reopened.counts()["outbox"], committed ? 1 : 0, fault.rawValue)
+            XCTAssertEqual(try reopened.counts()["outbox"], committed ? 2 : 0, fault.rawValue)
             if fault != .originalWrite {
                 let files = try FileManager.default.contentsOfDirectory(at: root.appendingPathComponent(committed ? "media" : "staging"), includingPropertiesForKeys: nil)
                 let original = try XCTUnwrap(files.first { $0.pathExtension == "original" })

@@ -31,3 +31,15 @@ Installed iOS 26.6 CloudKit Swift interface supports CKSyncEngine on iOS 17. Fet
 - Publication attempt was blocked by automatic approval review before execution. Requested user confirmation; no push or PR created, no alternate channel used.
 
 Current code is an intermediate checkpoint. Local business outbox payloads still require wiring to the shared protocol; no end-to-end sync or completed contract gate is claimed. Remaining work is explicit in VALIDATION_STATE.json.
+
+## Shared business chain, recovery and iOS App checkpoint
+
+LocalChain now uses typed WireRecord documents and Draft/Media intents within the business transaction. Each new library has a distinct persisted identity. SharedChainTests uses a conditional transport fake only; native CKRecord codec, SwiftData outbox, reducer, projection and ACK logic are shared with CloudAdapter. Blank-client preview is actual image bytes; missing original is explicitly tested.
+
+Focused evidence (not final full suite): `shared-chain-tests.log` 8/8; `shared-replication-tests.log` 8/8; `protocol-boundaries-tests.log` 13/13; `backup-restore-tests-fixed.log` 5/5; `photos-fallback-tests.log` 11/11. Counts overlap. Backup test source initially omitted two `try` annotations; fixed before execution. No runtime test was weakened.
+
+Backup uses native sqlite3_backup while the synchronous MainActor fixture boundary freezes writes, then copies exact media and writes hash manifest/completion marker. Restore validates into an independent complete generation, clears device ACK/session state and leaves cloud admission paused. Pointer switch covers DB and media together. Original generations and package remain. Photos writes are absent by implementation; no PHAssetChangeRequest/performChanges path exists.
+
+Independent App bundle `com.yocruzer.householdos.foundationvalidation`, no production source/build-input changes. Unsigned Simulator Debug build PASS (`ios-app-selftest-build.log`); actual installed iOS SDK is **26.5**, Xcode is 26.6 (prior note saying iOS 26.6 was incorrect). Initial real iOS self-test report: `ios-initial-report.json`, 1 Item/Media/Profile, 3 pending intents, one target representation verified, liveService NOT_RUN. This build predates the subsequent Photos mapping UI wiring; final App build evidence must be renewed for that affected change.
+
+New Photos adapter batches only supplied selected identifiers at persistence/load boundaries. Identifier-not-found, ambiguity, network need, space and authorization remain distinct. Mapping APIs compile; permission/cross-device behavior remains external evidence pending. Smart fallback backup restores picker-delivered bytes and precision; Full refuses to claim complete original resources from picker delivery alone.

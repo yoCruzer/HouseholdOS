@@ -45,7 +45,8 @@ import CloudKit
         guard core.accepts(callbackScope) else { return }
         do {
             switch event {
-            case .willFetchChanges: fetchFailed = false
+            case .willFetchChanges:
+                fetchFailed = false; try core.beginFetch(callback: callbackScope)
             case .fetchedRecordZoneChanges(let value):
                 for modification in value.modifications { try core.apply(modification.record, callback: callbackScope) }
                 if !value.deletions.isEmpty { try core.pause("unexpected physical record deletion; reconcile retained tombstones") }

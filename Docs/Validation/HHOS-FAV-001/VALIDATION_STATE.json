@@ -4,106 +4,63 @@
   "baseline": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
   "branch": "spike/foundation-validation",
   "worktree": ".",
-  "status": "RUNNING",
-  "last_good_commit": "54d67a8afa7818688d6879ecdcadcd615a4b0a18",
+  "status": "IMPLEMENTATION_COMPLETE_LIVE_EVIDENCE_PENDING",
+  "last_good_commit": "6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa",
   "gates": {
     "G0": {
-      "status": "RUNNING",
-      "evidence": [
-        "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending",
-        "ValidationCore compiles on macOS 14 target and iOS 17 Simulator target using installed SDK; isolated App UI still pending",
-        "Independent iOS App builds for arm64/x86_64 Simulator at iOS 17 deployment target, actual SDK 26.5. Initial synthetic iOS local-chain self-test PASS; relaunch verification in progress.",
-        "Simulator App terminated and relaunched: process-reopen report PASS; one complete target representation and matching snapshot verified; screenshot inspected, initial screen legible without clipping.",
-        "Manual live controls and executable+Debug-dylib configuration binding compile in actual iOS Simulator App; unsigned, no live requests."
-      ]
+      "status": "BLOCKED_EXTERNAL",
+      "local_result": "PASS",
+      "reason": "Independent Apple-framework App builds/runs; true authorized service connection and iOS17 runtime remain unavailable"
     },
     "G1": {
-      "status": "RUNNING",
-      "evidence": [
-        "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending",
-        "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync",
-        "Two independent local libraries have different persisted IDs; two replicas confirm same Draft to same Item ID (SharedChainTests).",
-        "Actual baseline store observable Core Data entity-version hashes captured; whole-directory source hashes unchanged through clone migration and repeat reopen. Process evidence driver retains synthetic stores.",
-        "Corrupt synthetic clone and existing migration destination rejected; immutable baseline hashes unchanged. Same-name distinct Item IDs exercised by adapter partial-success regression.",
-        "Actual SIGKILL after clone completion and after native candidate open; both twice reopened with exact legacy snapshot/media and unchanged immutable source. Process evidence 5caf8b22."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM",
+      "reason": "True legacy fixture identity/fields/media, complete clone migration, repeat reopen, crash boundaries and failures preserved source"
     },
     "G2": {
-      "status": "RUNNING",
-      "evidence": [
-        "SchemaTests 1/1",
-        "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending",
-        "Affected SchemaTests + LocalChainTests rerun 4/4 after sync sidecar additions",
-        "LocalChain stages typed wire Draft and Media intents in the same business save; shared chain affected 8/8 PASS.",
-        "Actual subprocess SIGKILL at prepared/committed/originalFinalized boundaries; recovery counts and original hashes correct. Actual read-only SwiftData save returns error 513, no phantom records/outbox; committed refresh outcome explicit.",
-        "Independent review R1 reproduced dirty-context leakage, then fixed complete capture/confirm rollback boundary and next wire revision; ReviewRegression + affected 25 tests PASS."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM+LOGIC",
+      "reason": "Same transaction, full rollback, file journal, real process termination and storage classification"
     },
     "G3": {
-      "status": "RUNNING",
-      "evidence": [
-        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
-        "SharedChainTests 3/3: blank client receives actual recovery preview using same CKRecord codec/core; lost ACK and usage action retry; native iOS synthetic chain initial report PASS.",
-        "Native delegate uses shared applySendResults reducer; partial success only retires saved operation, failed fetch cannot bootstrap; old error after OFF ignored. AdapterBoundaryTests PASS."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM+LOGIC",
+      "reason": "Durable intent/exact ACK/inbound checkpoint and native shared partial/error reducers; true service event timing listed externally"
     },
     "G4": {
-      "status": "RUNNING",
-      "evidence": [
-        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
-        "ProtocolBoundaryTests 5/5: three-way independent-field merge, coupled-money conflict, raw future-field retention and write protection, inbound commit failure blocks checkpoint, paged fetch gate.",
-        "Account A-B-A creates blocked durable epochs; old live adapter checks persisted scope before callbacks. 16 affected protocol tests PASS after correcting Usage fixture to contain its required parent.",
-        "Nested future Profile/Media fields retained byte-exact across reopen and write-protected; affected 17 tests PASS."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM+LOGIC",
+      "reason": "Bootstrap/scope/epoch/merge/conflict/future data guards; actual account events await environment"
     },
     "G5": {
-      "status": "RUNNING",
-      "evidence": [
-        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
-        "Parent deletion hides early and late children; old in-flight ACK cannot replace tombstone; offline conflict retained. More re-add/child-generation cases pending.",
-        "Explicit re-add has new incarnation; old child records remain hidden/unsent. Prior conflicts retained as resolved history. Old backup restored over current remote tombstone cannot upload or revive old children.",
-        "Review R3/R4 failing regressions fixed: concurrent update vs local tombstone persists conflict and blocks stale send; inbound re-add requires new incarnation. userDeletedZone/zoneNotFound durable pause tested through native reducer.",
-        "Actual installed SDK constant CKErrorUserDidResetEncryptedDataKey used and injected through native classifier; eight affected tests PASS; unknown zone loss remains unknown and paused."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM+LOGIC",
+      "reason": "Tombstone/re-add/child/restore, SDK zone-loss/reset pause injection"
     },
     "G6": {
-      "status": "RUNNING",
-      "evidence": [
-        "PhotosBoundaryTests 3/3 LOGIC plus real local byte restoration; Photos mapping APIs compiled but not invoked on a library",
-        "Affected Photos/Backup/LocalChain 11/11 PASS; JPEG original bytes, normalized privacy-stripped preview; HEIC runtime fixture pending",
-        "Native HEIC encode/import byte preservation and two recovery-preview dimensions tested in MediaTransferTests."
-      ]
+      "status": "BLOCKED_EXTERNAL",
+      "local_result": "PASS",
+      "reason": "Static JPEG/HEIC/fallback/representations validated; authorized Photos sustained access and cross-device mapping not executed"
     },
     "G7": {
-      "status": "RUNNING",
-      "evidence": [
-        "MediaTransferTests 5/5 PASS; old ACK/download guarded by representation/revision/scope, Photos-backed fallback does not upgrade upload, policy downgrade retains acknowledged cloud state, quota/backoff conservative, 250/50 representative ordered plan, persisted 100MiB estimate budget",
-        "CKAsset immutable representation upload and direct desiredKeys fetch compile on macOS; new native App build and LIVE remain pending",
-        "Review R5 fixed download admission to honor persisted media pause/retryAfter; focused adapter/media/review/evidence 15 tests PASS. LIVE requests remain zero."
-      ]
+      "status": "BLOCKED_EXTERNAL",
+      "local_result": "PASS",
+      "reason": "Shared planner/queue/revision/backoff/budget validated; actual CKAsset and original-on-demand proof missing"
     },
     "G8": {
-      "status": "RUNNING",
-      "evidence": [
-        "BackupRestoreTests 5/5 PASS on actual SQLite/SwiftData: consistent snapshot, hash/manifest validation, generation pointer, retained source/conflicts/intents, cleared engine/device state, injected export/switch interruption, missing original rejection, package path/symlink/version/size checks",
-        "iOS initial self-test validates one complete restored representation; process reopen running",
-        "Actual Simulator process restart verifies restored original bytes against same snapshot; LocalEvidence/ios-reopen-report.json PASS.",
-        "Backup includes all retained representation files, not only current revision. Restore admission cannot be bypassed by ordinary bind; it fetches current remote state before scheduling.",
-        "Explicit regression verifies all retired representation bytes restored, old prepared/acknowledged media tickets removed, restore upload still gated; affected 17 tests PASS.",
-        "Review R2 self-consistent package missing legacy original reproduced and rejected after fix; old ACTIVE unchanged. Synchronous queued mutation snapshot test PASS."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM+LOGIC",
+      "reason": "Single-writer local directory snapshot, complete reference verification, generation switch/recovery/admission and same-device target bytes; no double-device erasure claim"
     },
     "P1": {
-      "status": "RUNNING",
-      "evidence": [
-        "Original and recovery preview backup eligibility false exclusion flag; recreatable thumbnail excluded (real file flags). This does not claim completed system backup."
-      ]
+      "status": "PASS",
+      "evidence_level": "LOCAL_PLATFORM+LOGIC",
+      "reason": "Minimum original/privacy/failure/file-flag protections pass; encryptedValues live test and production confidentiality remain explicit pending decisions"
     },
     "integration": {
-      "status": "RUNNING",
-      "evidence": [
-        "Shared business chain to blank client uses same reducer; no persistent Photos permission fallback through real backup restore verified. Old backup cloud admission not complete."
-      ]
+      "status": "BLOCKED_EXTERNAL",
+      "local_result": "PASS",
+      "reason": "Shared local chain and four counterexamples pass; actual cloud replication remains missing"
     }
   },
   "external_blockers": [
@@ -111,7 +68,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Run single final deterministic candidate suite and actual App build/runtime; then consolidate final case statuses, dependency fingerprints and publication blocker disposition.",
+  "next_safe_action": "No unblocked implementation remains. Await publication approval clearance and/or authorized Owner platform evidence; do not retry rejected push via another channel.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -130,29 +87,8 @@
     "available_iOS_runtime": "26.5",
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
-  "remaining_implementation": [
-    "Final candidate full deterministic suite, native App build and actual Simulator fresh-chain/relaunch/export evidence",
-    "Consolidate final per-assertion statuses/fingerprints and truthful scope notes; no LIVE or production readiness overclaim",
-    "Publish one Draft PR only after prior platform approval-review block is cleared; no alternate push/retry used"
-  ],
-  "historical_tested_fingerprints": {
-    "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "a5a081ccfaf7159e62e4818e42fc16f76923f77300d18d7925e629b5b061fa59",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/CloudAdapter.swift": "0e6fd5974afa45eaaaca2863f07ee3ce6254ad369a4e53fed109bd03baed97ed",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/LegacyTypes.swift": "4f2a824e49d6bd08644067db698bb70f603c64ff04ef6c168eefae52a84296e6",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceController.swift": "e8be49ca44f70b601dbeb0d250d3170b6abd90829900468afd87aa995b2933d4",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceModels.swift": "f1dd75be099200e55fd6fa9bf91cd4202e68f67a2a95bf485f2a0ff03af94bd6",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/LegacyFixture.swift": "c4d569d354ae5a26ef72d6ece704cdc6791fc9fc8069da15351790c9bbb0997f",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/LocalChain.swift": "069109034f038fd2336b47ea552561f3c4f57c28a135016df4ca8be343e1029c",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/MediaFiles.swift": "9d49f4560a279d2495e3020da1733d4061b52b227aa594872a67baf09d96ae74",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/PhotosAdapter.swift": "e4dc7bbe1ae3a8e79d71f54fac9fde233f357a011fdad4c4cd84623199c2b1f0",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/SyncProtocol.swift": "7f90a2b6cec363e7a66a2c49ca7dd91603b17a2d924d9dd5150f206d6ca44005",
-    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/LocalChainTests.swift": "ecdf08e84cdded2f3abda7b1261c3c7af0e34d31c5bb6c0f6644ef46ce4b27c6",
-    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SchemaTests.swift": "97eb073cc8f297f1c84260acba6334b066d6730abb8d5bf32d5961b9a60de210",
-    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SyncProtocolTests.swift": "b3af4cdf94359e0858917c6f4ab72d392950baf0509f7155fc8c3a2696b29a55",
-    "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2"
-  },
-  "evidence_note": "Historical fingerprints refer to the earlier checkpoint. Current focused runs are indexed in VALIDATION_EVIDENCE.md; final code/config/fixture dependency manifests must be refreshed before final acceptance. No complete gate or final candidate is claimed.",
+  "remaining_implementation": [],
+  "evidence_note": "Final candidate input and artifact hashes above cover final code. Earlier checkpoints in VALIDATION_EVIDENCE are historical. Documentation-only finalization does not change runtime evidence.",
   "independent_review": {
     "status": "COMPLETED_ONCE",
     "reviewer": "final_readonly_review",
@@ -187,26 +123,609 @@
       {
         "id": "R6",
         "issue": "Photos/restore observations not fully included in durable redacted export",
-        "remediation": "App appends permission/selection/mapping and snapshot alias/target counts; native build PASS; final runtime pending"
+        "remediation": "Persistent redacted action history and target snapshot alias/count implemented; final native build and synthetic runtime PASS; live observations await Owner environment"
       }
     ],
     "limitations": "No second independent review is claimed. Root owns remediation tests and final completion audit."
   },
-  "current_checkpoint_build": {
-    "configuration": "Debug unsigned iOS Simulator, deployment17/SDK26.5",
-    "log": "Prototypes/FoundationValidation/LocalEvidence/review-remediation-app-build.log",
-    "exit": 0,
-    "status": "PASS",
-    "final_candidate": false,
-    "source_config_sha256": {
-      "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "766af062ff0118866db9e4dde025f13f264573fbb29158a0e11d14a1c46fbac0",
+  "owner_review": "AWAITING_OWNER_REVIEW",
+  "audited_code_head": "6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa",
+  "cases": {
+    "G0-01": {
+      "assertion": "G0 independent bundle/store/media/engine paths, preserve existing work",
+      "status": "PASS",
+      "expected": "G0 independent bundle/store/media/engine paths, preserve existing work",
+      "actual_evidence": "Independent xcodeproj/App paths; baseline diff scope and protected local hashes rechecked at checkpoints",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G0-02": {
+      "assertion": "G0 native SDK build / min OS",
+      "status": "PASS",
+      "expected": "G0 native SDK build / min OS",
+      "actual_evidence": "Actual Swift package + unsigned iOS Simulator builds, deployment iOS17, SDK26.5",
+      "scope": "Apple SDK compile and iOS26.5 runtime pass; iOS17 runtime separately blocked (not installed).",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G0-03": {
+      "assertion": "G0 create/read/update true service",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "G0 create/read/update true service",
+      "actual_evidence": "Native CloudAdapter + signed-config controls compiled; no authorized environment",
+      "scope": "Applicable authorized service/Photos/device evidence is missing; local tests/compilation do not replace it.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "G1-01": {
+      "assertion": "G1 true legacy source / shape",
+      "status": "PASS",
+      "expected": "G1 true legacy source / shape",
+      "actual_evidence": "Byte-exact baseline PersistenceModels/Controller in LegacySourceManifest; separate legacy CLI process; real store NSStoreModelVersionHashes for five legacy entities",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G1-02": {
+      "assertion": "G1 complete fixture topology, immutable source",
+      "status": "PASS",
+      "expected": "G1 complete fixture topology, immutable source",
+      "actual_evidence": "LegacyFixture snapshot comparisons; process_checks includes Item/Draft/archive/sourceDraft/location/system/custom/unknown category/cover/multiple media/deleted draft; whole source tree hashes unchanged",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G1-03": {
+      "assertion": "G1 clone migrate/reopen/repeat/failure",
+      "status": "PASS",
+      "expected": "G1 clone migrate/reopen/repeat/failure",
+      "actual_evidence": "Separate-process migrate + twice verify; corrupt clone fails without replacing DB; existing migration destination rejected; source remains",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G1-04": {
+      "assertion": "G1 retain legacy App-owned bytes",
+      "status": "PASS",
+      "expected": "G1 retain legacy App-owned bytes",
+      "actual_evidence": "LegacyFixture exact media hashes; no guessed Photos reference conversion",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G1-05": {
+      "assertion": "G1 same Draft across replicas / identity",
+      "status": "PASS",
+      "expected": "G1 same Draft across replicas / identity",
+      "actual_evidence": "SharedChainTests.testIndependentLibrariesAndClonedDraftConfirm; LocalChainTests.testCaptureReopenConfirmKeepsMediaAndProfileIdentity",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G1-06": {
+      "assertion": "G1 category switch retains Profile",
+      "status": "PASS",
+      "expected": "G1 category switch retains Profile",
+      "actual_evidence": "ProtocolBoundaryTests.testLateAckPreservesFetchedConflictAndCategoryEditKeepsProfile",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G1-07": {
+      "assertion": "G1 same-name identity / independent library / merge plan",
+      "status": "PASS",
+      "expected": "G1 same-name identity / independent library / merge plan",
+      "actual_evidence": "SharedChain independent persisted library IDs and rejected cross-library open; same-name distinct-item assertion now in AdapterBoundaryTests",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G2-01": {
+      "assertion": "G2 same-save business/outbox, no phantom",
+      "status": "PASS",
+      "expected": "G2 same-save business/outbox, no phantom",
+      "actual_evidence": "SchemaTests; LocalChainTests journal fault matrix; actual read-only SwiftData failure in StorageFailureTests",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G2-02": {
+      "assertion": "G2 file/DB/original-preview/finalize/cleanup/refresh errors",
+      "status": "PASS",
+      "expected": "G2 file/DB/original-preview/finalize/cleanup/refresh errors",
+      "actual_evidence": "LocalChainTests.testJournalFailuresPreserveStagingAndAtomicOutbox; StorageFailureTests.testSavedButRefreshUnavailableRetainsSuccessAndNoReplay",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G2-03": {
+      "assertion": "G2 process termination + unique staging retention",
+      "status": "PASS",
+      "expected": "G2 process termination + unique staging retention",
+      "actual_evidence": "process_checks actual SIGKILL at prepared, committed, originalFinalized; reopen counts/hash",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G2-04": {
+      "assertion": "G2 permission/protection/capacity/corruption distinctions",
+      "status": "PASS",
+      "expected": "G2 permission/protection/capacity/corruption distinctions",
+      "actual_evidence": "StorageFailureTests classifier + actual error513; corrupt synthetic clone failure; source retained",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G3-01": {
+      "assertion": "G3 rev7 ACK must not clear rev8 / repeated ACK / restart",
+      "status": "PASS",
+      "expected": "G3 rev7 ACK must not clear rev8 / repeated ACK / restart",
+      "actual_evidence": "SyncProtocolTests.testOldAckCannotRemoveNewEditAfterReopen",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G3-02": {
+      "assertion": "G3 lost ACK / service idempotence / Usage retry vs two actions",
+      "status": "PASS",
+      "expected": "G3 lost ACK / service idempotence / Usage retry vs two actions",
+      "actual_evidence": "SharedChainTests.testLostAckRetryAndTwoRealUsageActions; DeterministicService shares CloudCodec/core",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G3-03": {
+      "assertion": "G3 partial successes / engine state loss",
+      "status": "PASS",
+      "expected": "G3 partial successes / engine state loss",
+      "actual_evidence": "Native per-result handler exists; mixed saved/failed results now exercised by AdapterBoundaryTests",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G3-04": {
+      "assertion": "G3 durable inbound before checkpoint / replay no echo",
+      "status": "PASS",
+      "expected": "G3 durable inbound before checkpoint / replay no echo",
+      "actual_evidence": "ProtocolBoundaryTests.testFailedInboundCannotAdvanceCheckpointOrBootstrap; SyncProtocolTests.testInboundIsDurableNoEchoAndPendingEditRetainsConflict",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G3-05": {
+      "assertion": "G3 native event order / send-fetch reentry",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "G3 native event order / send-fetch reentry",
+      "actual_evidence": "Native delegate compiles, no service run",
+      "scope": "Applicable authorized service/Photos/device evidence is missing; local tests/compilation do not replace it.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "G4-01": {
+      "assertion": "G4 bootstrap local/cloud combinations and paging",
+      "status": "PASS",
+      "expected": "G4 bootstrap local/cloud combinations and paging",
+      "actual_evidence": "SharedChain blank replica; ProtocolBoundaryTests.testFetchPagesRequireCompletionAndOffRejectsLateData; failed inbound blocks; native shared begin/failure/complete reducers exercised by AdapterBoundaryTests",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G4-02": {
+      "assertion": "G4 scope/OFF/ON/account A-B-A",
+      "status": "PASS",
+      "expected": "G4 scope/OFF/ON/account A-B-A",
+      "actual_evidence": "SyncProtocolTests OFF/account; AdmissionTests.testAccountABARequiresBindingAndRejectsOldEpoch; durable session rejects retained old adapter",
+      "scope": "Deterministic scope/epoch/account tests pass; actual account-event timing remains an external case.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G4-03": {
+      "assertion": "G4 ancestor merge/coupled fields/no ancestor/same field",
+      "status": "PASS",
+      "expected": "G4 ancestor merge/coupled fields/no ancestor/same field",
+      "actual_evidence": "ProtocolBoundaryTests three-way test; SyncProtocolTests durable conflict; BackupRestoreTests preserves conflict bytes",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G4-04": {
+      "assertion": "G4 late ACK after fetched conflict",
+      "status": "PASS",
+      "expected": "G4 late ACK after fetched conflict",
+      "actual_evidence": "ProtocolBoundaryTests.testLateAckPreservesFetchedConflictAndCategoryEditKeepsProfile",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G4-05": {
+      "assertion": "G4 unknown top-level/nested fields",
+      "status": "PASS",
+      "expected": "G4 unknown top-level/nested fields",
+      "actual_evidence": "ProtocolBoundaryTests two future-field tests; raw payload survives reopen and refused rewrite",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G5-01": {
+      "assertion": "G5 tombstone/offline old write/late child/inflight old save",
+      "status": "PASS",
+      "expected": "G5 tombstone/offline old write/late child/inflight old save",
+      "actual_evidence": "ProtocolBoundaryTests parent-delete test; SyncProtocolTests tombstone/re-add; SharedChain child-first",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G5-02": {
+      "assertion": "G5 explicit re-add incarnation / old children",
+      "status": "PASS",
+      "expected": "G5 explicit re-add incarnation / old children",
+      "actual_evidence": "AdmissionTests.testReAddCannotRevivePriorIncarnationChildren",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G5-03": {
+      "assertion": "G5 old backup vs remote tombstone",
+      "status": "PASS",
+      "expected": "G5 old backup vs remote tombstone",
+      "actual_evidence": "AdmissionTests.testOldBackupCannotUploadOverRemoteTombstone",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G5-04": {
+      "assertion": "G5 userDeletedZone / unknown zoneNotFound / key-reset signal",
+      "status": "PASS",
+      "expected": "G5 userDeletedZone / unknown zoneNotFound / key-reset signal",
+      "actual_evidence": "Native error branch conservative; actual SDK reset key and both zone-loss classes now tested through native shared classifier",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G6-01": {
+      "assertion": "G6 separate Picker/PhotoKit permission and exact fallback",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "G6 separate Picker/PhotoKit permission and exact fallback",
+      "actual_evidence": "PhotosBoundaryTests permission matrix + Smart restore; actual adapter compiles",
+      "scope": "Applicable authorized service/Photos/device evidence is missing; local tests/compilation do not replace it.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "G6-02": {
+      "assertion": "G6 reference mapping failure classes / only selected IDs",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "G6 reference mapping failure classes / only selected IDs",
+      "actual_evidence": "PhotosBoundaryTests mapping classifier; PhotosMappingBatch native batch calls; no library-wide fetch",
+      "scope": "Applicable authorized service/Photos/device evidence is missing; local tests/compilation do not replace it.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "G6-03": {
+      "assertion": "G6 stable ID/ref/representation; old ACK/download",
+      "status": "PASS",
+      "expected": "G6 stable ID/ref/representation; old ACK/download",
+      "actual_evidence": "MediaTransferTests old representation test, policy safety-copy test; shared wire carries reference; preview/descriptor immutable guard test",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G6-04": {
+      "assertion": "G6 JPEG/HEIC / preserve original metadata / strip preview / orientation",
+      "status": "PASS",
+      "expected": "G6 JPEG/HEIC / preserve original metadata / strip preview / orientation",
+      "actual_evidence": "LocalChainTests ImageIO metadata test; MediaTransferTests.testStaticHEICAndTwoPreviewSizes",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G7-01": {
+      "assertion": "G7 real CKAsset upload/read/temp URL/durable restart",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "G7 real CKAsset upload/read/temp URL/durable restart",
+      "actual_evidence": "Native OriginalAssetAdapter code compiled; deterministic transfer guards; no actual CKAsset service",
+      "scope": "Applicable authorized service/Photos/device evidence is missing; local tests/compilation do not replace it.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "G7-02": {
+      "assertion": "G7 prove blank metadata fetch has no implicit originals",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "G7 prove blank metadata fetch has no implicit originals",
+      "actual_evidence": "Deterministic transport explicitly carries previews only; two native zones + desiredKeys compiled; Owner instructions require actual request observation",
+      "scope": "Applicable authorized service/Photos/device evidence is missing; local tests/compilation do not replace it.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "G7-03": {
+      "assertion": "G7 policy downgrade/OFF no cloud deletion; Photos original no escalation",
+      "status": "PASS",
+      "expected": "G7 policy downgrade/OFF no cloud deletion; Photos original no escalation",
+      "actual_evidence": "MediaTransferTests policy/quota/OFF tests; MediaPlanner representative 250/50",
+      "scope": "Contract planner and late-callback scope only; native minimum metadata chain includes a recovery preview. No full production settings implementation claimed.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G7-04": {
+      "assertion": "G7 quota/network/throttle/partial / finite retry",
+      "status": "PASS",
+      "expected": "G7 quota/network/throttle/partial / finite retry",
+      "actual_evidence": "MediaTransferTests quota/backoff; fixed native retry-after; mixed-result handling tested through native shared reducer",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G7-05": {
+      "assertion": "G7 cumulative budget / interrupted attempts",
+      "status": "PASS",
+      "expected": "G7 cumulative budget / interrupted attempts",
+      "actual_evidence": "LiveEvidenceTests two tests, persisted endpoint allocation and request STARTED survives reload; no LIVE bytes",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-01": {
+      "assertion": "G8 consistent structure/representation snapshot",
+      "status": "PASS",
+      "expected": "G8 consistent structure/representation snapshot",
+      "actual_evidence": "BackupRestoreTests consistency + queued mutation single-writer boundary; SQLite backup API includes WAL",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-02": {
+      "assertion": "G8 Smart/Full completeness/missing/cloud-only source",
+      "status": "PASS",
+      "expected": "G8 Smart/Full completeness/missing/cloud-only source",
+      "actual_evidence": "BackupRestoreTests missing original/hash; PhotosBoundaryTests picker precision rejects Full; no silent omission",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-03": {
+      "assertion": "G8 partial/marker/hash/count/cancel/capacity/interruption",
+      "status": "PASS",
+      "expected": "G8 partial/marker/hash/count/cancel/capacity/interruption",
+      "actual_evidence": "BackupRestoreTests interrupted export/switch; no final package on injected failure",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-04": {
+      "assertion": "G8 path/symlink/size/version/input validity",
+      "status": "PASS",
+      "expected": "G8 path/symlink/size/version/input validity",
+      "actual_evidence": "BackupRestoreTests package validation",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-05": {
+      "assertion": "G8 atomic generation / old source fallback / conflict/intents",
+      "status": "PASS",
+      "expected": "G8 atomic generation / old source fallback / conflict/intents",
+      "actual_evidence": "BackupRestoreTests consistency and before/after switch interruption",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-06": {
+      "assertion": "G8 all retired bytes, clear old ACK/session, fresh cloud admission",
+      "status": "PASS",
+      "expected": "G8 all retired bytes, clear old ACK/session, fresh cloud admission",
+      "actual_evidence": "BackupRestoreTests.testRestorePreservesRetiredBytesButDropsOldMediaTicketsAndAcknowledgements + AdmissionTests",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "G8-07": {
+      "assertion": "G8 zero Photos writes / source snapshot target actual hash",
+      "status": "PASS",
+      "expected": "G8 zero Photos writes / source snapshot target actual hash",
+      "actual_evidence": "Local restore code has no PhotoKit writes; Simulator snapshot/reopen report exact bytes; final fresh-chain/relaunch reports PASS",
+      "scope": "Actual same-Simulator generation and process reopen match snapshot/bytes; double-device erasure promise remains blocked.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "P1-01": {
+      "assertion": "P1 originals backup eligible, cache excluded, no ACK downgrade",
+      "status": "PASS",
+      "expected": "P1 originals backup eligible, cache excluded, no ACK downgrade",
+      "actual_evidence": "BackupRestoreTests.testOriginalAndRecoveryPreviewRemainBackupEligible",
+      "scope": "Final candidate local/logic evidence; scope limited to this assertion and fixture.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "P1-02": {
+      "assertion": "P1 no private data in public evidence / production confidentiality",
+      "status": "PASS",
+      "expected": "P1 no private data in public evidence / production confidentiality",
+      "actual_evidence": "Final scope/privacy audit passed; private config/evidence gitignored; impact field classification and pre-production decisions",
+      "scope": "Scope and public-evidence audit passed; production encryption remains a separate pre-production decision, not approved.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    },
+    "Integration-01": {
+      "assertion": "Integration normal chain + four counterexamples",
+      "status": "BLOCKED_EXTERNAL",
+      "expected": "Integration normal chain + four counterexamples",
+      "actual_evidence": "SharedChain, ProtocolBoundary old ACK/parent delete, PhotosBoundary fallback restore, Admission old backup tombstone reuse same core",
+      "scope": "All four deterministic counterexamples and native local chain pass; actual minimal cloud replication remains external.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "Not executed in authorized live environment"
+    },
+    "Program-01": {
+      "assertion": "Program checkpoint recovery",
+      "status": "PASS",
+      "expected": "Program checkpoint recovery",
+      "actual_evidence": "Existing worktree/commits/process handles verified; no duplicate harness or cloud run; state atomically replaced",
+      "scope": "Recovery and unique checkpoint verified; publication is separately blocked by platform approval review.",
+      "verification": "final_candidate",
+      "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+      "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
+      "command_or_action": "See referenced named test under final swift test, process_checks.py or final Simulator runtime; LIVE cases in Owner Action Pack",
+      "result": "51/51 deterministic suite, native App build and final Simulator chain passed"
+    }
+  },
+  "final_candidate": {
+    "code_head": "6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa",
+    "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
+    "inputs_sha256": {
+      "Prototypes/FoundationValidation/App/Info.plist": "d51e3814e4cb36ac73e9f7316f56e869e440c889200f84475ec909c2e07b7aa6",
+      "Prototypes/FoundationValidation/App/ValidationApp.swift": "5bdca2c7c338117e5aee5961e008fa5be6d5b790c3d05b959d891b00fca9cf38",
+      "Prototypes/FoundationValidation/FoundationValidation.xcodeproj/project.pbxproj": "1f84e38c91df99b9ca48e97a72040b8103703d03e5bb2935231dc2c7511c4a97",
+      "Prototypes/FoundationValidation/FoundationValidation.xcodeproj/xcshareddata/xcschemes/FoundationValidation.xcscheme": "de3d65ad71693672f7ab98940437431a52defb099c5c46784b575282dcfce4c3",
+      "Prototypes/FoundationValidation/LegacySourceManifest.json": "b18fe8bab7d1e8647a1a6bab2aaf3c2ba4a5541e7cf22d75c9cc90a790d169b0",
+      "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2",
+      "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "532402354d1f7370dae1d1d78d5fc503d13fe231904a35bb83dfd7095a73ea0f",
       "Prototypes/FoundationValidation/Sources/ValidationCore/BackupRestore.swift": "5190bde89947bf4752c8f79fc8ad96935a7060d536c28dcd4cab107b09efd8ce",
       "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "5a1f0dfa844196b6775d0cdfc5c120435654644dcfb523df76f3844d38ccf76f",
-      "Prototypes/FoundationValidation/Sources/ValidationCore/CloudAdapter.swift": "679f41cd0b1de6cffffc91b3b58624743066ed0ae5a3c55f2a335fef804b6463",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/CloudAdapter.swift": "625221e76a7e596b2d2a643c32b088cf666d3bd5ff1ccb39fe41795bc297dfb1",
       "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/LegacyTypes.swift": "4f2a824e49d6bd08644067db698bb70f603c64ff04ef6c168eefae52a84296e6",
       "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceController.swift": "e8be49ca44f70b601dbeb0d250d3170b6abd90829900468afd87aa995b2933d4",
       "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceModels.swift": "f1dd75be099200e55fd6fa9bf91cd4202e68f67a2a95bf485f2a0ff03af94bd6",
-      "Prototypes/FoundationValidation/Sources/ValidationCore/LegacyFixture.swift": "c4d569d354ae5a26ef72d6ece704cdc6791fc9fc8069da15351790c9bbb0997f",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/LegacyFixture.swift": "eda88e73e6d5f914e724bd266ea7e322b93eb6a221b9972e9a17ecedccf8cae7",
       "Prototypes/FoundationValidation/Sources/ValidationCore/LiveValidation.swift": "850635a35e59f04955f4eeb8eb55addfa2731d9584e1af4c5c779215585070f5",
       "Prototypes/FoundationValidation/Sources/ValidationCore/LocalChain.swift": "07e3c17f36219e42625c209a4dd9b81310abeea13f82430d5bb7eb58fab2aaa5",
       "Prototypes/FoundationValidation/Sources/ValidationCore/MediaFiles.swift": "9d49f4560a279d2495e3020da1733d4061b52b227aa594872a67baf09d96ae74",
@@ -214,10 +733,75 @@
       "Prototypes/FoundationValidation/Sources/ValidationCore/PhotosAdapter.swift": "84f572107cb580a7b3fdff560d9d53add9b672321e0c655d9cacf80e10725cda",
       "Prototypes/FoundationValidation/Sources/ValidationCore/StorageFailure.swift": "0af4364b7fdad5ee1b0352928678882e6343994f817b2ea98a63eacdace44f64",
       "Prototypes/FoundationValidation/Sources/ValidationCore/SyncProtocol.swift": "a0a94868fa8780d6c0bf2b94ad13e23ba54a3dd4130f841b989d0004cab1dd94",
-      "Prototypes/FoundationValidation/App/Info.plist": "d51e3814e4cb36ac73e9f7316f56e869e440c889200f84475ec909c2e07b7aa6",
-      "Prototypes/FoundationValidation/App/ValidationApp.swift": "5bdca2c7c338117e5aee5961e008fa5be6d5b790c3d05b959d891b00fca9cf38",
-      "Prototypes/FoundationValidation/FoundationValidation.xcodeproj/project.pbxproj": "1f84e38c91df99b9ca48e97a72040b8103703d03e5bb2935231dc2c7511c4a97",
-      "Prototypes/FoundationValidation/FoundationValidation.xcodeproj/xcshareddata/xcschemes/FoundationValidation.xcscheme": "de3d65ad71693672f7ab98940437431a52defb099c5c46784b575282dcfce4c3"
-    }
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/AdapterBoundaryTests.swift": "7b1b9aeec45d83948c1c5b1e28bd5d5ebc86917fe8ed299ef9ab05f61b23f8f0",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/AdmissionTests.swift": "07d91780d35ce41fa295b63b3a9377e6ed99fbb0d49aa1d00e841f01cbe8046e",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/BackupRestoreTests.swift": "4454706e96a55dafec7a4dea71d1811ce452b10dda0ae1b8e198edaccb284b94",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/LiveEvidenceTests.swift": "3d66873dc1023e09531b9ed6475129a5a46f18ae4576e04a2388a4580b7f1c55",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/LocalChainTests.swift": "38f303eece881f9c58185754492f4b0c4580ad19d07ef14f7e8475c9862b7b34",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/MediaTransferTests.swift": "9cc8aebc8121e00745bebec8b478a50eabf0d1f58d7f2637f14a2b79731317d7",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/PhotosBoundaryTests.swift": "05cf8823639841c866c5e3e3e8ea61b3e28bcd5028cf844d105a51382791170e",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/ProtocolBoundaryTests.swift": "f2978e26242a1264ae1f28292a5121a5d902fc063b5472e153f8a5d2f5e93ca1",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/ReviewRegressionTests.swift": "372de8eef805fa7ff0ca4d66e9225093800b19306d243a782e209fb23c896879",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SchemaTests.swift": "97eb073cc8f297f1c84260acba6334b066d6730abb8d5bf32d5961b9a60de210",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SharedChainTests.swift": "39f45d2e7d0fa152b6db22466337acd60db272811005632f588cc8b8e274e412",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/StorageFailureTests.swift": "7e3f43962550fe4342a9e8a7fc06247dd68c69698bb41755074a9e14e8da37ce",
+      "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SyncProtocolTests.swift": "4dc63d478f7d37d8b8fc35fd328b7ff8da55d77218fabea08a36991d0d4ba431",
+      "Prototypes/FoundationValidation/Tools/prepare_live_config.py": "6c98bce9e94ab01b021746e77761852721fc917e289568ff40f31615b5d4ec11",
+      "Prototypes/FoundationValidation/Tools/process_checks.py": "7a5e31c32d5a01d9b38fc23273712c77816a37a98131ada211ab7ea45b50fe34",
+      "Prototypes/FoundationValidation/Tools/refresh_project_sources.py": "faafcf80392d72588ba04dc2a1294cfbd84fd2e52be29f3d4568278aaa0649fe"
+    },
+    "artifacts_sha256": {
+      "Prototypes/FoundationValidation/LocalEvidence/final-candidate-tests.log": "8a13269ab1ff403b9ab7b89ec78490e8eb6718a58153ed2618c9defd60b0d4f2",
+      "Prototypes/FoundationValidation/LocalEvidence/final-candidate-app-build.log": "32db3e8c39ff4b680cd16ee2d60bba7b4e72edbd6aec823003c53e0565d3430e",
+      "Prototypes/FoundationValidation/LocalEvidence/final-ios-initial-report.json": "479d7965fadd069acf018b5d3d208fea6ffa62e77995fdb08143de9d151c441b",
+      "Prototypes/FoundationValidation/LocalEvidence/final-ios-reopen-report.json": "8590004aa75cd2ff6b6426d0553314565541cb834b9b04274e28bd9c554ca746",
+      "Prototypes/FoundationValidation/LocalEvidence/final-ios-runtime.json": "25b0f47b6712557c92d1ca13b6a0a1e4d6867451c37609e6f66951061abe3ffa",
+      "Prototypes/FoundationValidation/LocalEvidence/final-ios-screen.png": "909c1ed2037c0d2c72c224ee38468e73a5ace21d68a53454c94fbf1b580d8a4c",
+      "Prototypes/FoundationValidation/LocalEvidence/migration-interruption-process.log": "11941a3f3e9339514de0cfcd592c80f32fa9eeaa9b5055a1141ed42a3d379d90"
+    },
+    "full_suite": {
+      "command": "swift test",
+      "result": "PASS",
+      "executed": 51,
+      "failures": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "native_build": {
+      "command": "xcodebuild -project FoundationValidation.xcodeproj -scheme FoundationValidation -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath LocalEvidence/DerivedData CODE_SIGNING_ALLOWED=NO build",
+      "result": "PASS",
+      "exit": 0
+    },
+    "runtime": {
+      "program": "HHOS-FAV-001",
+      "device": "iPhone 16 Simulator",
+      "OS": "iOS26.5",
+      "freshChain": "PASS",
+      "processRelaunch": "PASS",
+      "sameSnapshot": true,
+      "liveService": "NOT_RUN",
+      "photosWrites": 0
+    },
+    "process_fixture": "LocalEvidence/process-5caf8b22-04e0-4a5e-ab22-bc4eb69208b0",
+    "visual_check": "Stable initial screen inspected; no clipping; launch-fade screenshot replaced by stable capture",
+    "production_tests": "Not rerun: shipping source/project/test inputs unchanged; prior 45/45 is historical only",
+    "limitations": "LOGIC/LOCAL_PLATFORM evidence is not LIVE_SERVICE/LIVE_CROSS_DEVICE; backup interruption uses explicit exceptions, migration/capture also actual SIGKILL"
+  },
+  "remaining_external_actions": [
+    "Clear the earlier platform approval-review block before ordinary push/one Draft PR; existing user confirmation remains pending",
+    "Owner supplies existing authorized Development signing/container and runs concentrated live/device/Photos action pack",
+    "Owner reviews per-decision Foundation recommendations; no automatic Freeze or production implementation"
+  ],
+  "remote_readback": {
+    "main": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
+    "draft_pr_query": "gh pr list --state all --head spike/foundation-validation",
+    "matching_prs": 0,
+    "read_only": true
+  },
+  "local_work_complete": true,
+  "all_acceptance_criteria_satisfied": false,
+  "blocking_audit": {
+    "consecutive_impasse_goal_turns": 0,
+    "note": "This turn completed local evidence and deliverables; do not mark goal blocked merely because publication/live are external. Future no-progress turns must revalidate same impasse."
   }
 }

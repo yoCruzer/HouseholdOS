@@ -27,7 +27,7 @@ final class SharedChainTests: XCTestCase {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: base) }
         let first = try LocalChain(root: base.appendingPathComponent("source"))
-        let draft = try first.capture(MediaFiles.syntheticJPEG())
+        let draft = try first.capture(MediaFiles.syntheticJPEG(), precision: "pickerDeliveredRepresentation", photoReference: "synthetic-cloud-reference")
         let source = try LocalChain(root: first.root)
         try source.recover(); _ = try source.confirm(draft)
         let sender = try SyncCore.local(context: source.context, library: source.libraryID, root: source.root)
@@ -55,6 +55,7 @@ final class SharedChainTests: XCTestCase {
         XCTAssertEqual(try blank.counts()["drafts"], 0)
         XCTAssertEqual(try blank.counts()["media"], 1)
         XCTAssertTrue(try receiver.pending().isEmpty)
+        XCTAssertEqual(try blank.context.fetch(FetchDescriptor<MediaRepresentation>()).first?.photosReference, "synthetic-cloud-reference")
         let media = try XCTUnwrap(blank.context.fetch(FetchDescriptor<MediaAssetRecord>()).first)
         XCTAssertNotNil(try Data(contentsOf: blank.root.appendingPathComponent("media/" + XCTUnwrap(media.thumbnailFileName))))
         XCTAssertFalse(FileManager.default.fileExists(atPath: blank.root.appendingPathComponent("media/" + media.originalFileName).path), "Metadata/preview fixture transport must not imply restored original")

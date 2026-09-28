@@ -8,6 +8,7 @@ import SwiftData
     let zone: CKRecordZone.ID
     private(set) var engine: CKSyncEngine?
     private var fetchFailed = false
+    private(set) var fetchedRecordCount = 0
     private(set) var lastFailure: String?
 
     init(core: SyncCore) {
@@ -47,27 +48,19 @@ import SwiftData
         do {
             switch event {
             case .willFetchChanges:
-                fetchFailed = false; try core.beginFetch(callback: callbackScope)
+                try beginFetch()
             case .fetchedRecordZoneChanges(let value):
-                for modification in value.modifications { try core.apply(modification.record, callback: callbackScope) }
+                for modification in value.modifications { try core.apply(modification.record, callback: callbackScope); fetchedRecordCount += 1 }
                 if !value.deletions.isEmpty { try core.pause("unexpected physical record deletion; reconcile retained tombstones") }
             case .stateUpdate(let value):
                 // Delegate delivery is serial. A failed durable apply sets pause before state can advance.
                 try core.persistEngineState(JSONEncoder().encode(value.stateSerialization), callback: callbackScope)
             case .didFetchRecordZoneChanges(let value):
-                if let error = value.error { fetchFailed = true; try classify(error) }
+                if let error = value.error { try recordFetchFailure(error) }
             case .didFetchChanges:
-                if !fetchFailed { try core.finishBootstrap(callback: callbackScope) }
+                try completeFetch()
             case .sentRecordZoneChanges(let value):
-                for record in value.savedRecords { try core.acknowledge(record, callback: callbackScope) }
-                for failed in value.failedRecordSaves {
-                    if failed.error.code == .serverRecordChanged, let server = failed.error.serverRecord {
-                        try core.apply(server, callback: callbackScope)
-                        if try core.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: { $0.entityID.uuidString == server.recordID.recordName && $0.scope == callbackScope.key }) {
-                            try core.pause("server conflict requires durable reconciliation")
-                        }
-                    } else { try classify(failed.error) }
-                }
+                try applySendResults(saved: value.savedRecords, errors: value.failedRecordSaves.map(\.error))
             case .accountChange(let value):
                 switch value.changeType {
                 case .signIn(let user) where MediaFiles.hash(Data(user.recordName.utf8)) == callbackScope.account: break
@@ -86,7 +79,34 @@ import SwiftData
             do { try core.saveSession() } catch { lastFailure = "durable checkpoint unavailable; stopped" }
         }
     }
-    private func classify(_ error: CKError) throws {
+    // Deterministic tests call these same delegate reducers; only service delivery is replaced.
+    func beginFetch() throws {
+        guard core.accepts(callbackScope) else { return }
+        fetchFailed = false; try core.beginFetch(callback: callbackScope)
+    }
+    func recordFetchFailure(_ error: CKError) throws {
+        guard core.accepts(callbackScope) else { return }
+        fetchFailed = true; try classify(error)
+    }
+    func completeFetch() throws {
+        guard core.accepts(callbackScope), !fetchFailed else { return }
+        try core.finishBootstrap(callback: callbackScope)
+    }
+    func applySendResults(saved: [CKRecord], errors: [CKError]) throws {
+        guard core.accepts(callbackScope) else { return }
+        for record in saved { try core.acknowledge(record, callback: callbackScope) }
+        for error in errors {
+            if error.code == .serverRecordChanged, let server = error.serverRecord {
+                try core.apply(server, callback: callbackScope)
+                if try core.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: { $0.entityID.uuidString == server.recordID.recordName && $0.scope == callbackScope.key }) {
+                    try core.pause("server conflict requires durable reconciliation")
+                }
+            } else { try classify(error) }
+        }
+    }
+    func classify(_ error: CKError) throws {
+        guard core.accepts(callbackScope) else { return }
+
         switch error.code {
         case .userDeletedZone: try core.pause("userDeletedZone")
         case .zoneNotFound: try core.pause("zoneNotFound; cause requires evidence")

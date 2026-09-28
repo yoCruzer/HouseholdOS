@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
     @State private var chain: LocalChain?
     @State private var message = "隔离验证环境准备中"
     @State private var counts = [String: Int]()
+    @State private var itemNames = [String]()
     @State private var selected: PhotosPickerItem?
     @State private var lastDraft: UUID?
     @State private var latestBackup: URL?
@@ -35,6 +36,11 @@ import UniformTypeIdentifiers
                     Text(message).accessibilityIdentifier("validation.status")
                     Text("Draft \(counts["drafts", default: 0]) · Item \(counts["items", default: 0]) · Media \(counts["media", default: 0])")
                 }
+                if !itemNames.isEmpty {
+                    Section("当前测试 Item") {
+                        ForEach(Array(itemNames.enumerated()), id: \.offset) { _, name in Text(name) }
+                    }
+                }
                 Section("本地链路") {
                     Button("生成测试图片并保存 Draft") { perform {
                         lastDraft = try requireChain().capture(MediaFiles.syntheticJPEG())
@@ -54,9 +60,29 @@ import UniformTypeIdentifiers
                     PhotosPicker("选择一张测试 JPEG/HEIC", selection: $selected, matching: .images, preferredItemEncoding: .current)
                     Button("单独请求 PhotoKit 持续访问权限") {
                         Task { let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
-                            message = "PhotoKit 权限状态：\(status.rawValue)。普通选图不依赖此授权。"
+                            perform {
+                                try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "photos-authorization", outcome: "OBSERVED", report: ["photosAuthorization": String(status.rawValue)])
+                                message = "PhotoKit 权限状态：\(status.rawValue)。普通选图不依赖此授权。"
+                            }
                         }
                     }
+                    Button("重查已选测试照片的映射与当前静态表示") { perform {
+                        let references = try requireChain().context.fetch(FetchDescriptor<MediaRepresentation>()).compactMap(\.photosReference)
+                        let mapped = PhotosMappingBatch().localReferences(forCloudReferences: references)
+                        var outcomes: [String: Int] = [:]
+                        for result in mapped.values {
+                            outcomes[result.state.rawValue, default: 0] += 1
+                            if let identifier = result.identifier, result.state == .mapped {
+                                do {
+                                    let data = try PhotosAdapter.readSelectedCurrentRepresentation(identifier)
+                                    outcomes["readableCurrentStill", default: 0] += data.isEmpty ? 0 : 1
+                                } catch { outcomes[PhotosAdapter.classify(error).rawValue, default: 0] += 1 }
+                            }
+                        }
+                        try JSONEncoder().encode(outcomes).write(to: programRoot.appendingPathComponent("photos-observation.json"), options: .atomic)
+                        try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "photos-mapping-current-still", outcome: "OBSERVED", report: outcomes.mapValues(String.init))
+                        message = "已检查 \(mapped.count) 份已选引用；仅读取当前静态表示，不替换档案图片，也不写相册"
+                    }}
                     Text("Picker 交付表示会保留为 App 安全副本；不声称它一定是未编辑原图或 Live Photo 全资源。")
                 }
                 Section("一致快照与隔离恢复") {
@@ -65,12 +91,25 @@ import UniformTypeIdentifiers
                         try FileManager.default.createDirectory(at: packages, withIntermediateDirectories: true)
                         let target = packages.appendingPathComponent(UUID().uuidString)
                         let result = try BackupRestore.export(requireChain(), to: target, full: false)
+                        try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "backup", outcome: "COMPLETED", report: ["snapshotCode": String(MediaFiles.hash(Data(result.snapshotID.uuidString.utf8)).prefix(12)), "sourceRepresentations": String(result.representations.count)])
                         latestBackup = target; message = "快照已校验：\(result.files.count) 个文件。明文实验包，不是生产保密承诺。"
                     }}
                     Button("恢复最近备份到新 generation") { perform {
                         guard let source = latestBackup else { throw ValidationFailure.invariant("先创建测试备份") }
-                        restoredSnapshotID = try BackupRestore.restore(source, into: programRoot.appendingPathComponent("restored"))
+                        let generations = programRoot.appendingPathComponent("restored")
+                        restoredSnapshotID = try BackupRestore.restore(source, into: generations)
+                        let manifest = try BackupRestore.validate(source)
+                        let target = try BackupRestore.activeGeneration(in: generations)
+                        for representation in manifest.representations {
+                            guard try MediaFiles.hash(Data(contentsOf: target.appendingPathComponent(representation.path))) == representation.sha256 else { throw ValidationFailure.invariant("target representation verification failed") }
+                        }
+                        try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "restore", outcome: "LOCAL_TARGET_VERIFIED", report: ["snapshotCode": String(MediaFiles.hash(Data(manifest.snapshotID.uuidString.utf8)).prefix(12)), "verifiedTargetRepresentations": String(manifest.representations.count), "photosWrites": "0"])
                         message = "隔离 generation 已恢复；原库保留；系统相册写入为零；云端准入待验证"
+                    }}
+                    Button("选用隔离恢复库进行准入验证") { perform {
+                        guard live == nil else { throw ValidationFailure.invariant("先关闭当前同步") }
+                        chain = try LocalChain(root: BackupRestore.activeGeneration(in: programRoot.appendingPathComponent("restored")))
+                        message = "已选用恢复库；连接后必须先抓取远端 tombstone；原库保持"
                     }}
                 }
                 Section("平台证据") {
@@ -114,7 +153,15 @@ import UniformTypeIdentifiers
                         let summary: [String: Any] = ["program": "HHOS-FAV-001", "counts": counts,
                             "liveCloud": live?.report ?? ["status": "NOT_RUN_THIS_SESSION"], "crossDevicePhotos": "NOT_RUN", "photosWrites": 0,
                             "sourceSnapshotVerifiedOnTarget": restoredSnapshotID != nil ? "LOCAL_GENERATION_ONLY" : "NOT_RUN"]
-                        try JSONSerialization.data(withJSONObject: summary, options: [.prettyPrinted, .sortedKeys]).write(to: url, options: .atomic)
+                        var exported = summary
+                        let evidence = try LiveEvidence.load(programRoot.appendingPathComponent("live-evidence.json"))
+                        let photosURL = programRoot.appendingPathComponent("photos-observation.json")
+                        if FileManager.default.fileExists(atPath: photosURL.path) {
+                            exported["photosObservation"] = try JSONSerialization.jsonObject(with: Data(contentsOf: photosURL))
+                        }
+                        exported["liveObservations"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(evidence))
+                        exported["estimatedTransferredBytes"] = try LiveBudget.load(programRoot.appendingPathComponent("live-budget.json")).estimatedBytes
+                        try JSONSerialization.data(withJSONObject: exported, options: [.prettyPrinted, .sortedKeys]).write(to: url, options: .atomic)
                         reportURL = url; message = "脱敏摘要已生成，不含照片、账号或原始路径"
                     }}
                     if let reportURL { ShareLink("导出脱敏摘要", item: reportURL) }
@@ -159,6 +206,7 @@ import UniformTypeIdentifiers
                         perform {
                             let cloudReference = resolution.localIdentifier.flatMap { id in PhotosMappingBatch().cloudReferences(forSelectedIdentifiers: [id])[id]?.identifier }
                             lastDraft = try requireChain().capture(resolution.fallbackBytes, precision: resolution.precision, photoReference: cloudReference)
+                            try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "photos-selection", outcome: "SAVED", report: ["selectedAccess": resolution.access.rawValue, "representationPrecision": resolution.precision, "hasCloudReference": String(cloudReference != nil)])
                             message = "选中表示已保存；持续访问状态：\(resolution.access.rawValue)"
                         }
                     } catch { message = "选图未完成：\(error.localizedDescription)" }
@@ -184,8 +232,19 @@ import UniformTypeIdentifiers
         busy = true
         Task { @MainActor in
             defer { busy = false }
-            do { try await operation(); perform {} }
-            catch { message = "平台操作未完成；保留本地数据。请核对配置、账号和执行摘要。" }
+            do {
+                try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "manual-control", outcome: "STARTED", report: live?.report ?? [:])
+                try await operation(); perform {}
+            } catch {
+                // Record only stable error class/code, never userInfo, account IDs or raw paths.
+                let value = error as NSError
+                var report = live?.report ?? [:]
+                report["errorCode"] = String(value.code)
+                report["errorClass"] = value.domain == "CKErrorDomain" ? "CloudKit" : "local-or-configuration"
+                do { try LiveEvidence.append(at: programRoot.appendingPathComponent("live-evidence.json"), action: "manual-control", outcome: "FAILED", report: report) }
+                catch { message = "证据文件无法保存；停止测试并保留本地数据"; return }
+                message = "平台操作未完成；保留本地数据。请核对配置、账号和执行摘要。"
+            }
         }
     }
 
@@ -223,7 +282,10 @@ import UniformTypeIdentifiers
         do {
             try operation()
             let chain = try requireChain(); counts = try chain.counts()
+            itemNames = try chain.context.fetch(FetchDescriptor<ItemRecord>()).map(\.name)
             previews = try chain.context.fetch(FetchDescriptor<MediaAssetRecord>()).compactMap { $0.thumbnailFileName.map { chain.root.appendingPathComponent("media/" + $0) } }
-        } catch { message = "操作未完成，数据保留：\(error.localizedDescription)" }
+        } catch {
+            message = (error as? CommittedCaptureError)?.errorDescription ?? StorageFailure.classify(error).message
+        }
     }
 }

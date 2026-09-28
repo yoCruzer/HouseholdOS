@@ -5,7 +5,7 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "2f2f7d87c3352e7793041dcd8468b8603738a606",
+  "last_good_commit": "d996a1a2f409eef95c2f47f08f8043f3ea29b550",
   "gates": {
     "G0": {
       "status": "RUNNING",
@@ -23,7 +23,8 @@
         "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending",
         "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync",
         "Two independent local libraries have different persisted IDs; two replicas confirm same Draft to same Item ID (SharedChainTests).",
-        "Actual baseline store observable Core Data entity-version hashes captured; whole-directory source hashes unchanged through clone migration and repeat reopen. Process evidence driver retains synthetic stores."
+        "Actual baseline store observable Core Data entity-version hashes captured; whole-directory source hashes unchanged through clone migration and repeat reopen. Process evidence driver retains synthetic stores.",
+        "Corrupt synthetic clone and existing migration destination rejected; immutable baseline hashes unchanged. Same-name distinct Item IDs exercised by adapter partial-success regression."
       ]
     },
     "G2": {
@@ -33,14 +34,16 @@
         "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending",
         "Affected SchemaTests + LocalChainTests rerun 4/4 after sync sidecar additions",
         "LocalChain stages typed wire Draft and Media intents in the same business save; shared chain affected 8/8 PASS.",
-        "Actual subprocess SIGKILL at prepared/committed/originalFinalized boundaries; recovery counts and original hashes correct. Actual read-only SwiftData save returns error 513, no phantom records/outbox; committed refresh outcome explicit."
+        "Actual subprocess SIGKILL at prepared/committed/originalFinalized boundaries; recovery counts and original hashes correct. Actual read-only SwiftData save returns error 513, no phantom records/outbox; committed refresh outcome explicit.",
+        "Independent review R1 reproduced dirty-context leakage, then fixed complete capture/confirm rollback boundary and next wire revision; ReviewRegression + affected 25 tests PASS."
       ]
     },
     "G3": {
       "status": "RUNNING",
       "evidence": [
         "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
-        "SharedChainTests 3/3: blank client receives actual recovery preview using same CKRecord codec/core; lost ACK and usage action retry; native iOS synthetic chain initial report PASS."
+        "SharedChainTests 3/3: blank client receives actual recovery preview using same CKRecord codec/core; lost ACK and usage action retry; native iOS synthetic chain initial report PASS.",
+        "Native delegate uses shared applySendResults reducer; partial success only retires saved operation, failed fetch cannot bootstrap; old error after OFF ignored. AdapterBoundaryTests PASS."
       ]
     },
     "G4": {
@@ -57,7 +60,8 @@
       "evidence": [
         "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
         "Parent deletion hides early and late children; old in-flight ACK cannot replace tombstone; offline conflict retained. More re-add/child-generation cases pending.",
-        "Explicit re-add has new incarnation; old child records remain hidden/unsent. Prior conflicts retained as resolved history. Old backup restored over current remote tombstone cannot upload or revive old children."
+        "Explicit re-add has new incarnation; old child records remain hidden/unsent. Prior conflicts retained as resolved history. Old backup restored over current remote tombstone cannot upload or revive old children.",
+        "Review R3/R4 failing regressions fixed: concurrent update vs local tombstone persists conflict and blocks stale send; inbound re-add requires new incarnation. userDeletedZone/zoneNotFound durable pause tested through native reducer."
       ]
     },
     "G6": {
@@ -72,7 +76,8 @@
       "status": "RUNNING",
       "evidence": [
         "MediaTransferTests 5/5 PASS; old ACK/download guarded by representation/revision/scope, Photos-backed fallback does not upgrade upload, policy downgrade retains acknowledged cloud state, quota/backoff conservative, 250/50 representative ordered plan, persisted 100MiB estimate budget",
-        "CKAsset immutable representation upload and direct desiredKeys fetch compile on macOS; new native App build and LIVE remain pending"
+        "CKAsset immutable representation upload and direct desiredKeys fetch compile on macOS; new native App build and LIVE remain pending",
+        "Review R5 fixed download admission to honor persisted media pause/retryAfter; focused adapter/media/review/evidence 15 tests PASS. LIVE requests remain zero."
       ]
     },
     "G8": {
@@ -82,7 +87,8 @@
         "iOS initial self-test validates one complete restored representation; process reopen running",
         "Actual Simulator process restart verifies restored original bytes against same snapshot; LocalEvidence/ios-reopen-report.json PASS.",
         "Backup includes all retained representation files, not only current revision. Restore admission cannot be bypassed by ordinary bind; it fetches current remote state before scheduling.",
-        "Explicit regression verifies all retired representation bytes restored, old prepared/acknowledged media tickets removed, restore upload still gated; affected 17 tests PASS."
+        "Explicit regression verifies all retired representation bytes restored, old prepared/acknowledged media tickets removed, restore upload still gated; affected 17 tests PASS.",
+        "Review R2 self-consistent package missing legacy original reproduced and rejected after fix; old ACTIVE unchanged. Synchronous queued mutation snapshot test PASS."
       ]
     },
     "P1": {
@@ -103,7 +109,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Audit live controls/report persistence and remaining per-contract gaps; then one independent read-only reviewer and final candidate suite/build/runtime evidence.",
+  "next_safe_action": "Close remaining migration interruption and scope/policy evidence gaps; refresh final source/config/fixture fingerprints, run final candidate suite once and actual Simulator runtime, then finish case statuses/publication disposition.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -123,12 +129,11 @@
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
   "remaining_implementation": [
-    "Complete live control audit (durable redacted reports, budget/error behavior, signed-device Owner instructions); actual unsigned iOS build passes, LIVE blocked by external setup.",
-    "Close any remaining per-contract assertion gaps: migration failure/corrupt clone source preservation, category/Profile retention, backup concurrent mutation/cancel restart, partial results and cross-scope late callbacks, representation restore history",
-    "Nested unknown fields and media restore tickets now covered; continue auditing remote projection fidelity and late ACK/conflict ordering.",
-    "Run one independent final read-only review, address findings with affected tests, then final harness suite and actual App build/launch with dependency fingerprints",
-    "Complete per-assertion evidence map, per-decision Freeze recommendation, production implementation map and concentrated Owner Action Pack",
-    "Publish one Draft PR only after platform review block is cleared; explicit confirmation pending, no retries or alternate push channel used"
+    "Close final assertion audit: migration interruption boundary, backup interruption evidence precision, exact date/DTO and metadata-policy claims; keep unsupported/live conditions explicit",
+    "Finalize Owner pack against actual controls and persist runtime export evidence; SDK key-reset/index restrictions need authoritative confirmation",
+    "Single independent read-only review completed; six findings remediated with affected tests/build. Final full deterministic candidate suite and actual App runtime still pending",
+    "Replace historical narrative state with final per-case statuses and source/config/SDK/fixture fingerprints; reconcile impact/Owner docs with final evidence",
+    "One Draft PR still requires clearance of earlier automatic approval-review block. No push retry or alternate channel used; original explicit confirmation request remains pending"
   ],
   "historical_tested_fingerprints": {
     "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",
@@ -147,5 +152,72 @@
     "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SyncProtocolTests.swift": "b3af4cdf94359e0858917c6f4ab72d392950baf0509f7155fc8c3a2696b29a55",
     "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2"
   },
-  "evidence_note": "Historical fingerprints refer to the earlier checkpoint. Current focused runs are indexed in VALIDATION_EVIDENCE.md; final code/config/fixture dependency manifests must be refreshed before final acceptance. No complete gate or final candidate is claimed."
+  "evidence_note": "Historical fingerprints refer to the earlier checkpoint. Current focused runs are indexed in VALIDATION_EVIDENCE.md; final code/config/fixture dependency manifests must be refreshed before final acceptance. No complete gate or final candidate is claimed.",
+  "independent_review": {
+    "status": "COMPLETED_ONCE",
+    "reviewer": "final_readonly_review",
+    "candidate": "d996a1a plus pre-review working changes",
+    "read_only": true,
+    "findings": [
+      {
+        "id": "R1",
+        "issue": "Draft confirmation fixed revision and incomplete rollback boundary",
+        "remediation": "Fixed whole mutation rollback and dynamic revision; failing regression then PASS"
+      },
+      {
+        "id": "R2",
+        "issue": "Restore could accept self-consistent manifest missing referenced legacy media/preview",
+        "remediation": "All MediaAsset references now require file and manifest hash coverage; failing regression then PASS"
+      },
+      {
+        "id": "R3",
+        "issue": "Local tombstone ignored concurrent live server record and repeated stale conditional write",
+        "remediation": "Durable conflict blocks entity; native delegate reducer pauses; failing regression then PASS"
+      },
+      {
+        "id": "R4",
+        "issue": "Inbound re-add did not require new incarnation",
+        "remediation": "Inbound now rejects old incarnation; parent/child regression fails before and passes after"
+      },
+      {
+        "id": "R5",
+        "issue": "Downloads bypassed persistent media retry/pause",
+        "remediation": "Download ticket checks queue admission; affected backoff/reopen test PASS"
+      },
+      {
+        "id": "R6",
+        "issue": "Photos/restore observations not fully included in durable redacted export",
+        "remediation": "App appends permission/selection/mapping and snapshot alias/target counts; native build PASS; final runtime pending"
+      }
+    ],
+    "limitations": "No second independent review is claimed. Root owns remediation tests and final completion audit."
+  },
+  "current_checkpoint_build": {
+    "configuration": "Debug unsigned iOS Simulator, deployment17/SDK26.5",
+    "log": "Prototypes/FoundationValidation/LocalEvidence/review-remediation-app-build.log",
+    "exit": 0,
+    "status": "PASS",
+    "final_candidate": false,
+    "source_config_sha256": {
+      "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "766af062ff0118866db9e4dde025f13f264573fbb29158a0e11d14a1c46fbac0",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/BackupRestore.swift": "5190bde89947bf4752c8f79fc8ad96935a7060d536c28dcd4cab107b09efd8ce",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "5a1f0dfa844196b6775d0cdfc5c120435654644dcfb523df76f3844d38ccf76f",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/CloudAdapter.swift": "679f41cd0b1de6cffffc91b3b58624743066ed0ae5a3c55f2a335fef804b6463",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/LegacyTypes.swift": "4f2a824e49d6bd08644067db698bb70f603c64ff04ef6c168eefae52a84296e6",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceController.swift": "e8be49ca44f70b601dbeb0d250d3170b6abd90829900468afd87aa995b2933d4",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceModels.swift": "f1dd75be099200e55fd6fa9bf91cd4202e68f67a2a95bf485f2a0ff03af94bd6",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/LegacyFixture.swift": "c4d569d354ae5a26ef72d6ece704cdc6791fc9fc8069da15351790c9bbb0997f",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/LiveValidation.swift": "850635a35e59f04955f4eeb8eb55addfa2731d9584e1af4c5c779215585070f5",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/LocalChain.swift": "07e3c17f36219e42625c209a4dd9b81310abeea13f82430d5bb7eb58fab2aaa5",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/MediaFiles.swift": "9d49f4560a279d2495e3020da1733d4061b52b227aa594872a67baf09d96ae74",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/MediaTransfers.swift": "473ae50a7fe5a0213f19b58e76836cf20d8620095f578e96424215bf86ec38c3",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/PhotosAdapter.swift": "84f572107cb580a7b3fdff560d9d53add9b672321e0c655d9cacf80e10725cda",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/StorageFailure.swift": "0af4364b7fdad5ee1b0352928678882e6343994f817b2ea98a63eacdace44f64",
+      "Prototypes/FoundationValidation/Sources/ValidationCore/SyncProtocol.swift": "a0a94868fa8780d6c0bf2b94ad13e23ba54a3dd4130f841b989d0004cab1dd94",
+      "Prototypes/FoundationValidation/App/Info.plist": "d51e3814e4cb36ac73e9f7316f56e869e440c889200f84475ec909c2e07b7aa6",
+      "Prototypes/FoundationValidation/App/ValidationApp.swift": "5bdca2c7c338117e5aee5961e008fa5be6d5b790c3d05b959d891b00fca9cf38",
+      "Prototypes/FoundationValidation/FoundationValidation.xcodeproj/project.pbxproj": "1f84e38c91df99b9ca48e97a72040b8103703d03e5bb2935231dc2c7511c4a97",
+      "Prototypes/FoundationValidation/FoundationValidation.xcodeproj/xcshareddata/xcschemes/FoundationValidation.xcscheme": "de3d65ad71693672f7ab98940437431a52defb099c5c46784b575282dcfce4c3"
+    }
+  }
 }

@@ -59,23 +59,20 @@ struct FileJournal: Codable {
         let preview = try MediaFiles.preview(bytes)
         try MediaFiles.write(preview, to: root.appendingPathComponent("staging/\(journal.previewName)"))
         checkpoint?("prepared")
-        let date = Date()
-        context.insert(CaptureDraftRecord(id: draftID, householdID: libraryID, name: "Synthetic capture", createdAt: date, updatedAt: date, captureSource: precision == "pickerDeliveredRepresentation" ? .photoLibrary : .camera))
-        let profile = WardrobeProfile(ownerID: draftID, size: "M", material: "cotton")
-        context.insert(profile)
-        context.insert(MediaAssetRecord(id: mediaID, ownerKind: .draft, ownerID: draftID, originalFileName: journal.originalName, thumbnailFileName: journal.previewName, contentTypeIdentifier: type, createdAt: date, sortOrder: 0))
-        let representation = MediaRepresentation(mediaID: mediaID, revision: 1, precision: precision, originalHash: journal.originalHash, relativePath: "media/\(journal.originalName)", photosReference: photoReference)
-        context.insert(representation)
-        let sync = try SyncCore.local(context: context, library: libraryID, root: root)
-        try sync.stageWrite(WireRecord(id: draftID, operationID: UUID(), revision: 1, library: libraryID, kind: "draft", name: "Synthetic capture", profile: WireProfile(id: profile.id, size: profile.size, material: profile.material)))
-        try sync.stageWrite(WireRecord(id: mediaID, operationID: UUID(), revision: 1, library: libraryID, kind: "media", parentID: draftID, media: WireMedia(representationID: representation.id, revision: 1, hash: journal.originalHash, precision: representation.precision, contentType: type, preview: preview)))
         do {
+            let date = Date()
+            context.insert(CaptureDraftRecord(id: draftID, householdID: libraryID, name: "Synthetic capture", createdAt: date, updatedAt: date, captureSource: precision == "pickerDeliveredRepresentation" ? .photoLibrary : .camera))
+            let profile = WardrobeProfile(ownerID: draftID, size: "M", material: "cotton")
+            context.insert(profile)
+            context.insert(MediaAssetRecord(id: mediaID, ownerKind: .draft, ownerID: draftID, originalFileName: journal.originalName, thumbnailFileName: journal.previewName, contentTypeIdentifier: type, createdAt: date, sortOrder: 0))
+            let representation = MediaRepresentation(mediaID: mediaID, revision: 1, precision: precision, originalHash: journal.originalHash, relativePath: "media/\(journal.originalName)", photosReference: photoReference)
+            context.insert(representation)
+            let sync = try SyncCore.local(context: context, library: libraryID, root: root)
+            try sync.stageWrite(WireRecord(id: draftID, operationID: UUID(), revision: 1, library: libraryID, kind: "draft", name: "Synthetic capture", profile: WireProfile(id: profile.id, size: profile.size, material: profile.material)))
+            try sync.stageWrite(WireRecord(id: mediaID, operationID: UUID(), revision: 1, library: libraryID, kind: "media", parentID: draftID, media: WireMedia(representationID: representation.id, revision: 1, hash: journal.originalHash, precision: representation.precision, contentType: type, preview: preview, photosReference: photoReference)))
             if fault == .beforeSave { throw fault }
             try context.save()
-        } catch {
-            context.rollback()
-            throw error
-        }
+        } catch { context.rollback(); throw error }
         lastCaptureOutcome = .saved
         checkpoint?("committed")
         do {
@@ -121,19 +118,27 @@ struct FileJournal: Codable {
             throw ValidationFailure.invariant("draft missing")
         }
         guard !draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ValidationFailure.invariant("name required") }
-        // Same Draft produces the same logical Item on independent clients; sourceDraftID remains traceable.
-        let item = ItemRecord(id: draftID, householdID: draft.householdID, name: draft.name, categoryID: draft.categoryID, locationID: draft.locationID, note: draft.note, createdAt: draft.createdAt, updatedAt: .now, captureSource: draft.captureSource, sourceDraftID: draftID)
-        context.insert(item)
-        for media in try context.fetch(FetchDescriptor<MediaAssetRecord>()) where media.ownerID == draftID && media.ownerKind == .draft {
-            media.ownerKind = .item
-            if item.coverMediaID == nil { item.coverMediaID = media.id }
-        }
-        context.delete(draft)
-        let sync = try SyncCore.local(context: context, library: libraryID, root: root)
-        let profile = try context.fetch(FetchDescriptor<WardrobeProfile>()).first { $0.ownerID == draftID }
-        try sync.stageWrite(WireRecord(id: item.id, operationID: UUID(), revision: 2, library: libraryID, kind: "item", name: item.name, category: item.categoryID?.uuidString, profile: profile.map { WireProfile(id: $0.id, size: $0.size, material: $0.material) }, sourceDraftID: draftID))
-        do { try context.save() } catch { context.rollback(); throw error }
-        return item.id
+        do {
+            let sync = try SyncCore.local(context: context, library: libraryID, root: root)
+            let prior = try sync.document(draftID).map { try JSONDecoder().decode(WireRecord.self, from: $0.payload) }
+            guard prior?.revision != Int.max else { throw ValidationFailure.invariant("revision exhausted") }
+            // Same Draft produces the same logical Item on independent clients.
+            let item = ItemRecord(id: draftID, householdID: draft.householdID, name: draft.name, categoryID: draft.categoryID, locationID: draft.locationID, note: draft.note, createdAt: draft.createdAt, updatedAt: .now, captureSource: draft.captureSource, sourceDraftID: draftID)
+            context.insert(item)
+            for media in try context.fetch(FetchDescriptor<MediaAssetRecord>()) where media.ownerID == draftID && media.ownerKind == .draft {
+                media.ownerKind = .item
+                if item.coverMediaID == nil { item.coverMediaID = media.id }
+            }
+            context.delete(draft)
+            let profile = try context.fetch(FetchDescriptor<WardrobeProfile>()).first { $0.ownerID == draftID }
+            var wire = prior ?? WireRecord(id: item.id, operationID: UUID(), revision: 1, library: libraryID, kind: "draft")
+            wire.operationID = UUID(); wire.revision += 1; wire.kind = "item"
+            wire.name = item.name; wire.category = item.categoryID?.uuidString; wire.sourceDraftID = draftID
+            wire.profile = profile.map { WireProfile(id: $0.id, size: $0.size, material: $0.material) }
+            try sync.stageWrite(wire)
+            try context.save()
+            return item.id
+        } catch { context.rollback(); throw error }
     }
 
     public func counts() throws -> [String: Int] {

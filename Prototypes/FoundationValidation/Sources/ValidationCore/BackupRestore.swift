@@ -192,8 +192,16 @@ enum BackupFault: Error { case cancelled, capacity, interrupted, beforeSwitch, a
         let restored = try LocalChain(root: stage, libraryID: manifest.libraryID)
         let c = restored.context
         for asset in try c.fetch(FetchDescriptor<MediaAssetRecord>()) {
-            _ = try safeURL(asset.originalFileName, in: stage)
-            if let preview = asset.thumbnailFileName { _ = try safeURL(preview, in: stage) }
+            for name in [asset.originalFileName, asset.thumbnailFileName].compactMap({ $0 }) {
+                let managed = "media/" + name
+                let path = FileManager.default.fileExists(atPath: try safeURL(managed, in: stage).path) ? managed : name
+                let url = try safeURL(path, in: stage)
+                guard let entry = manifest.files.first(where: { $0.path == path }),
+                      FileManager.default.fileExists(atPath: url.path),
+                      MediaFiles.hash(try Data(contentsOf: url)) == entry.sha256 else {
+                    throw ValidationFailure.invariant("restored media reference not covered by complete manifest")
+                }
+            }
         }
         for representation in try c.fetch(FetchDescriptor<MediaRepresentation>()) {
             _ = try safeURL(representation.relativePath, in: stage)

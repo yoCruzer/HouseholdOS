@@ -80,6 +80,34 @@ final class ProtocolBoundaryTests: XCTestCase {
         }
     }
 
+    @MainActor func testLateAckPreservesFetchedConflictAndCategoryEditKeepsProfile() throws {
+        try fixture { chain, core in
+            var base = item(chain.libraryID)
+            base.profile = WireProfile(id: UUID(), size: "M", material: "cotton")
+            let scope = core.session.scope
+            try core.apply(record(base, scope), callback: scope)
+            var local = base; local.operationID = UUID(); local.revision = 2
+            local.name = "local edit"; local.category = UUID().uuidString
+            try core.write(local); try core.finishBootstrap(callback: scope)
+            _ = try core.nextBatch()
+            let projected = try XCTUnwrap(chain.context.fetch(FetchDescriptor<ItemRecord>()).first)
+            XCTAssertEqual(projected.name, local.name)
+            XCTAssertEqual(projected.categoryID?.uuidString, local.category)
+            let profile = try XCTUnwrap(chain.context.fetch(FetchDescriptor<WardrobeProfile>()).first)
+            XCTAssertEqual(profile.id, base.profile?.id); XCTAssertEqual(profile.size, "M")
+            var remote = base; remote.operationID = UUID(); remote.revision = 3; remote.name = "remote edit"
+            try core.apply(record(remote, scope), callback: scope)
+            let previousAncestor = try XCTUnwrap(core.document(base.id)).ancestor
+            try core.acknowledge(record(local, scope), callback: scope)
+            XCTAssertEqual(try core.document(base.id)?.ancestor, previousAncestor)
+            let conflict = try XCTUnwrap(chain.context.fetch(FetchDescriptor<ConflictCandidate>()).first)
+            XCTAssertEqual(try JSONDecoder().decode(WireRecord.self, from: conflict.remote), remote)
+            XCTAssertEqual(try JSONDecoder().decode(WireRecord.self, from: conflict.local), local)
+            XCTAssertTrue(try core.pending().isEmpty, "Only the precisely acknowledged operation retires")
+            XCTAssertEqual(try core.document(base.id)?.payload, try local.encoded())
+        }
+    }
+
     @MainActor func testFailedInboundCannotAdvanceCheckpointOrBootstrap() throws {
         try fixture { chain, core in
             let scope = core.session.scope

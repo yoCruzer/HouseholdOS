@@ -25,6 +25,7 @@ struct WireMedia: Codable, Equatable, Sendable {
     var precision: String
     var contentType: String
     var preview: Data
+    var photosReference: String?
 }
 
 struct WireRecord: Codable, Equatable, Sendable {
@@ -155,7 +156,7 @@ enum CloudCodec {
         // profile after silently dropping fields introduced by a newer client.
         let nested: [String: Set<String>] = [
             "profile": ["id", "size", "material"],
-            "media": ["representationID", "revision", "hash", "precision", "contentType", "preview"]
+            "media": ["representationID", "revision", "hash", "precision", "contentType", "preview", "photosReference"]
         ]
         for (key, fields) in nested {
             guard let value = object[key], !(value is NSNull) else { continue }
@@ -225,7 +226,7 @@ enum CloudCodec {
         try context.fetch(FetchDescriptor<DurableIntent>()).filter { $0.scope == session.scope.key }
     }
     func write(_ record: WireRecord) throws {
-        do { try stageWrite(record); try commit() }
+        do { try stageWrite(record); try projectVisibleRecord(record.id); try commit() }
         catch { context.rollback(); throw error }
     }
     // Business models and their wire intent share the caller's single SwiftData save.
@@ -287,8 +288,15 @@ enum CloudCodec {
         for intent in try pending() where intent.operationID == wire.operationID { context.delete(intent) }
         context.delete(snapshot)
         if let document = try document(wire.id) {
-            document.ancestor = try wire.encoded()
-            document.systemFields = CloudCodec.systemFields(record)
+            let ancestor = try document.ancestor.map { try JSONDecoder().decode(WireRecord.self, from: $0) }
+            let candidates = try context.fetch(FetchDescriptor<ConflictCandidate>()).filter { $0.entityID == wire.id && $0.scope == callback.key }
+            let observed = try candidates.map { try JSONDecoder().decode(WireRecord.self, from: $0.remote) } + (ancestor.map { [$0] } ?? [])
+            // An exact operation ACK retires its intent, but cannot roll back a later
+            // fetched server version/change tag or an unresolved concurrent candidate.
+            if !observed.contains(where: { $0.revision >= wire.revision && $0.operationID != wire.operationID }) {
+                document.ancestor = try wire.encoded()
+                document.systemFields = CloudCodec.systemFields(record)
+            }
         }
         try commit()
     }
@@ -300,7 +308,19 @@ enum CloudCodec {
             if let existing = try document(remote.id) {
                 guard existing.scope == callback.key else { throw ValidationFailure.invariant("cross-scope inbound requires plan") }
                 let local = try JSONDecoder().decode(WireRecord.self, from: existing.payload)
-                if local.deleted && !remote.deleted && remote.replacesDeletion != local.operationID { return }
+                if local.deleted && !remote.deleted {
+                    if remote.replacesDeletion != local.operationID {
+                        // A conditional delete can lose to a concurrent server edit. Keep
+                        // that content recoverable and block this entity until resolved.
+                        try retainConflict(existing: existing, remote: raw)
+                        existing.systemFields = CloudCodec.systemFields(record)
+                        try commit()
+                        return
+                    }
+                    guard remote.incarnation != nil, remote.effectiveIncarnation != local.effectiveIncarnation else {
+                        throw ValidationFailure.invariant("inbound re-add requires new incarnation")
+                    }
+                }
                 if let ancestor = try existing.ancestor.map({ try JSONDecoder().decode(WireRecord.self, from: $0) }), remote.revision < ancestor.revision { return }
                 // Fetching the exact sent operation also resolves a lost ACK, never a newer edit.
                 for intent in try pending() where intent.operationID == remote.operationID {
@@ -432,15 +452,28 @@ enum CloudCodec {
         }
         if wire.kind == "media", let descriptor = wire.media, let parent = wire.parentID, let root = mediaRoot {
             let previewName = "\(descriptor.representationID).preview.jpg"
-            try MediaFiles.write(descriptor.preview, to: root.appendingPathComponent("media/" + previewName))
             let ownerKind: MediaOwnerKind = try context.fetch(FetchDescriptor<ItemRecord>()).contains { $0.id == parent } ? .item : .draft
+            let retained = try context.fetch(FetchDescriptor<MediaRepresentation>()).first { $0.id == descriptor.representationID }
+            if let retained {
+                guard retained.mediaID == id, retained.revision == descriptor.revision, retained.originalHash == descriptor.hash else {
+                    throw ValidationFailure.invariant("immutable representation descriptor changed")
+                }
+            }
+            let previewURL = root.appendingPathComponent("media/" + previewName)
+            if FileManager.default.fileExists(atPath: previewURL.path) {
+                guard try Data(contentsOf: previewURL) == descriptor.preview else {
+                    throw ValidationFailure.invariant("immutable recovery preview changed")
+                }
+            } else { try MediaFiles.write(descriptor.preview, to: previewURL) }
+            let originalName = retained.map { URL(fileURLWithPath: $0.relativePath).lastPathComponent } ?? "\(descriptor.representationID).original"
             if let existing = try context.fetch(FetchDescriptor<MediaAssetRecord>()).first(where: { $0.id == id }) {
                 existing.ownerID = parent; existing.ownerKind = ownerKind; existing.thumbnailFileName = previewName
+                existing.originalFileName = originalName; existing.contentTypeIdentifier = descriptor.contentType
             } else {
-                context.insert(MediaAssetRecord(id: id, ownerKind: ownerKind, ownerID: parent, originalFileName: "\(descriptor.representationID).original", thumbnailFileName: previewName, contentTypeIdentifier: descriptor.contentType, createdAt: date, sortOrder: 0))
+                context.insert(MediaAssetRecord(id: id, ownerKind: ownerKind, ownerID: parent, originalFileName: originalName, thumbnailFileName: previewName, contentTypeIdentifier: descriptor.contentType, createdAt: date, sortOrder: 0))
             }
             if !(try context.fetch(FetchDescriptor<MediaRepresentation>()).contains { $0.id == descriptor.representationID }) {
-                context.insert(MediaRepresentation(id: descriptor.representationID, mediaID: id, revision: descriptor.revision, precision: descriptor.precision, originalHash: descriptor.hash, relativePath: "media/\(descriptor.representationID).original"))
+                context.insert(MediaRepresentation(id: descriptor.representationID, mediaID: id, revision: descriptor.revision, precision: descriptor.precision, originalHash: descriptor.hash, relativePath: "media/\(descriptor.representationID).original", photosReference: descriptor.photosReference))
             }
         }
         if wire.kind == "item" || wire.kind == "draft" {

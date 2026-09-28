@@ -89,3 +89,33 @@ final class PhotosMappingBatch {
         return cache
     }
 }
+
+extension PhotosAdapter {
+    // Reads only a previously selected/mapped asset. No broad fetch, library mutation,
+    // or implicit iCloud download. This checks current still-image access, not original fidelity.
+    static func readSelectedCurrentRepresentation(_ identifier: String) throws -> Data {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard status == .authorized || status == .limited else {
+            throw NSError(domain: PHPhotosErrorDomain, code: PHPhotosError.accessUserDenied.rawValue)
+        }
+        let assets = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
+        guard assets.count == 1, let asset = assets.firstObject else {
+            throw NSError(domain: PHPhotosErrorDomain, code: PHPhotosError.identifierNotFound.rawValue)
+        }
+        let options = PHImageRequestOptions()
+        options.isSynchronous = true; options.isNetworkAccessAllowed = false
+        options.deliveryMode = .highQualityFormat; options.version = .current
+        var bytes: Data?
+        var failure: Error?
+        PHImageManager.default().requestImageDataAndOrientation(for: asset, options: options) { data, _, _, info in
+            bytes = data
+            failure = info?[PHImageErrorKey] as? Error
+            if data == nil, failure == nil, info?[PHImageResultIsInCloudKey] as? Bool == true {
+                failure = NSError(domain: PHPhotosErrorDomain, code: PHPhotosError.networkAccessRequired.rawValue)
+            }
+        }
+        if let failure { throw failure }
+        guard let bytes else { throw ValidationFailure.invariant("selected Photos representation unavailable") }
+        return bytes
+    }
+}

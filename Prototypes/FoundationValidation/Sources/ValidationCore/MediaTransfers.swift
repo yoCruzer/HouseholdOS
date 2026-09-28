@@ -62,8 +62,9 @@ struct MediaTransferState: Codable {
         state.tickets.append(ticket); try persist()
         return ticket
     }
-    func downloadTicket(_ mediaID: UUID) throws -> TransferTicket {
-        guard core.accepts(core.session.scope), core.session.bootstrapComplete else { throw ValidationFailure.invariant("download requires current scope and fetched metadata") }
+    func downloadTicket(_ mediaID: UUID, now: Date = .now) throws -> TransferTicket {
+        guard core.accepts(core.session.scope), core.session.bootstrapComplete,
+              state.pauseReason == nil, state.retryAfter.map({ $0 <= now }) ?? true else { throw ValidationFailure.invariant("download requires current scope, fetched metadata and queue admission") }
         let representation = try current(mediaID)
         return TransferTicket(operationID: UUID(), mediaID: mediaID, representationID: representation.id, revision: representation.revision, sha256: representation.originalHash, scope: core.session.scope, bytes: 0, phase: "download")
     }

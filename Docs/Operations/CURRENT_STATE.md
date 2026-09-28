@@ -267,7 +267,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 - Goal 1: ACCEPTED / CLOSED
 - TestFlight Round 1 Device Quality Stabilization: ACCEPTED / CLOSED
-- Foundation Architecture Validation Program: NOT STARTED
+- Foundation Architecture Validation Program: HHOS-FAV-001 RUNNING (isolated validation only)
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous

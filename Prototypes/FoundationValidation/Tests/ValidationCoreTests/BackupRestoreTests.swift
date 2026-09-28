@@ -72,6 +72,25 @@ final class BackupRestoreTests: XCTestCase {
         }
     }
 
+    @MainActor func testSnapshotSerializesQueuedMutationAtSingleWriterBoundary() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let chain = try LocalChain(root: root.appendingPathComponent("source"))
+        _ = try chain.capture(MediaFiles.syntheticJPEG())
+        let queued = Task { @MainActor in try chain.capture(MediaFiles.syntheticJPEG(seed: 91)) }
+        let package = root.appendingPathComponent("snapshot")
+        let manifest = try BackupRestore.export(chain, to: package, full: true)
+        XCTAssertEqual(manifest.representations.count, 1)
+        _ = try await queued.value
+        XCTAssertEqual(try chain.counts()["drafts"], 2)
+        let generations = root.appendingPathComponent("generations")
+        _ = try BackupRestore.restore(package, into: generations)
+        let restored = try LocalChain(root: BackupRestore.activeGeneration(in: generations))
+        XCTAssertEqual(try restored.counts()["drafts"], 1)
+        XCTAssertEqual(try restored.context.fetchCount(FetchDescriptor<MediaRepresentation>()), 1)
+        XCTAssertEqual(try BackupRestore.validate(package).snapshotID, manifest.snapshotID)
+    }
+
     @MainActor func testInterruptedExportAndSwitchLeavePriorGenerationUsable() throws {
         try fixture { chain, root in
             let backup = root.appendingPathComponent("good")

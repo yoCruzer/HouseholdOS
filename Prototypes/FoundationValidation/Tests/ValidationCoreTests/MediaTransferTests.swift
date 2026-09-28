@@ -35,6 +35,24 @@ final class MediaTransferTests: XCTestCase {
             XCTAssertEqual(try resumed.beginUpload(id).representationID, try resumed.current(id).id)
         }
     }
+    @MainActor func testImmutableRepresentationRejectsChangeBeforeReplacingPreview() throws {
+        try fixture { chain, core, _, id in
+            let wire = try JSONDecoder().decode(WireRecord.self, from: XCTUnwrap(core.document(id)).payload)
+            try core.write(wire)
+            let asset = try XCTUnwrap(chain.context.fetch(FetchDescriptor<MediaAssetRecord>()).first)
+            let path = chain.root.appendingPathComponent("media/" + (try XCTUnwrap(asset.thumbnailFileName)))
+            let preview = try Data(contentsOf: path)
+            for corruptHash in [true, false] {
+                var changed = wire; changed.operationID = UUID(); changed.revision += 1
+                changed.media?.preview = Data("different preview".utf8)
+                if corruptHash { changed.media?.hash = String(repeating: "b", count: 64) }
+                XCTAssertThrowsError(try core.write(changed))
+                XCTAssertEqual(try Data(contentsOf: path), preview)
+                XCTAssertEqual(try core.document(id)?.payload, try wire.encoded())
+            }
+        }
+    }
+
     @MainActor func testPolicyDowngradeDoesNotDeleteCloudCopyAndPhotosSafetyCopyDoesNotEscalateUpload() throws {
         try fixture { chain, core, transfers, id in
             try transfers.setPolicy(.appOwnedOriginals)
@@ -52,15 +70,19 @@ final class MediaTransferTests: XCTestCase {
         }
     }
     @MainActor func testQuotaBackoffAndOffAreConservative() throws {
-        try fixture { _, core, transfers, id in
+        try fixture { chain, core, transfers, id in
             try transfers.setPolicy(.appOwnedOriginals)
             let ticket = try transfers.beginUpload(id)
             let now = Date(timeIntervalSince1970: 100)
             try transfers.serviceFailed(CKError(.requestRateLimited, userInfo: [CKErrorRetryAfterKey: 60]), callback: core.session.scope, now: now)
             XCTAssertThrowsError(try transfers.beginUpload(id, now: now.addingTimeInterval(10)))
+            let resumed = try MediaTransfers(chain: chain, core: core)
+            XCTAssertThrowsError(try resumed.downloadTicket(id, now: now.addingTimeInterval(10)))
+            XCTAssertEqual(try resumed.downloadTicket(id, now: now.addingTimeInterval(61)).representationID, ticket.representationID)
             XCTAssertEqual(try transfers.beginUpload(id, now: now.addingTimeInterval(61)), ticket)
             try transfers.serviceFailed(CKError(.quotaExceeded), callback: core.session.scope)
             XCTAssertThrowsError(try transfers.beginUpload(id))
+            XCTAssertThrowsError(try MediaTransfers(chain: chain, core: core).downloadTicket(id))
             try core.setEnabled(false)
             XCTAssertFalse(try transfers.acknowledge(ticket))
             XCTAssertEqual(transfers.state.tickets.first?.phase, "prepared", "OFF does not assert server cancellation")

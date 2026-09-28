@@ -37,6 +37,34 @@ struct LiveConfiguration: Codable {
     }
 }
 
+struct LiveObservation: Codable {
+    var action: String
+    var outcome: String
+    var report: [String: String]
+}
+
+struct LiveEvidence: Codable {
+    var observations: [LiveObservation] = []
+    static func load(_ url: URL) throws -> LiveEvidence {
+        guard FileManager.default.fileExists(atPath: url.path) else { return LiveEvidence() }
+        return try JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
+    }
+    static func append(at url: URL, action: String, outcome: String, report: [String: String]) throws {
+        var evidence = try load(url)
+        let merged = (evidence.observations.last?.report ?? [:]).merging(report) { _, new in new }
+        evidence.observations.append(LiveObservation(action: action, outcome: outcome, report: merged))
+        try MediaFiles.write(JSONEncoder().encode(evidence), to: url)
+    }
+    static func reserveEndpoint(_ bytes: Int, at url: URL) throws -> Int {
+        var budget = try LiveBudget.load(url)
+        guard bytes >= 0, budget.estimatedBytes + bytes + 4096 <= 50 * 1024 * 1024 else {
+            throw ValidationFailure.invariant("endpoint allocation exhausted; reconcile cumulative Program budget")
+        }
+        try budget.reserve(payloadBytes: bytes, at: url)
+        return budget.estimatedBytes
+    }
+}
+
 @MainActor final class LiveValidation {
     let config: LiveConfiguration
     let chain: LocalChain
@@ -46,16 +74,28 @@ struct LiveConfiguration: Codable {
     let budgetURL: URL
     private(set) var report: [String: String] = [:]
 
-    private init(config: LiveConfiguration, chain: LocalChain, core: SyncCore, budgetURL: URL) {
+    private init(config: LiveConfiguration, chain: LocalChain, core: SyncCore, budgetURL: URL) throws {
         self.config = config; self.chain = chain; self.core = core; self.budgetURL = budgetURL
         database = CKContainer(identifier: config.containerID).privateCloudDatabase
         adapter = CloudAdapter(core: core)
+        report = try LiveEvidence.load(budgetURL.deletingLastPathComponent().appendingPathComponent("live-evidence.json")).observations.last?.report ?? [:]
+        report["role"] = config.role
+    }
+    var evidenceURL: URL { budgetURL.deletingLastPathComponent().appendingPathComponent("live-evidence.json") }
+    func observe(_ action: String, _ outcome: String) throws {
+        report["estimatedTransferredBytes"] = String(try LiveBudget.load(budgetURL).estimatedBytes)
+        report["bootstrapComplete"] = String(core.session.bootstrapComplete)
+        report["paused"] = String(core.session.pauseReason != nil)
+        report["adapterFetchedRecordsThisConnection"] = String(adapter.fetchedRecordCount)
+        try LiveEvidence.append(at: evidenceURL, action: action, outcome: outcome, report: report)
+    }
+    func countRequest(_ key: String) {
+        report[key] = String((Int(report[key] ?? "0") ?? 0) + 1)
     }
     static func start(config: LiveConfiguration, chain: LocalChain, budgetURL: URL) async throws -> LiveValidation {
         try config.validateArtifact()
         guard chain.libraryID == config.libraryID else { throw ValidationFailure.invariant("live configuration does not bind this library") }
-        var budget = try LiveBudget.load(budgetURL)
-        try budget.reserve(payloadBytes: 4096, at: budgetURL)
+        _ = try LiveEvidence.reserveEndpoint(4096, at: budgetURL)
         let container = CKContainer(identifier: config.containerID)
         guard try await container.accountStatus() == .available else { throw ValidationFailure.invariant("test iCloud account unavailable") }
         let account = try await container.userRecordID()
@@ -70,18 +110,16 @@ struct LiveConfiguration: Codable {
         }
         guard core.session.pauseReason == nil else { throw ValidationFailure.invariant("previous platform failure requires reconciliation") }
         try core.setEnabled(true)
-        let runner = LiveValidation(config: config, chain: chain, core: core, budgetURL: budgetURL)
+        let runner = try LiveValidation(config: config, chain: chain, core: core, budgetURL: budgetURL)
         try await runner.ensureRegisteredNamespace()
         try runner.adapter.connect(authorizedDevelopmentContainer: config.containerID)
-        runner.report["signedDevelopmentArtifact"] = "VERIFIED"
+        runner.report["signedDevelopmentArtifact"] = "OWNER_TOOL_VERIFIED_AND_CODE_MATCHED"
+        try runner.observe("connect", "COMPLETED")
         return runner
     }
     func reserve(_ bytes: Int) throws {
-        var budget = try LiveBudget.load(budgetURL)
-        // Two planned endpoints at most 50 MiB each; preserve this ledger across role/run changes.
-        guard budget.estimatedBytes + bytes + 4096 <= 50 * 1024 * 1024 else { throw ValidationFailure.invariant("endpoint allocation exhausted; reconcile cumulative Program budget") }
-        try budget.reserve(payloadBytes: bytes, at: budgetURL)
-        report["estimatedTransferredBytes"] = String(budget.estimatedBytes)
+        // Exactly two configured endpoints; never reset this ledger on reconnect or role change.
+        report["estimatedTransferredBytes"] = String(try LiveEvidence.reserveEndpoint(bytes, at: budgetURL))
     }
     private func ensureRegisteredNamespace() async throws {
         let key = "namespace-attempted:" + config.metadataZone
@@ -102,6 +140,7 @@ struct LiveConfiguration: Codable {
         report["namespace"] = "REGISTERED_TEST_ZONES_ONLY"
     }
     func metadataRoundTrip() async throws {
+        try observe("metadata", "STARTED")
         try reserve(4 * 1024 * 1024)
         try await adapter.fetch()
         for _ in 0..<3 {
@@ -119,6 +158,7 @@ struct LiveConfiguration: Codable {
         report["readablePreviews"] = String(try chain.context.fetch(FetchDescriptor<MediaAssetRecord>()).filter { asset in
             asset.thumbnailFileName.map { FileManager.default.fileExists(atPath: chain.root.appendingPathComponent("media/" + $0).path) } ?? false
         }.count)
+        try observe("metadata", core.session.bootstrapComplete && core.session.pauseReason == nil ? "COMPLETED" : "INCOMPLETE")
     }
     func uploadOneOriginal() async throws {
         let transfers = try MediaTransfers(chain: chain, core: core)
@@ -127,11 +167,13 @@ struct LiveConfiguration: Codable {
         let ticket = try transfers.beginUpload(asset.id)
         let path = try transfers.current(asset.id).relativePath
         try reserve(ticket.bytes)
+        countRequest("originalUploadRequests")
+        try observe("original-upload", "STARTED")
         do {
             try await OriginalAssetAdapter.upload(ticket, database: database, durableURL: chain.root.appendingPathComponent(path))
             let current = try transfers.acknowledge(ticket)
-            report["originalUploadRequests"] = String((Int(report["originalUploadRequests"] ?? "0") ?? 0) + 1)
             report["originalUploadACK"] = current ? "CURRENT_REPRESENTATION" : "OLD_REPRESENTATION"
+            try observe("original-upload", "COMPLETED")
         } catch let error as CKError { try transfers.serviceFailed(error, callback: ticket.scope); throw error }
     }
     func fetchOneOriginal() async throws {
@@ -139,10 +181,14 @@ struct LiveConfiguration: Codable {
         guard let asset = try chain.context.fetch(FetchDescriptor<MediaAssetRecord>()).first else { throw ValidationFailure.invariant("fetch metadata first") }
         let ticket = try transfers.downloadTicket(asset.id)
         try reserve(4 * 1024 * 1024) // Conservative reservation for the small live fixture; do not select large originals.
-        let bytes = try await OriginalAssetAdapter.fetch(ticket, database: database)
+        countRequest("originalFetchRequests")
+        try observe("original-download", "STARTED")
+        let bytes: Data
+        do { bytes = try await OriginalAssetAdapter.fetch(ticket, database: database) }
+        catch let error as CKError { try transfers.serviceFailed(error, callback: ticket.scope); throw error }
         guard bytes.count <= 4 * 1024 * 1024 else { throw ValidationFailure.invariant("live fixture exceeded allocation; stop and reconcile observed traffic") }
         let accepted = try transfers.receive(bytes, for: ticket)
-        report["originalFetchRequests"] = String((Int(report["originalFetchRequests"] ?? "0") ?? 0) + 1)
         report["targetOriginalHash"] = accepted ? "VERIFIED" : "STALE_RESULT_REJECTED"
+        try observe("original-download", accepted ? "COMPLETED" : "STALE")
     }
 }

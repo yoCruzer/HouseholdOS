@@ -66,3 +66,89 @@ Simulator process relaunch completed: `LocalEvidence/ios-reopen-report.json` PAS
 - Private configuration tool verifies an already signed bundle and Development entitlements without provisioning. Runtime binds config to executable plus Debug dylibs; these controls still require signed-device execution evidence.
 - Actual iOS Simulator Debug build, iOS 17 deployment target / installed iOS 26.5 SDK, unsigned: PASS, exit 0. Latest log: `LocalEvidence/live-code-binding-app-build.log`. This is compilation evidence, not signed/live or final runtime acceptance.
 - Remaining control audit includes durable live reporting, cumulative budget accounting, service errors and Owner setup instructions. Final reviewer/full candidate suite not yet performed.
+
+## Contract assertion map — pre-final audit
+
+This map distinguishes directly exercised behavior from missing evidence. It is a candidate audit, not final acceptance: final dependency fingerprints, one consolidated independent review and candidate closure remain pending. All named tests are under `Prototypes/FoundationValidation/Tests/ValidationCoreTests`; process tools and local artifacts under that prototype. LOCAL_PLATFORM here is macOS SwiftData/SQLite/ImageIO/file flags or separately identified Simulator execution, never a physical-device claim.
+
+| Contract assertion | Current evidence / exact boundary | Status |
+| --- | --- | --- |
+| G0 independent bundle/store/media/engine paths, preserve existing work | Independent xcodeproj/App paths; baseline diff scope and protected local hashes rechecked at checkpoints | PASS (local isolation; final audit pending) |
+| G0 native SDK build / min OS | Actual Swift package + unsigned iOS Simulator builds, deployment iOS17, SDK26.5 | PASS compilation; iOS17 runtime BLOCKED_EXTERNAL |
+| G0 create/read/update true service | Native CloudAdapter + signed-config controls compiled; no authorized environment | BLOCKED_EXTERNAL |
+| G1 true legacy source / shape | Byte-exact baseline PersistenceModels/Controller in LegacySourceManifest; separate legacy CLI process; real store NSStoreModelVersionHashes for five legacy entities | PASS LOCAL_PLATFORM |
+| G1 complete fixture topology, immutable source | LegacyFixture snapshot comparisons; process_checks includes Item/Draft/archive/sourceDraft/location/system/custom/unknown category/cover/multiple media/deleted draft; whole source tree hashes unchanged | PASS LOCAL_PLATFORM |
+| G1 clone migrate/reopen/repeat/failure | Separate-process migrate + twice verify; corrupt clone fails without replacing DB; existing migration destination rejected; source remains | PASS LOCAL_PLATFORM; migration-engine mid-operation kill not separately proven |
+| G1 retain legacy App-owned bytes | LegacyFixture exact media hashes; no guessed Photos reference conversion | PASS LOCAL_PLATFORM |
+| G1 same Draft across replicas / identity | SharedChainTests.testIndependentLibrariesAndClonedDraftConfirm; LocalChainTests.testCaptureReopenConfirmKeepsMediaAndProfileIdentity | PASS LOGIC+LOCAL_PLATFORM |
+| G1 category switch retains Profile | ProtocolBoundaryTests.testLateAckPreservesFetchedConflictAndCategoryEditKeepsProfile | PASS LOGIC+LOCAL_PLATFORM |
+| G1 same-name identity / independent library / merge plan | SharedChain independent persisted library IDs and rejected cross-library open; explicit same-name distinct-item assertion still to finalize | RUNNING |
+| G2 same-save business/outbox, no phantom | SchemaTests; LocalChainTests journal fault matrix; actual read-only SwiftData failure in StorageFailureTests | PASS LOCAL_PLATFORM+LOGIC |
+| G2 file/DB/original-preview/finalize/cleanup/refresh errors | LocalChainTests.testJournalFailuresPreserveStagingAndAtomicOutbox; StorageFailureTests.testSavedButRefreshUnavailableRetainsSuccessAndNoReplay | PASS LOCAL_PLATFORM+LOGIC |
+| G2 process termination + unique staging retention | process_checks actual SIGKILL at prepared, committed, originalFinalized; reopen counts/hash | PASS LOCAL_PLATFORM |
+| G2 permission/protection/capacity/corruption distinctions | StorageFailureTests classifier + actual error513; corrupt synthetic clone failure; source retained | PASS injection/local; physical locked-device access not claimed |
+| G3 rev7 ACK must not clear rev8 / repeated ACK / restart | SyncProtocolTests.testOldAckCannotRemoveNewEditAfterReopen | PASS LOGIC+LOCAL_PLATFORM |
+| G3 lost ACK / service idempotence / Usage retry vs two actions | SharedChainTests.testLostAckRetryAndTwoRealUsageActions; DeterministicService shares CloudCodec/core | PASS LOGIC+LOCAL_PLATFORM |
+| G3 partial successes / engine state loss | Native per-result handler exists; focused explicit mixed-result regression still to finalize | RUNNING |
+| G3 durable inbound before checkpoint / replay no echo | ProtocolBoundaryTests.testFailedInboundCannotAdvanceCheckpointOrBootstrap; SyncProtocolTests.testInboundIsDurableNoEchoAndPendingEditRetainsConflict | PASS LOGIC+LOCAL_PLATFORM |
+| G3 native event order / send-fetch reentry | Native delegate compiles, no service run | BLOCKED_EXTERNAL |
+| G4 bootstrap local/cloud combinations and paging | SharedChain blank replica; ProtocolBoundaryTests.testFetchPagesRequireCompletionAndOffRejectsLateData; failed inbound blocks; explicit full partial/empty/error matrix still to finalize | RUNNING |
+| G4 scope/OFF/ON/account A-B-A | SyncProtocolTests OFF/account; AdmissionTests.testAccountABARequiresBindingAndRejectsOldEpoch; durable session rejects retained old adapter | PASS LOGIC+LOCAL_PLATFORM; actual account event BLOCKED_EXTERNAL |
+| G4 ancestor merge/coupled fields/no ancestor/same field | ProtocolBoundaryTests three-way test; SyncProtocolTests durable conflict; BackupRestoreTests preserves conflict bytes | PASS LOGIC+LOCAL_PLATFORM |
+| G4 late ACK after fetched conflict | ProtocolBoundaryTests.testLateAckPreservesFetchedConflictAndCategoryEditKeepsProfile | PASS LOGIC+LOCAL_PLATFORM |
+| G4 unknown top-level/nested fields | ProtocolBoundaryTests two future-field tests; raw payload survives reopen and refused rewrite | PASS LOGIC+LOCAL_PLATFORM |
+| G5 tombstone/offline old write/late child/inflight old save | ProtocolBoundaryTests parent-delete test; SyncProtocolTests tombstone/re-add; SharedChain child-first | PASS LOGIC+LOCAL_PLATFORM |
+| G5 explicit re-add incarnation / old children | AdmissionTests.testReAddCannotRevivePriorIncarnationChildren | PASS LOGIC+LOCAL_PLATFORM |
+| G5 old backup vs remote tombstone | AdmissionTests.testOldBackupCannotUploadOverRemoteTombstone | PASS LOGIC+LOCAL_PLATFORM |
+| G5 userDeletedZone / unknown zoneNotFound / key-reset signal | Native error branch conservative; SDK signal/evidence audit and explicit injected classifier assertions remain | RUNNING; live destructive system condition not requested |
+| G6 separate Picker/PhotoKit permission and exact fallback | PhotosBoundaryTests permission matrix + Smart restore; actual adapter compiles | PASS LOGIC+LOCAL_PLATFORM fallback; real permission transitions BLOCKED_EXTERNAL |
+| G6 reference mapping failure classes / only selected IDs | PhotosBoundaryTests mapping classifier; PhotosMappingBatch native batch calls; no library-wide fetch | PASS LOGIC+compile; actual mapping and cross-device BLOCKED_EXTERNAL |
+| G6 stable ID/ref/representation; old ACK/download | MediaTransferTests old representation test, policy safety-copy test; shared wire carries reference; preview/descriptor immutable guard test | PASS LOGIC+LOCAL_PLATFORM |
+| G6 JPEG/HEIC / preserve original metadata / strip preview / orientation | LocalChainTests ImageIO metadata test; MediaTransferTests.testStaticHEICAndTwoPreviewSizes | PASS LOCAL_PLATFORM; Live Photo/RAW full resources NOT_APPLICABLE to supported static scope |
+| G7 real CKAsset upload/read/temp URL/durable restart | Native OriginalAssetAdapter code compiled; deterministic transfer guards; no actual CKAsset service | BLOCKED_EXTERNAL |
+| G7 prove blank metadata fetch has no implicit originals | Deterministic transport explicitly carries previews only; two native zones + desiredKeys compiled; Owner instructions require actual request observation | BLOCKED_EXTERNAL; fake is insufficient |
+| G7 policy downgrade/OFF no cloud deletion; Photos original no escalation | MediaTransferTests policy/quota/OFF tests; MediaPlanner representative 250/50 | PASS LOGIC; metadata data-only policy integration scope under audit |
+| G7 quota/network/throttle/partial / finite retry | MediaTransferTests quota/backoff; fixed native retry-after; mixed-result coverage under audit | RUNNING |
+| G7 cumulative budget / interrupted attempts | LiveEvidenceTests two tests, persisted endpoint allocation and request STARTED survives reload; no LIVE bytes | PASS LOGIC+LOCAL_PLATFORM; actual overhead unknown |
+| G8 consistent structure/representation snapshot | BackupRestoreTests consistency + queued mutation single-writer boundary; SQLite backup API includes WAL | PASS LOCAL_PLATFORM within synchronous single-writer fixture; not external-provider concurrency |
+| G8 Smart/Full completeness/missing/cloud-only source | BackupRestoreTests missing original/hash; PhotosBoundaryTests picker precision rejects Full; no silent omission | PASS LOCAL_PLATFORM |
+| G8 partial/marker/hash/count/cancel/capacity/interruption | BackupRestoreTests interrupted export/switch; no final package on injected failure | PASS LOCAL_PLATFORM+LOGIC; real kill during backup publication not separately proven |
+| G8 path/symlink/size/version/input validity | BackupRestoreTests package validation | PASS LOCAL_PLATFORM; no archive/decompression implementation, so decompression bomb support NOT_APPLICABLE |
+| G8 atomic generation / old source fallback / conflict/intents | BackupRestoreTests consistency and before/after switch interruption | PASS LOCAL_PLATFORM+LOGIC |
+| G8 all retired bytes, clear old ACK/session, fresh cloud admission | BackupRestoreTests.testRestorePreservesRetiredBytesButDropsOldMediaTicketsAndAcknowledgements + AdmissionTests | PASS LOCAL_PLATFORM+LOGIC |
+| G8 zero Photos writes / source snapshot target actual hash | Local restore code has no PhotoKit writes; Simulator snapshot/reopen report exact bytes; latest runtime refresh still required | RUNNING final runtime; cross-device erase-old-device promise BLOCKED_EXTERNAL |
+| P1 originals backup eligible, cache excluded, no ACK downgrade | BackupRestoreTests.testOriginalAndRecoveryPreviewRemainBackupEligible | PASS real file flags; system backup success not claimed |
+| P1 no private data in public evidence / production confidentiality | Scope/privacy audit pending final; private config/evidence gitignored; impact field classification and pre-production decisions | RUNNING; production encryption approval DEFERRED until explicit design |
+| Integration normal chain + four counterexamples | SharedChain, ProtocolBoundary old ACK/parent delete, PhotosBoundary fallback restore, Admission old backup tombstone reuse same core | PASS affected evidence; final candidate fingerprints pending |
+| Program checkpoint recovery | Existing worktree/commits/process handles verified; no duplicate harness or cloud run; state atomically replaced | PASS operational checkpoint recovery; publication still platform-review blocked |
+
+## Current audit checkpoint runs
+
+- `late-ack-projection-tests.log`: 23 affected tests PASS, exit 0. Exact ACK preserves pending edit and newer fetched conflict basis; local protocol write now projects within its transaction.
+- First `live-evidence-tests.log`: 2 fixture failures because temporary parent directories were absent. The directory precondition was corrected; no assertions removed or errors swallowed.
+- `live-evidence-media-fixed-tests.log`: 26 affected tests PASS, exit 0. Includes durable request evidence/budget, wire Photos reference, representation original path, backup and protocol.
+- `snapshot-photos-tests.log`: 10 tests PASS, exit 0. Includes queued mutation snapshot boundary; PhotoKit selected-current-representation adapter compiled, not called against a library.
+- `immutable-preview-tests.log`: 16 affected tests PASS, exit 0. Invalid immutable descriptor or changed preview cannot overwrite existing recovery-preview bytes before transaction rejection.
+- `process-corrupt-checks.log`: process tool exit 0, evidence directory `LocalEvidence/process-efa42863-0b5f-4bd2-b447-bcea6c783362`. Actual SIGKILL recovery/migration rerun plus corrupt clone and existing destination protection.
+- `live-report-photos-app-build.log`: actual unsigned iOS Simulator App build PASS. `pre-review-app-build.log` tracks the subsequent UI/preview-guard candidate build; inspect terminal result before treating as PASS.
+- One independent read-only reviewer started per GOAL §9. It has no mutation/service authorization. Findings and remediation remain pending; no claim of final review approval.
+
+## Independent review (one consolidated read-only review) and remediation
+
+Reviewer `final_readonly_review` inspected `d996a1a` plus the pre-review candidate, without edits, tests or service access. It correctly rejected IMPLEMENTATION_COMPLETE at that point. No independent re-review is claimed.
+
+| Finding | Reproduction and remediation evidence |
+| --- | --- |
+| R1 confirmation fixed rev2 / dirty context after staging throw | ReviewRegressionTests reproduced wrong revision and a subsequent save committing an Item without confirmation outbox. capture/confirm now wrap all mutations and staging in rollback; confirm derives next revision and preserves prior wire values. |
+| R2 missing legacy original/preview could pass manifest validation | Self-consistent manifest omission regression reproduced successful ACTIVE switch before fix. Restore now checks each MediaAsset original/preview path, file and manifest hash coverage before switch. |
+| R3 local deletion vs concurrent server update repeated stale condition | Previously no candidate and repeat scheduling; now preserves remote candidate, blocks entity and native shared delegate reducer pauses reconciliation. |
+| R4 inbound re-add accepted old incarnation | Previously resurrected parent/old child. Same new-incarnation requirement now applies inbound; rejection preserves tombstone. |
+| R5 download bypassed backoff/pause | Download ticket now uses persisted queue admission; resumed queue before retry time and quota pause reject requests. |
+| R6 incomplete durable Owner observations | Permission, selection access, mapping states and backup/restore snapshot alias/target representation counts now append to the redacted execution history. Final device/runtime observations remain pending. |
+
+- `review-regressions-before.log`: four new tests fail on the previous implementation (14 assertions/errors), confirming actual counterexamples.
+- `review-core-fixes.log`: 25 affected tests PASS, exit 0. Real read-only SwiftData error513 in its intentional fault test remains expected, not a swallowed unexpected failure.
+- `review-adapter-fixes.log`: 15 affected tests PASS, exit 0. AdapterBoundaryTests exercise the exact beginFetch/recordFetchFailure/completeFetch/applySendResults/classify methods used by native delegate events, without creating CKSyncEngine or network calls. Covers same-name distinct objects, partial success, durable retry, failed fetch, old error after OFF, both zone-loss classes, conditional delete conflict.
+- `pre-review-app-build.log` and `review-remediation-app-build.log`: actual unsigned iOS Simulator build PASS, exit 0. Storage failure categories now appear in validation App error messages; committed capture recovery remains explicitly reported as saved.
+- Remaining audit items from review: actual migration interruption boundary; precise distinction between backup fault injection and process kill; native service/account event timing; true Photos/CKAsset evidence; final candidate fingerprints/full suite/runtime. Those are not closed by the test counts above.
+- Operations stale NOT STARTED line corrected to RUNNING. No formal Foundation file or shipping App input modified.

@@ -70,6 +70,19 @@ versions = metadata.get('NSStoreModelVersionHashes', {})
 assert set(versions) == {'ItemRecord', 'CaptureDraftRecord', 'MediaAssetRecord', 'CategoryRecord', 'LocationRecord'}
 results.append({'case':'legacy-clone-migrate-reopen-repeat', 'status':'PASS', 'sourceImmutable':True,
                 'legacyEntities': {key: value.hex() for key,value in versions.items()}, 'sourceFileHashes':before})
+# A corrupt synthetic clone must fail without replacing the store or touching its source.
+corrupt = run / 'corrupt-candidate'
+shutil.copytree(legacy, corrupt)
+store = corrupt / 'library.store'
+store.write_bytes(b'not-a-sqlite-store' + store.read_bytes()[18:])
+corrupt_hash = hashlib.sha256(store.read_bytes()).hexdigest()
+failure = execute('verify', corrupt, check=False)
+assert failure.returncode != 0
+assert store.exists() and hashlib.sha256(store.read_bytes()).hexdigest() == corrupt_hash
+assert digest_tree(legacy) == before
+assert execute('migrate', legacy, clone, check=False).returncode != 0
+assert digest_tree(legacy) == before
+results.append({'case':'corrupt-clone-and-existing-destination', 'status':'PASS', 'sourceImmutable':True, 'corruptStoreNotReplaced':True})
 summary = {'program':'HHOS-FAV-001', 'evidenceLevel':'LOCAL_PLATFORM', 'results':results,
            'relativeEvidenceDirectory':str(run.relative_to(base))}
 (run / 'summary.json').write_text(json.dumps(summary, indent=2)+'\n')

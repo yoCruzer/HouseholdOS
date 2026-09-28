@@ -188,3 +188,7 @@ Reviewer `final_readonly_review` inspected `d996a1a` plus the pre-review candida
 11. **Git:** local checkpoint commits only, ordinary push rejected earlier, one Draft PR not created; no merge/force/ready.
 12. **All acceptance criteria:** **No**. Local core evidence complete; explicitly required platform/publication results remain missing.
 13. **Next:** clear publication approval block and execute consolidated Owner pack on authorized existing resources; then Owner reviews decision-specific recommendations. Stop before formal implementation.
+
+## Publication follow-up
+
+Owner explicitly confirmed publication after the earlier automatic approval-review rejection. Ordinary push succeeded and one Draft PR [#5](https://github.com/yoCruzer/HouseholdOS/pull/5) was created and attached to the task. This supersedes historical publication-blocked statements above. The follow-up changes only handoff documentation; tested code remains `6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa`, so tests/build were not rerun. LIVE evidence remains pending and all acceptance criteria are not yet satisfied. No merge, ready transition, auto-merge or Foundation Freeze.

@@ -68,7 +68,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "No unblocked implementation remains. Await publication approval clearance and/or authorized Owner platform evidence; do not retry rejected push via another channel.",
+  "next_safe_action": "Await Owner review and authorized Owner platform evidence using OWNER_ACTION_PACK.md; no Foundation Freeze or production implementation.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -76,9 +76,9 @@
   },
   "active_operations": [],
   "publication": {
-    "draft_pr": null,
-    "status": "APPROVAL_REVIEW_REJECTED",
-    "reason": "Automatic approval review rejected push as external disclosure authorization insufficient; user confirmation requested; no retry or alternate push performed"
+    "draft_pr": "https://github.com/yoCruzer/HouseholdOS/pull/5",
+    "status": "DRAFT_PR_CREATED",
+    "reason": "Owner explicitly confirmed publication after earlier approval-review rejection; ordinary push and one Draft PR creation succeeded. No merge or ready transition."
   },
   "toolchain": {
     "xcode": "26.6 (17F113)",
@@ -700,7 +700,7 @@
       "status": "PASS",
       "expected": "Program checkpoint recovery",
       "actual_evidence": "Existing worktree/commits/process handles verified; no duplicate harness or cloud run; state atomically replaced",
-      "scope": "Recovery and unique checkpoint verified; publication is separately blocked by platform approval review.",
+      "scope": "Recovery and unique checkpoint verified; publication completed as Draft PR #5 after explicit Owner confirmation.",
       "verification": "final_candidate",
       "input_fingerprint": "17fdc501c9147137ed41e4d48465af707c3b7b41f49b571b6de2a9317291fe7e",
       "fixture": "synthetic HHOS-FAV-001 fixtures; native local framework unless explicitly blocked",
@@ -788,14 +788,13 @@
     "limitations": "LOGIC/LOCAL_PLATFORM evidence is not LIVE_SERVICE/LIVE_CROSS_DEVICE; backup interruption uses explicit exceptions, migration/capture also actual SIGKILL"
   },
   "remaining_external_actions": [
-    "Clear the earlier platform approval-review block before ordinary push/one Draft PR; existing user confirmation remains pending",
     "Owner supplies existing authorized Development signing/container and runs concentrated live/device/Photos action pack",
     "Owner reviews per-decision Foundation recommendations; no automatic Freeze or production implementation"
   ],
   "remote_readback": {
     "main": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
     "draft_pr_query": "gh pr list --state all --head spike/foundation-validation",
-    "matching_prs": 0,
+    "matching_prs": 1,
     "read_only": true
   },
   "local_work_complete": true,

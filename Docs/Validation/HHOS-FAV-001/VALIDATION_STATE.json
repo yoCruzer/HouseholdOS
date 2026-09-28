@@ -5,14 +5,15 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "dde8d4619493a15a3590e5a1712ccc7d89d6d160",
+  "last_good_commit": "6a7eb3eb358a9e8624e9031e6fd6575d3193094f",
   "gates": {
     "G0": {
       "status": "RUNNING",
       "evidence": [
         "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending",
         "ValidationCore compiles on macOS 14 target and iOS 17 Simulator target using installed SDK; isolated App UI still pending",
-        "Independent iOS App builds for arm64/x86_64 Simulator at iOS 17 deployment target, actual SDK 26.5. Initial synthetic iOS local-chain self-test PASS; relaunch verification in progress."
+        "Independent iOS App builds for arm64/x86_64 Simulator at iOS 17 deployment target, actual SDK 26.5. Initial synthetic iOS local-chain self-test PASS; relaunch verification in progress.",
+        "Simulator App terminated and relaunched: process-reopen report PASS; one complete target representation and matching snapshot verified; screenshot inspected, initial screen legible without clipping."
       ]
     },
     "G1": {
@@ -68,7 +69,8 @@
       "status": "RUNNING",
       "evidence": [
         "BackupRestoreTests 5/5 PASS on actual SQLite/SwiftData: consistent snapshot, hash/manifest validation, generation pointer, retained source/conflicts/intents, cleared engine/device state, injected export/switch interruption, missing original rejection, package path/symlink/version/size checks",
-        "iOS initial self-test validates one complete restored representation; process reopen running"
+        "iOS initial self-test validates one complete restored representation; process reopen running",
+        "Actual Simulator process restart verifies restored original bytes against same snapshot; LocalEvidence/ios-reopen-report.json PASS."
       ]
     },
     "P1": {
@@ -89,7 +91,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Read Simulator reopen report; complete remaining sync/media policy/restore-admission risks and native live controls, migration/journal process failures, then final evidence audit and one independent review",
+  "next_safe_action": "Complete media revision/policy and restore admission, parent re-add/incarnation and scoped live controls; then remaining process/migration faults and final assertion audit",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -108,7 +110,18 @@
     "available_iOS_runtime": "26.5",
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
-  "tested_fingerprints": {
+  "remaining_implementation": [
+    "Final native build fingerprint must cover changed Photos mapping adapter and UI (existing App runtime evidence is explicitly from previous self-test build)",
+    "Complete parent incarnation guard so re-add cannot revive old children or send old child intents; account A-B-A/session lifetime and partial service results coverage",
+    "Integrate shared CloudAdapter conflict resolution/retry handling, scoped state and pending queues; Owner-configured live controls must be usable without code edits or automatic provisioning",
+    "Restore cloud admission must fetch current tombstones before any restored upload, preserving explicit re-add choices",
+    "Media representation revision guard, CKAsset upload/read version checks, policy planner, quota/retry/budget handling, HEIC fixture, small preview candidate comparison",
+    "Journal actual subprocess termination, actual SwiftData save error, refresh outcome and protected/capacity/corruption classifications; migration repeat/failure evidence and observable schema identity",
+    "Backup consistency under export mutation attempt, physical interruption validation, source fixture integrity proof; Full fidelity limits and retired representations audit",
+    "Per-assertion contract evidence mapping; final candidate suite/build once; one independent read-only review; complete impact map and Owner Action Pack",
+    "Publication remains blocked by automatic approval review; explicit confirmation request is pending, no alternate channel or retry used"
+  ],
+  "historical_tested_fingerprints": {
     "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",
     "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "a5a081ccfaf7159e62e4818e42fc16f76923f77300d18d7925e629b5b061fa59",
     "Prototypes/FoundationValidation/Sources/ValidationCore/CloudAdapter.swift": "0e6fd5974afa45eaaaca2863f07ee3ce6254ad369a4e53fed109bd03baed97ed",
@@ -125,15 +138,5 @@
     "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SyncProtocolTests.swift": "b3af4cdf94359e0858917c6f4ab72d392950baf0509f7155fc8c3a2696b29a55",
     "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2"
   },
-  "remaining_implementation": [
-    "Read and retain Simulator reopen report; final native build fingerprint must cover changed Photos adapter and UI",
-    "Complete parent incarnation guard so re-add cannot revive old children or send old child intents; account A-B-A/session lifetime and partial service results coverage",
-    "Integrate shared CloudAdapter conflict resolution/retry handling, scoped state and pending queues; Owner-configured live controls must be usable without code edits or automatic provisioning",
-    "Restore cloud admission must fetch current tombstones before any restored upload, preserving explicit re-add choices",
-    "Media representation revision guard, CKAsset upload/read version checks, policy planner, quota/retry/budget handling, HEIC fixture, small preview candidate comparison",
-    "Journal actual subprocess termination, actual SwiftData save error, refresh outcome and protected/capacity/corruption classifications; migration repeat/failure evidence and observable schema identity",
-    "Backup consistency under export mutation attempt, physical interruption validation, source fixture integrity proof; Full fidelity limits and retired representations audit",
-    "Per-assertion contract evidence mapping; final candidate suite/build once; one independent read-only review; complete impact map and Owner Action Pack",
-    "Publication remains blocked by automatic approval review; explicit confirmation request is pending, no alternate channel or retry used"
-  ]
+  "evidence_note": "Historical fingerprints refer to the earlier checkpoint. Current focused runs are indexed in VALIDATION_EVIDENCE.md; final code/config/fixture dependency manifests must be refreshed before final acceptance. No complete gate or final candidate is claimed."
 }

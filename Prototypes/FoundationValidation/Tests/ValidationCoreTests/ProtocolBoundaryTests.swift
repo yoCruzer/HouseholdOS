@@ -52,6 +52,34 @@ final class ProtocolBoundaryTests: XCTestCase {
         }
     }
 
+    @MainActor func testFutureNestedFieldsRetainedAcrossReopenAndCannotBeRewritten() throws {
+        for field in ["profile", "media"] {
+            try fixture { chain, core in
+                var value = item(chain.libraryID)
+                value.profile = WireProfile(id: UUID(), size: "M", material: "cotton")
+                let scope = core.session.scope
+                if field == "media" {
+                    value.kind = "media"; value.parentID = UUID(); value.profile = nil
+                    value.media = WireMedia(representationID: UUID(), revision: 1, hash: String(repeating: "a", count: 64), precision: "importedBytes", contentType: "public.jpeg", preview: try MediaFiles.preview(MediaFiles.syntheticJPEG()))
+                }
+                var object = try XCTUnwrap(JSONSerialization.jsonObject(with: value.encoded()) as? [String: Any])
+                var nested = try XCTUnwrap(object[field] as? [String: Any])
+                nested["futureSensitiveField"] = "must survive"
+                object[field] = nested
+                let opaque = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+                XCTAssertFalse(CloudCodec.writable(opaque))
+                let ck = try record(value, scope); ck.encryptedValues["payload"] = opaque as CKRecordValue
+                try core.apply(ck, callback: scope)
+                let reopened = try LocalChain(root: chain.root)
+                let resumed = try SyncCore.local(context: reopened.context, library: reopened.libraryID, root: reopened.root)
+                XCTAssertEqual(try resumed.document(value.id)?.payload, opaque)
+                var rewrite = value; rewrite.operationID = UUID(); rewrite.revision += 1
+                XCTAssertThrowsError(try resumed.write(rewrite))
+                XCTAssertEqual(try resumed.document(value.id)?.payload, opaque)
+            }
+        }
+    }
+
     @MainActor func testFailedInboundCannotAdvanceCheckpointOrBootstrap() throws {
         try fixture { chain, core in
             let scope = core.session.scope

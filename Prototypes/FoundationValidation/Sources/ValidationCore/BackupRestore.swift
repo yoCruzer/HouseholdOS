@@ -201,7 +201,7 @@ enum BackupFault: Error { case cancelled, capacity, interrupted, beforeSwitch, a
                 throw ValidationFailure.invariant("restored representation not covered by manifest")
             }
         }
-        for row in try c.fetch(FetchDescriptor<SyncCheckpoint>()) where row.key == "session" { c.delete(row) }
+        for row in try c.fetch(FetchDescriptor<SyncCheckpoint>()) where row.key == "session" || row.key == "media-transfers" { c.delete(row) }
         for snapshot in try c.fetch(FetchDescriptor<SentSnapshot>()) { c.delete(snapshot) }
         let scope = SyncScope(container: "unbound", environment: "Development", account: "unbound", library: manifest.libraryID, zone: "HHOSVAL_" + manifest.libraryID.uuidString, epoch: UUID())
         for row in try c.fetch(FetchDescriptor<SyncedDocument>()) { row.systemFields = nil; row.ancestor = nil; row.scope = scope.key }

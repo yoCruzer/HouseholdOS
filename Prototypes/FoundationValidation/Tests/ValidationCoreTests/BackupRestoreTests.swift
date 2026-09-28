@@ -41,6 +41,37 @@ final class BackupRestoreTests: XCTestCase {
         }
     }
 
+    @MainActor func testRestorePreservesRetiredBytesButDropsOldMediaTicketsAndAcknowledgements() throws {
+        try fixture { chain, root in
+            let core = try SyncCore.local(context: chain.context, library: chain.libraryID, root: chain.root)
+            try core.setEnabled(true); try core.finishBootstrap(callback: core.session.scope)
+            let transfers = try MediaTransfers(chain: chain, core: core)
+            let media = try XCTUnwrap(chain.context.fetch(FetchDescriptor<MediaAssetRecord>()).first)
+            try transfers.setPolicy(.appOwnedOriginals)
+            let acknowledged = try transfers.beginUpload(media.id)
+            XCTAssertTrue(try transfers.acknowledge(acknowledged))
+            try transfers.replace(media.id, bytes: MediaFiles.syntheticJPEG(seed: 99))
+            _ = try transfers.beginUpload(media.id)
+            XCTAssertEqual(transfers.state.tickets.count, 2)
+            let backup = root.appendingPathComponent("history-backup")
+            let manifest = try BackupRestore.export(chain, to: backup, full: true)
+            XCTAssertEqual(manifest.representations.count, 2)
+            let target = root.appendingPathComponent("history-restored")
+            _ = try BackupRestore.restore(backup, into: target)
+            let restored = try LocalChain(root: BackupRestore.activeGeneration(in: target))
+            let resumed = try SyncCore.local(context: restored.context, library: restored.libraryID, root: restored.root)
+            let restoredTransfers = try MediaTransfers(chain: restored, core: resumed)
+            XCTAssertTrue(restoredTransfers.state.tickets.isEmpty)
+            XCTAssertEqual(restoredTransfers.state.policy, .preview)
+            XCTAssertEqual(try restored.context.fetchCount(FetchDescriptor<MediaRepresentation>()), 2)
+            for representation in manifest.representations {
+                XCTAssertEqual(try Data(contentsOf: restored.root.appendingPathComponent(representation.path)), try Data(contentsOf: chain.root.appendingPathComponent(representation.path)))
+            }
+            XCTAssertFalse(resumed.session.enabled)
+            XCTAssertThrowsError(try restoredTransfers.beginUpload(media.id))
+        }
+    }
+
     @MainActor func testInterruptedExportAndSwitchLeavePriorGenerationUsable() throws {
         try fixture { chain, root in
             let backup = root.appendingPathComponent("good")

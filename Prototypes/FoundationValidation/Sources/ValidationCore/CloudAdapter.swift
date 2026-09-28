@@ -1,5 +1,6 @@
 import Foundation
 import CloudKit
+import SwiftData
 
 @MainActor final class CloudAdapter: CKSyncEngineDelegate {
     let core: SyncCore
@@ -62,10 +63,16 @@ import CloudKit
                 for failed in value.failedRecordSaves {
                     if failed.error.code == .serverRecordChanged, let server = failed.error.serverRecord {
                         try core.apply(server, callback: callbackScope)
-                        try core.pause("server conflict requires durable reconciliation")
+                        if try core.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: { $0.entityID.uuidString == server.recordID.recordName && $0.scope == callbackScope.key }) {
+                            try core.pause("server conflict requires durable reconciliation")
+                        }
                     } else { try classify(failed.error) }
                 }
-            case .accountChange: try core.pause("account changed; explicit binding required")
+            case .accountChange(let value):
+                switch value.changeType {
+                case .signIn(let user) where MediaFiles.hash(Data(user.recordName.utf8)) == callbackScope.account: break
+                default: try core.pause("account changed; explicit binding required")
+                }
             case .fetchedDatabaseChanges(let value):
                 if value.deletions.contains(where: { $0.zoneID == zone }) { try core.pause("zone removed; no automatic recreation") }
             case .sentDatabaseChanges(let value):
@@ -85,7 +92,10 @@ import CloudKit
         case .zoneNotFound: try core.pause("zoneNotFound; cause requires evidence")
         case .quotaExceeded: try core.pause("quota exceeded; uploads paused")
         case .notAuthenticated: try core.pause("account unavailable")
-        default: lastFailure = "service failure; platform retry/backoff applies"
+        case .requestRateLimited, .serviceUnavailable, .networkFailure, .networkUnavailable:
+            core.session.retryAfter = Date().addingTimeInterval(max(error.retryAfterSeconds ?? 30, 1)); try core.saveSession()
+            lastFailure = "platform retry-after retained; no custom timer"
+        default: lastFailure = "service failure; explicit retry/reconciliation required"
         }
     }
     func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext, syncEngine: CKSyncEngine) async -> CKSyncEngine.RecordZoneChangeBatch? {

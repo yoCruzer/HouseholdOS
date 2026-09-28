@@ -114,6 +114,7 @@ struct SessionState: Codable {
     var pauseReason: String?
     var engineSerialization: Data?
     var restoring: Bool?
+    var retryAfter: Date?
 }
 
 // One codec is used by the real CloudKit delegate and deterministic transport tests.
@@ -150,6 +151,16 @@ enum CloudCodec {
         let known: Set<String> = ["id", "operationID", "revision", "library", "kind", "parentID", "name", "category", "amount", "currency", "deleted", "replacesDeletion", "format", "profile", "media", "sourceDraftID", "incarnation", "parentIncarnation"]
         guard let object = try? JSONSerialization.jsonObject(with: bytes) as? [String: Any],
               Set(object.keys).isSubset(of: known), object["format"] as? Int == 1 else { return false }
+        // Codable ignores unknown nested keys too. Never rewrite a representation or
+        // profile after silently dropping fields introduced by a newer client.
+        let nested: [String: Set<String>] = [
+            "profile": ["id", "size", "material"],
+            "media": ["representationID", "revision", "hash", "precision", "contentType", "preview"]
+        ]
+        for (key, fields) in nested {
+            guard let value = object[key], !(value is NSNull) else { continue }
+            guard let dictionary = value as? [String: Any], Set(dictionary.keys).isSubset(of: fields) else { return false }
+        }
         return true
     }
     static func systemFields(_ record: CKRecord) -> Data {
@@ -246,7 +257,7 @@ enum CloudCodec {
         }
     }
     func nextBatch() throws -> [WireRecord] {
-        guard accepts(session.scope), session.bootstrapComplete else { return [] }
+        guard accepts(session.scope), session.bootstrapComplete, session.retryAfter.map({ $0 <= Date() }) ?? true else { return [] }
         var blocked = Set(try context.fetch(FetchDescriptor<ConflictCandidate>()).filter { $0.scope == session.scope.key }.map(\.entityID))
             .union(try context.fetch(FetchDescriptor<SyncedDocument>()).filter { !CloudCodec.writable($0.payload) }.map(\.id))
         for row in try context.fetch(FetchDescriptor<SyncedDocument>()) {

@@ -2,6 +2,7 @@ import SwiftUI
 import PhotosUI
 import Photos
 import SwiftData
+import UniformTypeIdentifiers
 
 @main struct FoundationValidationApp: App {
     var body: some Scene { WindowGroup { ValidationView() } }
@@ -17,6 +18,11 @@ import SwiftData
     @State private var restoredSnapshotID: UUID?
     @State private var reportURL: URL?
     @State private var previews = [URL]()
+    @State private var liveConfiguration: LiveConfiguration?
+    @State private var live: LiveValidation?
+    @State private var importingConfiguration = false
+    @State private var busy = false
+    @State private var setupURL: URL?
 
     private var programRoot: URL {
         URL.applicationSupportDirectory.appendingPathComponent(ProcessInfo.processInfo.arguments.contains("--self-test") ? "HHOS-FAV-001-synthetic-self-test" : "HHOS-FAV-001", isDirectory: true)
@@ -39,7 +45,8 @@ import SwiftData
                         _ = try requireChain().confirm(id); message = "Item 已确认；媒体和 Profile 身份保持"
                     }}
                     Button("重开并恢复 journal") { perform {
-                        chain = try LocalChain(root: programRoot.appendingPathComponent("local"))
+                        chain = try LocalChain(root: requireChain().root)
+                        live = nil
                         try requireChain().recover(); message = "本地库已重新打开"
                     }}
                 }
@@ -67,11 +74,45 @@ import SwiftData
                     }}
                 }
                 Section("平台证据") {
-                    Text("CloudKit：尚未配置已授权的 Development 容器。不得把本地通过当作真实服务通过。")
+                    Text(liveConfiguration == nil ? "CloudKit 未配置。导出本地库设置，在已签名 App 上运行配置工具，再导入配置。" : "Development 配置已校验；仅手动执行。需分别保留源端与空白端证据。")
+                    Button("导出本地库设置（用于生成私有配置）") { perform {
+                        let url = programRoot.appendingPathComponent("local-setup.json")
+                        let setup = ["program": "HHOS-FAV-001", "libraryID": try requireChain().libraryID.uuidString]
+                        try JSONEncoder().encode(setup).write(to: url, options: .atomic)
+                        setupURL = url
+                    }}
+                    if let setupURL { ShareLink("分享私有设置", item: setupURL) }
+                    Button("导入已签名 Development 配置") { importingConfiguration = true }
+                    Button("连接已授权测试容器") { runLive {
+                        guard let config = liveConfiguration else { throw ValidationFailure.invariant("先导入已校验配置") }
+                        live = try await LiveValidation.start(config: config, chain: requireChain(), budgetURL: programRoot.appendingPathComponent("live-budget.json"))
+                        message = "已连接测试 namespace；尚未声明复制或恢复成功"
+                    }}
+                    Button("抓取 metadata／preview，再发送本地意图") { runLive {
+                        try await requireLive().metadataRoundTrip()
+                        message = "本次 metadata 操作结束；请导出摘要核对实际结果"
+                    }}
+                    Button("修改测试 Item（验证 update）") { perform {
+                        let runner = try requireLive()
+                        guard let item = try requireChain().context.fetch(FetchDescriptor<ItemRecord>()).first,
+                              let document = try runner.core.document(item.id) else { throw ValidationFailure.invariant("先确认测试 Item") }
+                        var wire = try JSONDecoder().decode(WireRecord.self, from: document.payload)
+                        wire.operationID = UUID(); wire.revision += 1; wire.name = "Synthetic updated item"
+                        try runner.core.write(wire); message = "更新意图已本地保存，等待手动发送"
+                    }}
+                    Button("明确上传一张 App-owned 测试原件") { runLive {
+                        try await requireLive().uploadOneOriginal(); message = "上传操作结束；ACK 不代表目标端已恢复"
+                    }}
+                    Button("按需取回一张测试原件并校验") { runLive {
+                        try await requireLive().fetchOneOriginal(); message = "按需读取结束；摘要记录目标表示校验结果"
+                    }}
+                    Button("关闭测试同步，保留云端数据") { runLive {
+                        try await requireLive().adapter.stop(); live = nil; message = "同步已关闭；云端既有数据未删除"
+                    }}
                     Button("生成脱敏执行摘要") { perform {
                         let url = programRoot.appendingPathComponent("validation-summary.json")
                         let summary: [String: Any] = ["program": "HHOS-FAV-001", "counts": counts,
-                            "liveCloud": "NOT_RUN", "crossDevicePhotos": "NOT_RUN", "photosWrites": 0,
+                            "liveCloud": live?.report ?? ["status": "NOT_RUN_THIS_SESSION"], "crossDevicePhotos": "NOT_RUN", "photosWrites": 0,
                             "sourceSnapshotVerifiedOnTarget": restoredSnapshotID != nil ? "LOCAL_GENERATION_ONLY" : "NOT_RUN"]
                         try JSONSerialization.data(withJSONObject: summary, options: [.prettyPrinted, .sortedKeys]).write(to: url, options: .atomic)
                         reportURL = url; message = "脱敏摘要已生成，不含照片、账号或原始路径"
@@ -86,9 +127,26 @@ import SwiftData
                     }
                 }
             }
+            .disabled(busy)
             .navigationTitle("Foundation Validation")
+            .fileImporter(isPresented: $importingConfiguration, allowedContentTypes: [.json]) { result in
+                perform {
+                    let url = try result.get()
+                    let accessible = url.startAccessingSecurityScopedResource()
+                    defer { if accessible { url.stopAccessingSecurityScopedResource() } }
+                    let bytes = try Data(contentsOf: url)
+                    let config = try JSONDecoder().decode(LiveConfiguration.self, from: bytes)
+                    try installConfiguration(config)
+                    try bytes.write(to: programRoot.appendingPathComponent("live-config.json"), options: .atomic)
+                    message = "签名配置已绑定；尚未发起网络请求"
+                }
+            }
             .task { perform {
                 chain = try LocalChain(root: programRoot.appendingPathComponent("local"))
+                let configurationURL = programRoot.appendingPathComponent("live-config.json")
+                if FileManager.default.fileExists(atPath: configurationURL.path) {
+                    try installConfiguration(JSONDecoder().decode(LiveConfiguration.self, from: Data(contentsOf: configurationURL)))
+                }
                 try requireChain().recover(); message = "独立本地环境就绪"
                 if ProcessInfo.processInfo.arguments.contains("--self-test") { try runSyntheticSelfTest() }
             }}
@@ -108,6 +166,29 @@ import SwiftData
             }
         }
     }
+    private func installConfiguration(_ config: LiveConfiguration) throws {
+        guard live == nil else { throw ValidationFailure.invariant("先关闭当前同步") }
+        try config.validateArtifact()
+        // A replica gets its own persistent store; the existing local library is never rebound.
+        let root = programRoot.appendingPathComponent(config.role == "blankReplica" ? "blank-replica" : "local")
+        let configured = try LocalChain(root: root, libraryID: config.libraryID)
+        try configured.recover()
+        chain = configured; liveConfiguration = config; lastDraft = nil
+    }
+    private func requireLive() throws -> LiveValidation {
+        guard let live else { throw ValidationFailure.invariant("先连接已授权测试容器") }
+        return live
+    }
+    private func runLive(_ operation: @escaping @MainActor () async throws -> Void) {
+        guard !busy else { return }
+        busy = true
+        Task { @MainActor in
+            defer { busy = false }
+            do { try await operation(); perform {} }
+            catch { message = "平台操作未完成；保留本地数据。请核对配置、账号和执行摘要。" }
+        }
+    }
+
     private func runSyntheticSelfTest() throws {
         let source = try requireChain()
         let backup = programRoot.appendingPathComponent("snapshot")

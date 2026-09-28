@@ -5,7 +5,7 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "e070cfac0fe58ce82775a92b474d448b17206ba7",
+  "last_good_commit": "2f2f7d87c3352e7793041dcd8468b8603738a606",
   "gates": {
     "G0": {
       "status": "RUNNING",
@@ -13,7 +13,8 @@
         "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending",
         "ValidationCore compiles on macOS 14 target and iOS 17 Simulator target using installed SDK; isolated App UI still pending",
         "Independent iOS App builds for arm64/x86_64 Simulator at iOS 17 deployment target, actual SDK 26.5. Initial synthetic iOS local-chain self-test PASS; relaunch verification in progress.",
-        "Simulator App terminated and relaunched: process-reopen report PASS; one complete target representation and matching snapshot verified; screenshot inspected, initial screen legible without clipping."
+        "Simulator App terminated and relaunched: process-reopen report PASS; one complete target representation and matching snapshot verified; screenshot inspected, initial screen legible without clipping.",
+        "Manual live controls and executable+Debug-dylib configuration binding compile in actual iOS Simulator App; unsigned, no live requests."
       ]
     },
     "G1": {
@@ -47,7 +48,8 @@
       "evidence": [
         "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
         "ProtocolBoundaryTests 5/5: three-way independent-field merge, coupled-money conflict, raw future-field retention and write protection, inbound commit failure blocks checkpoint, paged fetch gate.",
-        "Account A-B-A creates blocked durable epochs; old live adapter checks persisted scope before callbacks. 16 affected protocol tests PASS after correcting Usage fixture to contain its required parent."
+        "Account A-B-A creates blocked durable epochs; old live adapter checks persisted scope before callbacks. 16 affected protocol tests PASS after correcting Usage fixture to contain its required parent.",
+        "Nested future Profile/Media fields retained byte-exact across reopen and write-protected; affected 17 tests PASS."
       ]
     },
     "G5": {
@@ -79,7 +81,8 @@
         "BackupRestoreTests 5/5 PASS on actual SQLite/SwiftData: consistent snapshot, hash/manifest validation, generation pointer, retained source/conflicts/intents, cleared engine/device state, injected export/switch interruption, missing original rejection, package path/symlink/version/size checks",
         "iOS initial self-test validates one complete restored representation; process reopen running",
         "Actual Simulator process restart verifies restored original bytes against same snapshot; LocalEvidence/ios-reopen-report.json PASS.",
-        "Backup includes all retained representation files, not only current revision. Restore admission cannot be bypassed by ordinary bind; it fetches current remote state before scheduling."
+        "Backup includes all retained representation files, not only current revision. Restore admission cannot be bypassed by ordinary bind; it fetches current remote state before scheduling.",
+        "Explicit regression verifies all retired representation bytes restored, old prepared/acknowledged media tickets removed, restore upload still gated; affected 17 tests PASS."
       ]
     },
     "P1": {
@@ -100,7 +103,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Implement signed-artifact-verified live runner controls and audit remaining contract coverage; finish local process evidence and final reviewer/candidate",
+  "next_safe_action": "Audit live controls/report persistence and remaining per-contract gaps; then one independent read-only reviewer and final candidate suite/build/runtime evidence.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -120,9 +123,9 @@
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
   "remaining_implementation": [
-    "Usable Owner-configured live controls with exact signed Development artifact verification; finish adapter conflict/retry and event preflight (no live calls without configured authorization)",
+    "Complete live control audit (durable redacted reports, budget/error behavior, signed-device Owner instructions); actual unsigned iOS build passes, LIVE blocked by external setup.",
     "Close any remaining per-contract assertion gaps: migration failure/corrupt clone source preservation, category/Profile retention, backup concurrent mutation/cancel restart, partial results and cross-scope late callbacks, representation restore history",
-    "Ensure restored media transfer state also drops old device tickets/ACK; audit future nested fields and remote projection fidelity",
+    "Nested unknown fields and media restore tickets now covered; continue auditing remote projection fidelity and late ACK/conflict ordering.",
     "Run one independent final read-only review, address findings with affected tests, then final harness suite and actual App build/launch with dependency fingerprints",
     "Complete per-assertion evidence map, per-decision Freeze recommendation, production implementation map and concentrated Owner Action Pack",
     "Publish one Draft PR only after platform review block is cleared; explicit confirmation pending, no retries or alternate push channel used"

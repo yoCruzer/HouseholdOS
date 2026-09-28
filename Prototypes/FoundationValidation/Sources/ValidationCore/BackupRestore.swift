@@ -111,7 +111,16 @@ enum BackupFault: Error { case cancelled, capacity, interrupted, beforeSwitch, a
             }
         }
         // Preserve prepared originals and journal recovery intent too, including uncommitted captures.
-        for directory in ["staging", "journals"] {
+        for representation in representations where !represented.contains(where: { $0.representationID == representation.id }) {
+            let url = try safeURL(representation.relativePath, in: chain.root)
+            guard FileManager.default.fileExists(atPath: url.path), MediaFiles.hash(try Data(contentsOf: url)) == representation.originalHash else {
+                throw ValidationFailure.invariant("backup incomplete: historical representation unavailable")
+            }
+            if full && representation.precision == "pickerDeliveredRepresentation" { throw ValidationFailure.invariant("Full fidelity unavailable for picker representation") }
+            paths.insert(representation.relativePath)
+            represented.append(BackupRepresentation(mediaID: representation.mediaID, representationID: representation.id, revision: representation.revision, precision: representation.precision, sha256: representation.originalHash, path: representation.relativePath))
+        }
+        for directory in ["media", "staging", "journals"] {
             for url in try FileManager.default.contentsOfDirectory(at: chain.root.appendingPathComponent(directory), includingPropertiesForKeys: nil) {
                 paths.insert(directory + "/" + url.lastPathComponent)
             }
@@ -188,6 +197,9 @@ enum BackupFault: Error { case cancelled, capacity, interrupted, beforeSwitch, a
         }
         for representation in try c.fetch(FetchDescriptor<MediaRepresentation>()) {
             _ = try safeURL(representation.relativePath, in: stage)
+            guard manifest.files.contains(where: { $0.path == representation.relativePath && $0.sha256 == representation.originalHash }) else {
+                throw ValidationFailure.invariant("restored representation not covered by manifest")
+            }
         }
         for row in try c.fetch(FetchDescriptor<SyncCheckpoint>()) where row.key == "session" { c.delete(row) }
         for snapshot in try c.fetch(FetchDescriptor<SentSnapshot>()) { c.delete(snapshot) }

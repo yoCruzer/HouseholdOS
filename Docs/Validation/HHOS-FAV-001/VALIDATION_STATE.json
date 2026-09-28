@@ -5,7 +5,7 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "6a7eb3eb358a9e8624e9031e6fd6575d3193094f",
+  "last_good_commit": "e070cfac0fe58ce82775a92b474d448b17206ba7",
   "gates": {
     "G0": {
       "status": "RUNNING",
@@ -21,7 +21,8 @@
       "evidence": [
         "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending",
         "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync",
-        "Two independent local libraries have different persisted IDs; two replicas confirm same Draft to same Item ID (SharedChainTests)."
+        "Two independent local libraries have different persisted IDs; two replicas confirm same Draft to same Item ID (SharedChainTests).",
+        "Actual baseline store observable Core Data entity-version hashes captured; whole-directory source hashes unchanged through clone migration and repeat reopen. Process evidence driver retains synthetic stores."
       ]
     },
     "G2": {
@@ -30,7 +31,8 @@
         "SchemaTests 1/1",
         "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending",
         "Affected SchemaTests + LocalChainTests rerun 4/4 after sync sidecar additions",
-        "LocalChain stages typed wire Draft and Media intents in the same business save; shared chain affected 8/8 PASS."
+        "LocalChain stages typed wire Draft and Media intents in the same business save; shared chain affected 8/8 PASS.",
+        "Actual subprocess SIGKILL at prepared/committed/originalFinalized boundaries; recovery counts and original hashes correct. Actual read-only SwiftData save returns error 513, no phantom records/outbox; committed refresh outcome explicit."
       ]
     },
     "G3": {
@@ -44,33 +46,40 @@
       "status": "RUNNING",
       "evidence": [
         "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
-        "ProtocolBoundaryTests 5/5: three-way independent-field merge, coupled-money conflict, raw future-field retention and write protection, inbound commit failure blocks checkpoint, paged fetch gate."
+        "ProtocolBoundaryTests 5/5: three-way independent-field merge, coupled-money conflict, raw future-field retention and write protection, inbound commit failure blocks checkpoint, paged fetch gate.",
+        "Account A-B-A creates blocked durable epochs; old live adapter checks persisted scope before callbacks. 16 affected protocol tests PASS after correcting Usage fixture to contain its required parent."
       ]
     },
     "G5": {
       "status": "RUNNING",
       "evidence": [
         "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
-        "Parent deletion hides early and late children; old in-flight ACK cannot replace tombstone; offline conflict retained. More re-add/child-generation cases pending."
+        "Parent deletion hides early and late children; old in-flight ACK cannot replace tombstone; offline conflict retained. More re-add/child-generation cases pending.",
+        "Explicit re-add has new incarnation; old child records remain hidden/unsent. Prior conflicts retained as resolved history. Old backup restored over current remote tombstone cannot upload or revive old children."
       ]
     },
     "G6": {
       "status": "RUNNING",
       "evidence": [
         "PhotosBoundaryTests 3/3 LOGIC plus real local byte restoration; Photos mapping APIs compiled but not invoked on a library",
-        "Affected Photos/Backup/LocalChain 11/11 PASS; JPEG original bytes, normalized privacy-stripped preview; HEIC runtime fixture pending"
+        "Affected Photos/Backup/LocalChain 11/11 PASS; JPEG original bytes, normalized privacy-stripped preview; HEIC runtime fixture pending",
+        "Native HEIC encode/import byte preservation and two recovery-preview dimensions tested in MediaTransferTests."
       ]
     },
     "G7": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "MediaTransferTests 5/5 PASS; old ACK/download guarded by representation/revision/scope, Photos-backed fallback does not upgrade upload, policy downgrade retains acknowledged cloud state, quota/backoff conservative, 250/50 representative ordered plan, persisted 100MiB estimate budget",
+        "CKAsset immutable representation upload and direct desiredKeys fetch compile on macOS; new native App build and LIVE remain pending"
+      ]
     },
     "G8": {
       "status": "RUNNING",
       "evidence": [
         "BackupRestoreTests 5/5 PASS on actual SQLite/SwiftData: consistent snapshot, hash/manifest validation, generation pointer, retained source/conflicts/intents, cleared engine/device state, injected export/switch interruption, missing original rejection, package path/symlink/version/size checks",
         "iOS initial self-test validates one complete restored representation; process reopen running",
-        "Actual Simulator process restart verifies restored original bytes against same snapshot; LocalEvidence/ios-reopen-report.json PASS."
+        "Actual Simulator process restart verifies restored original bytes against same snapshot; LocalEvidence/ios-reopen-report.json PASS.",
+        "Backup includes all retained representation files, not only current revision. Restore admission cannot be bypassed by ordinary bind; it fetches current remote state before scheduling."
       ]
     },
     "P1": {
@@ -91,7 +100,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Complete media revision/policy and restore admission, parent re-add/incarnation and scoped live controls; then remaining process/migration faults and final assertion audit",
+  "next_safe_action": "Implement signed-artifact-verified live runner controls and audit remaining contract coverage; finish local process evidence and final reviewer/candidate",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -111,15 +120,12 @@
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
   "remaining_implementation": [
-    "Final native build fingerprint must cover changed Photos mapping adapter and UI (existing App runtime evidence is explicitly from previous self-test build)",
-    "Complete parent incarnation guard so re-add cannot revive old children or send old child intents; account A-B-A/session lifetime and partial service results coverage",
-    "Integrate shared CloudAdapter conflict resolution/retry handling, scoped state and pending queues; Owner-configured live controls must be usable without code edits or automatic provisioning",
-    "Restore cloud admission must fetch current tombstones before any restored upload, preserving explicit re-add choices",
-    "Media representation revision guard, CKAsset upload/read version checks, policy planner, quota/retry/budget handling, HEIC fixture, small preview candidate comparison",
-    "Journal actual subprocess termination, actual SwiftData save error, refresh outcome and protected/capacity/corruption classifications; migration repeat/failure evidence and observable schema identity",
-    "Backup consistency under export mutation attempt, physical interruption validation, source fixture integrity proof; Full fidelity limits and retired representations audit",
-    "Per-assertion contract evidence mapping; final candidate suite/build once; one independent read-only review; complete impact map and Owner Action Pack",
-    "Publication remains blocked by automatic approval review; explicit confirmation request is pending, no alternate channel or retry used"
+    "Usable Owner-configured live controls with exact signed Development artifact verification; finish adapter conflict/retry and event preflight (no live calls without configured authorization)",
+    "Close any remaining per-contract assertion gaps: migration failure/corrupt clone source preservation, category/Profile retention, backup concurrent mutation/cancel restart, partial results and cross-scope late callbacks, representation restore history",
+    "Ensure restored media transfer state also drops old device tickets/ACK; audit future nested fields and remote projection fidelity",
+    "Run one independent final read-only review, address findings with affected tests, then final harness suite and actual App build/launch with dependency fingerprints",
+    "Complete per-assertion evidence map, per-decision Freeze recommendation, production implementation map and concentrated Owner Action Pack",
+    "Publish one Draft PR only after platform review block is cleared; explicit confirmation pending, no retries or alternate push channel used"
   ],
   "historical_tested_fingerprints": {
     "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",

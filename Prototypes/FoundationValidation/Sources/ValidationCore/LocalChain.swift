@@ -6,6 +6,12 @@ public enum LocalFault: String, CaseIterable, Error {
     case none, originalWrite, previewWrite, beforeSave, afterSave, finalize, cleanup, refresh
 }
 
+public enum CaptureOutcome { case notCommitted, saved, savedRefreshUnavailable, savedNeedsMediaRecovery }
+struct CommittedCaptureError: LocalizedError {
+    var draftID: UUID
+    var errorDescription: String? { "Draft 已保存；媒体整理待恢复。请重开恢复，不要重复录入。" }
+}
+
 struct FileJournal: Codable {
     var draftID: UUID
     var mediaID: UUID
@@ -19,13 +25,14 @@ struct FileJournal: Codable {
     let container: ModelContainer
     let context: ModelContext
     public let libraryID: UUID
-    public init(root: URL, libraryID requestedLibrary: UUID? = nil) throws {
+    public private(set) var lastCaptureOutcome: CaptureOutcome = .notCommitted
+    public init(root: URL, libraryID requestedLibrary: UUID? = nil, allowsSave: Bool = true) throws {
         self.root = root
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         for dir in ["staging", "media", "journals"] {
             try FileManager.default.createDirectory(at: root.appendingPathComponent(dir), withIntermediateDirectories: true)
         }
-        container = try CandidateStore.open(root.appendingPathComponent("library.store"))
+        container = try CandidateStore.open(root.appendingPathComponent("library.store"), allowsSave: allowsSave)
         context = ModelContext(container); context.autosaveEnabled = false
         if let identity = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == "localLibrary" }) {
             libraryID = try JSONDecoder().decode(UUID.self, from: identity.data)
@@ -37,7 +44,8 @@ struct FileJournal: Codable {
         }
     }
 
-    @discardableResult public func capture(_ bytes: Data, fault: LocalFault = .none, precision: String = "importedBytes", photoReference: String? = nil) throws -> UUID {
+    @discardableResult public func capture(_ bytes: Data, fault: LocalFault = .none, precision: String = "importedBytes", photoReference: String? = nil, checkpoint: ((String) -> Void)? = nil) throws -> UUID {
+        lastCaptureOutcome = .notCommitted
         let draftID = UUID(), mediaID = UUID()
         let journal = FileJournal(draftID: draftID, mediaID: mediaID, originalHash: MediaFiles.hash(bytes), originalName: "\(mediaID).original", previewName: "\(mediaID).preview.jpg")
         let journalURL = root.appendingPathComponent("journals/\(mediaID).json")
@@ -50,6 +58,7 @@ struct FileJournal: Codable {
         }
         let preview = try MediaFiles.preview(bytes)
         try MediaFiles.write(preview, to: root.appendingPathComponent("staging/\(journal.previewName)"))
+        checkpoint?("prepared")
         let date = Date()
         context.insert(CaptureDraftRecord(id: draftID, householdID: libraryID, name: "Synthetic capture", createdAt: date, updatedAt: date, captureSource: precision == "pickerDeliveredRepresentation" ? .photoLibrary : .camera))
         let profile = WardrobeProfile(ownerID: draftID, size: "M", material: "cotton")
@@ -67,13 +76,20 @@ struct FileJournal: Codable {
             context.rollback()
             throw error
         }
-        if fault == .afterSave || fault == .finalize { throw fault }
-        try finalize(journal, journalURL: journalURL, fault: fault)
-        // A refresh failure is a committed outcome and must not invite replay of capture.
+        lastCaptureOutcome = .saved
+        checkpoint?("committed")
+        do {
+            if fault == .afterSave || fault == .finalize { throw fault }
+            try finalize(journal, journalURL: journalURL, fault: fault, checkpoint: checkpoint)
+        } catch {
+            lastCaptureOutcome = .savedNeedsMediaRecovery
+            throw CommittedCaptureError(draftID: draftID)
+        }
+        if fault == .refresh { lastCaptureOutcome = .savedRefreshUnavailable }
         return draftID
     }
 
-    func finalize(_ journal: FileJournal, journalURL: URL, fault: LocalFault = .none) throws {
+    func finalize(_ journal: FileJournal, journalURL: URL, fault: LocalFault = .none, checkpoint: ((String) -> Void)? = nil) throws {
         guard journal.originalName == "\(journal.mediaID).original", journal.previewName == "\(journal.mediaID).preview.jpg",
               journal.originalHash.count == 64 else { throw ValidationFailure.invariant("unsafe file journal") }
         for name in [journal.originalName, journal.previewName] {
@@ -81,6 +97,7 @@ struct FileJournal: Codable {
             let target = root.appendingPathComponent("media/\(name)")
             if !FileManager.default.fileExists(atPath: target.path) {
                 try FileManager.default.moveItem(at: source, to: target)
+                if name == journal.originalName { checkpoint?("originalFinalized") }
             }
         }
         let original = try Data(contentsOf: root.appendingPathComponent("media/\(journal.originalName)"))

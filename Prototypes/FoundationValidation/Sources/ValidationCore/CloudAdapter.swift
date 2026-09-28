@@ -110,13 +110,37 @@ import CloudKit
 // Originals are kept outside the engine metadata zone. This is only an explicit request entry;
 // real-service evidence is required before claiming that metadata fetch is original-free.
 enum OriginalAssetAdapter {
-    static func fetch(recordID: CKRecord.ID, database: CKDatabase, expectedHash: String, durableURL: URL) async throws {
-        let results = try await database.records(for: [recordID], desiredKeys: ["original"])
-        guard let result = results[recordID], let asset = try result.get()["original"] as? CKAsset,
-              let temporary = asset.fileURL else { throw ValidationFailure.invariant("original unavailable") }
+    static func recordID(_ ticket: TransferTicket) -> CKRecord.ID {
+        CKRecord.ID(recordName: ticket.representationID.uuidString, zoneID: .init(zoneName: ticket.scope.zone + "_media"))
+    }
+    static func upload(_ ticket: TransferTicket, database: CKDatabase, durableURL: URL) async throws {
+        let bytes = try Data(contentsOf: durableURL)
+        guard MediaFiles.hash(bytes) == ticket.sha256, bytes.count == ticket.bytes else { throw ValidationFailure.invariant("upload representation changed") }
+        let record = CKRecord(recordType: "HHOSVAL_Original", recordID: recordID(ticket))
+        record["original"] = CKAsset(fileURL: durableURL)
+        record["revision"] = ticket.revision as CKRecordValue
+        record["sha256"] = ticket.sha256 as CKRecordValue
+        record["mediaID"] = ticket.mediaID.uuidString as CKRecordValue
+        do {
+            let result = try await database.modifyRecords(saving: [record], deleting: [], savePolicy: .ifServerRecordUnchanged, atomically: false)
+            guard let saved = result.saveResults[record.recordID] else { throw ValidationFailure.invariant("missing asset result") }
+            _ = try saved.get()
+        } catch let error as CKError where error.code == .serverRecordChanged {
+            guard let saved = error.serverRecord, saved["sha256"] as? String == ticket.sha256,
+                  saved["revision"] as? Int == ticket.revision, saved["mediaID"] as? String == ticket.mediaID.uuidString else { throw error }
+            // Immutable representation ID with matching descriptor resolves a lost upload ACK.
+        }
+    }
+    static func fetch(_ ticket: TransferTicket, database: CKDatabase) async throws -> Data {
+        let id = recordID(ticket)
+        let results = try await database.records(for: [id], desiredKeys: ["original", "sha256", "revision", "mediaID"])
+        guard let result = results[id] else { throw ValidationFailure.invariant("original unavailable") }
+        let record = try result.get()
+        guard record["sha256"] as? String == ticket.sha256, record["revision"] as? Int == ticket.revision,
+              record["mediaID"] as? String == ticket.mediaID.uuidString,
+              let asset = record["original"] as? CKAsset, let temporary = asset.fileURL else { throw ValidationFailure.invariant("original descriptor mismatch") }
         let bytes = try Data(contentsOf: temporary)
-        guard MediaFiles.hash(bytes) == expectedHash else { throw ValidationFailure.invariant("original integrity failure") }
-        // CKAsset temporary location never becomes the persisted replica location.
-        try MediaFiles.write(bytes, to: durableURL)
+        guard MediaFiles.hash(bytes) == ticket.sha256 else { throw ValidationFailure.invariant("original integrity failure") }
+        return bytes // Caller validates the still-current ticket then writes to durable storage.
     }
 }

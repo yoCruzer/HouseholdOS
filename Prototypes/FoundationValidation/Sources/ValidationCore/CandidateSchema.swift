@@ -51,9 +51,9 @@ enum CandidateMigration: SchemaMigrationPlan {
 }
 
 @MainActor enum CandidateStore {
-    static func open(_ url: URL) throws -> ModelContainer {
+    static func open(_ url: URL, allowsSave: Bool = true) throws -> ModelContainer {
         let schema = Schema(CandidateSchema.models)
         return try ModelContainer(for: schema, migrationPlan: CandidateMigration.self,
-            configurations: [ModelConfiguration("HouseholdOS", schema: schema, url: url, cloudKitDatabase: .none)])
+            configurations: [ModelConfiguration("HouseholdOS", schema: schema, url: url, allowsSave: allowsSave, cloudKitDatabase: .none)])
     }
 }

@@ -88,6 +88,7 @@ final class SyncProtocolTests: XCTestCase {
             var readd = wire(scope, id: old.id, revision: 3)
             XCTAssertThrowsError(try core.write(readd))
             readd.replacesDeletion = deletion.operationID
+            readd.incarnation = UUID()
             try core.write(readd)
             XCTAssertEqual(try core.pending().count, 1)
         }

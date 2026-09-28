@@ -70,6 +70,8 @@ final class SharedChainTests: XCTestCase {
         try core.setEnabled(true); try core.finishBootstrap(callback: core.session.scope)
         let service = DeterministicService()
         let parent = UUID()
+        let parentRecord = WireRecord(id: parent, operationID: UUID(), revision: 1, library: chain.libraryID, kind: "item", name: "Usage parent")
+        try core.apply(CloudCodec.encode(parentRecord, zone: .init(zoneName: core.session.scope.zone)), callback: core.session.scope)
         let usage = WireRecord(id: UUID(), operationID: UUID(), revision: 1, library: chain.libraryID, kind: "usage", parentID: parent)
         try core.write(usage); try core.write(usage)
         let proposal = try XCTUnwrap(core.nextBatch().first)

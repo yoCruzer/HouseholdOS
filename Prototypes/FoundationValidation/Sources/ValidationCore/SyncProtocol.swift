@@ -44,6 +44,9 @@ struct WireRecord: Codable, Equatable, Sendable {
     var profile: WireProfile?
     var media: WireMedia?
     var sourceDraftID: UUID?
+    var incarnation: UUID?
+    var parentIncarnation: UUID?
+    var effectiveIncarnation: UUID { incarnation ?? id }
 
     func encoded() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
@@ -110,6 +113,7 @@ struct SessionState: Codable {
     var bootstrapComplete = false
     var pauseReason: String?
     var engineSerialization: Data?
+    var restoring: Bool?
 }
 
 // One codec is used by the real CloudKit delegate and deterministic transport tests.
@@ -143,7 +147,7 @@ enum CloudCodec {
         return wire
     }
     static func writable(_ bytes: Data) -> Bool {
-        let known: Set<String> = ["id", "operationID", "revision", "library", "kind", "parentID", "name", "category", "amount", "currency", "deleted", "replacesDeletion", "format", "profile", "media", "sourceDraftID"]
+        let known: Set<String> = ["id", "operationID", "revision", "library", "kind", "parentID", "name", "category", "amount", "currency", "deleted", "replacesDeletion", "format", "profile", "media", "sourceDraftID", "incarnation", "parentIncarnation"]
         guard let object = try? JSONSerialization.jsonObject(with: bytes) as? [String: Any],
               Set(object.keys).isSubset(of: known), object["format"] as? Int == 1 else { return false }
         return true
@@ -169,6 +173,10 @@ enum CloudCodec {
             }
         } else { session = SessionState(scope: scope) }
         context.autosaveEnabled = false
+        if let saved = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == "session" }),
+           try JSONDecoder().decode(SessionState.self, from: saved.data).scope != session.scope {
+            try saveSession() // Persist the new blocked epoch before accepting any callbacks.
+        }
     }
     func commit() throws {
         if failNextCommit {
@@ -193,7 +201,12 @@ enum CloudCodec {
         if !value { session.scope.epoch = UUID(); session.bootstrapComplete = false; session.engineSerialization = nil }
         try saveSession()
     }
-    func accepts(_ scope: SyncScope) -> Bool { session.enabled && session.scope == scope && session.pauseReason == nil }
+    func accepts(_ scope: SyncScope) -> Bool {
+        guard session.enabled, session.scope == scope, session.pauseReason == nil,
+              let row = try? context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == "session" }),
+              let durable = try? JSONDecoder().decode(SessionState.self, from: row.data) else { return false }
+        return durable.enabled && durable.scope == scope && durable.pauseReason == nil
+    }
     func document(_ id: UUID) throws -> SyncedDocument? {
         try context.fetch(FetchDescriptor<SyncedDocument>()).first { $0.id == id }
     }
@@ -218,6 +231,14 @@ enum CloudCodec {
             guard record.revision > old.revision else { throw ValidationFailure.invariant("non-increasing revision") }
             guard CloudCodec.writable(current.payload) else { throw ValidationFailure.invariant("future data is write protected") }
             guard !old.deleted || record.deleted || record.replacesDeletion == old.operationID else { throw ValidationFailure.invariant("explicit re-add intent required") }
+            if old.deleted && !record.deleted {
+                guard record.incarnation != nil, record.effectiveIncarnation != old.effectiveIncarnation else {
+                    throw ValidationFailure.invariant("re-add requires new incarnation")
+                }
+                for conflict in try context.fetch(FetchDescriptor<ConflictCandidate>()) where conflict.entityID == record.id && conflict.scope == session.scope.key {
+                    conflict.scope = "resolved/" + session.scope.key // Retain the candidate as history, unblock the explicit new decision.
+                }
+            }
             current.payload = try record.encoded()
         } else { context.insert(try SyncedDocument(record, scope: session.scope.key)) }
         if !(try context.fetch(FetchDescriptor<DurableIntent>()).contains { $0.operationID == record.operationID }) {
@@ -225,9 +246,17 @@ enum CloudCodec {
         }
     }
     func nextBatch() throws -> [WireRecord] {
-        guard session.enabled, session.bootstrapComplete, session.pauseReason == nil else { return [] }
-        let blocked = Set(try context.fetch(FetchDescriptor<ConflictCandidate>()).filter { $0.scope == session.scope.key }.map(\.entityID))
+        guard accepts(session.scope), session.bootstrapComplete else { return [] }
+        var blocked = Set(try context.fetch(FetchDescriptor<ConflictCandidate>()).filter { $0.scope == session.scope.key }.map(\.entityID))
             .union(try context.fetch(FetchDescriptor<SyncedDocument>()).filter { !CloudCodec.writable($0.payload) }.map(\.id))
+        for row in try context.fetch(FetchDescriptor<SyncedDocument>()) {
+            let wire = try JSONDecoder().decode(WireRecord.self, from: row.payload)
+            if let parentID = wire.parentID {
+                guard let parent = try document(parentID) else { blocked.insert(wire.id); continue }
+                let value = try JSONDecoder().decode(WireRecord.self, from: parent.payload)
+                if value.deleted || (wire.parentIncarnation ?? parentID) != value.effectiveIncarnation { blocked.insert(wire.id) }
+            }
+        }
         let inflight = try context.fetch(FetchDescriptor<SentSnapshot>()).filter { $0.scope == session.scope.key && !blocked.contains($0.entityID) }
         var records = try inflight.map { try JSONDecoder().decode(WireRecord.self, from: $0.payload) }
         var selected = Set(records.map(\.id))
@@ -261,6 +290,14 @@ enum CloudCodec {
                 guard existing.scope == callback.key else { throw ValidationFailure.invariant("cross-scope inbound requires plan") }
                 let local = try JSONDecoder().decode(WireRecord.self, from: existing.payload)
                 if local.deleted && !remote.deleted && remote.replacesDeletion != local.operationID { return }
+                if let ancestor = try existing.ancestor.map({ try JSONDecoder().decode(WireRecord.self, from: $0) }), remote.revision < ancestor.revision { return }
+                // Fetching the exact sent operation also resolves a lost ACK, never a newer edit.
+                for intent in try pending() where intent.operationID == remote.operationID {
+                    if try JSONDecoder().decode(WireRecord.self, from: intent.payload) == remote {
+                        context.delete(intent)
+                        for snapshot in try context.fetch(FetchDescriptor<SentSnapshot>()) where snapshot.operationID == remote.operationID { context.delete(snapshot) }
+                    }
+                }
                 let pendingLocal = try pending().contains { $0.entityID == remote.id }
                 if !CloudCodec.writable(raw) {
                     if pendingLocal { try retainConflict(existing: existing, remote: raw) }
@@ -271,6 +308,8 @@ enum CloudCodec {
                     if pendingLocal { try retainConflict(existing: existing, remote: raw) }
                     try discardDelivery(for: remote.id)
                     existing.payload = raw; existing.ancestor = raw
+                } else if let known = existing.ancestor, try JSONDecoder().decode(WireRecord.self, from: known) == remote {
+                    existing.systemFields = CloudCodec.systemFields(record)
                 } else if pendingLocal {
                     let ancestor = try existing.ancestor.map { try JSONDecoder().decode(WireRecord.self, from: $0) }
                     if let ancestor, let merged = ThreeWayMerge.merge(ancestor: ancestor, local: local, remote: remote) {
@@ -315,7 +354,7 @@ enum CloudCodec {
     }
     func finishBootstrap(callback: SyncScope) throws {
         guard accepts(callback) else { return }
-        session.bootstrapComplete = true; try saveSession()
+        session.bootstrapComplete = true; session.restoring = false; try saveSession()
     }
     func pause(_ reason: String) throws {
         session.pauseReason = reason; session.bootstrapComplete = false; try saveSession()
@@ -333,7 +372,7 @@ enum CloudCodec {
     }
 
     func bindInitial(to scope: SyncScope) throws {
-        guard session.scope.account == "unbound", session.scope.container == "unbound", scope.library == session.scope.library,
+        guard session.pauseReason == nil, session.scope.account == "unbound", session.scope.container == "unbound", scope.library == session.scope.library,
               scope.environment == "Development", scope.zone.hasPrefix("HHOSVAL_") else {
             throw ValidationFailure.invariant("new account requires explicit recovery/binding plan")
         }
@@ -358,7 +397,7 @@ enum CloudCodec {
         if let parent = wire.parentID {
             guard let parentRow = try document(parent) else { return } // Quarantine until its parent arrives.
             let parentWire = try JSONDecoder().decode(WireRecord.self, from: parentRow.payload)
-            guard !parentWire.deleted else { try removeProjection(id); return }
+            guard !parentWire.deleted, (wire.parentIncarnation ?? parent) == parentWire.effectiveIncarnation else { try removeProjection(id); return }
         }
         let date = Date(timeIntervalSince1970: 1_700_000_000) // Fixture projection, not a precision claim about user dates.
         if wire.kind == "draft" {
@@ -433,5 +472,28 @@ enum ThreeWayMerge {
         result.profile = profile[0]; result.media = media[0]
         result.operationID = UUID(); result.revision = max(local.revision, remote.revision) + 1
         return try? result.validated()
+    }
+}
+
+
+@MainActor extension SyncCore {
+    func prepareRestoreAdmission(to scope: SyncScope) throws {
+        guard session.pauseReason == "restored snapshot requires cloud admission against current tombstones",
+              session.scope.account == "unbound", scope.library == session.scope.library,
+              scope.environment == "Development", scope.zone.hasPrefix("HHOSVAL_") else {
+            throw ValidationFailure.invariant("restore admission scope mismatch")
+        }
+        let oldScope = session.scope.key
+        for row in try context.fetch(FetchDescriptor<SyncedDocument>()) where row.scope == oldScope {
+            row.scope = scope.key; row.ancestor = nil; row.systemFields = nil
+            let wire = try JSONDecoder().decode(WireRecord.self, from: row.payload)
+            if CloudCodec.writable(row.payload), !(try context.fetch(FetchDescriptor<DurableIntent>()).contains { $0.operationID == wire.operationID }) {
+                context.insert(DurableIntent(operationID: wire.operationID, entityID: wire.id, revision: wire.revision, kind: wire.kind, payload: row.payload, scope: scope.key))
+            }
+        }
+        for intent in try context.fetch(FetchDescriptor<DurableIntent>()) where intent.scope == oldScope { intent.scope = scope.key }
+        for conflict in try context.fetch(FetchDescriptor<ConflictCandidate>()) where conflict.scope == oldScope { conflict.scope = scope.key }
+        session = SessionState(scope: scope, enabled: true, restoring: true)
+        try saveSession() // Enabled for fetch only; bootstrapComplete is still false.
     }
 }

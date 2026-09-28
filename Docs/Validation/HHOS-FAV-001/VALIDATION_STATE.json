@@ -5,38 +5,47 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
+  "last_good_commit": "ca3fd7005fb1daf493519a443a5602420ec14ff5",
   "gates": {
     "G0": {
       "status": "RUNNING",
       "evidence": [
-        "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending"
+        "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending",
+        "ValidationCore compiles on macOS 14 target and iOS 17 Simulator target using installed SDK; isolated App UI still pending"
       ]
     },
     "G1": {
       "status": "RUNNING",
       "evidence": [
-        "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending"
+        "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending",
+        "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync"
       ]
     },
     "G2": {
       "status": "RUNNING",
       "evidence": [
         "SchemaTests 1/1",
-        "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending"
+        "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending",
+        "Affected SchemaTests + LocalChainTests rerun 4/4 after sync sidecar additions"
       ]
     },
     "G3": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending"
+      ]
     },
     "G4": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending"
+      ]
     },
     "G5": {
-      "status": "NOT_STARTED",
-      "evidence": []
+      "status": "RUNNING",
+      "evidence": [
+        "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending"
+      ]
     },
     "G6": {
       "status": "NOT_STARTED",
@@ -64,7 +73,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Compile shared CloudKit/PhotoKit adapters, expand revision/scoped durable protocol, then backup/restore and isolated iOS App",
+  "next_safe_action": "Integrate LocalChain business writes with WireRecord/SyncCore in same transaction; add isolated iOS App; complete G1-G8/P1 assertion mapping and remaining tests",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -72,7 +81,9 @@
   },
   "active_operations": [],
   "publication": {
-    "draft_pr": null
+    "draft_pr": null,
+    "status": "APPROVAL_REVIEW_REJECTED",
+    "reason": "Automatic approval review rejected push as external disclosure authorization insufficient; user confirmation requested; no retry or alternate push performed"
   },
   "toolchain": {
     "xcode": "26.6 (17F113)",
@@ -81,16 +92,33 @@
     "available_iOS_runtime": "26.5"
   },
   "tested_fingerprints": {
-    "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2",
     "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",
-    "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "2ffe76fd641f2fabf2bec56cf80fa9d6d729abb5d262c69aee3c6500e7aeb8aa",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "a5a081ccfaf7159e62e4818e42fc16f76923f77300d18d7925e629b5b061fa59",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/CloudAdapter.swift": "0e6fd5974afa45eaaaca2863f07ee3ce6254ad369a4e53fed109bd03baed97ed",
     "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/LegacyTypes.swift": "4f2a824e49d6bd08644067db698bb70f603c64ff04ef6c168eefae52a84296e6",
     "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceController.swift": "e8be49ca44f70b601dbeb0d250d3170b6abd90829900468afd87aa995b2933d4",
     "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceModels.swift": "f1dd75be099200e55fd6fa9bf91cd4202e68f67a2a95bf485f2a0ff03af94bd6",
     "Prototypes/FoundationValidation/Sources/ValidationCore/LegacyFixture.swift": "c4d569d354ae5a26ef72d6ece704cdc6791fc9fc8069da15351790c9bbb0997f",
     "Prototypes/FoundationValidation/Sources/ValidationCore/LocalChain.swift": "069109034f038fd2336b47ea552561f3c4f57c28a135016df4ca8be343e1029c",
     "Prototypes/FoundationValidation/Sources/ValidationCore/MediaFiles.swift": "9d49f4560a279d2495e3020da1733d4061b52b227aa594872a67baf09d96ae74",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/PhotosAdapter.swift": "e4dc7bbe1ae3a8e79d71f54fac9fde233f357a011fdad4c4cd84623199c2b1f0",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/SyncProtocol.swift": "7f90a2b6cec363e7a66a2c49ca7dd91603b17a2d924d9dd5150f206d6ca44005",
     "Prototypes/FoundationValidation/Tests/ValidationCoreTests/LocalChainTests.swift": "ecdf08e84cdded2f3abda7b1261c3c7af0e34d31c5bb6c0f6644ef46ce4b27c6",
-    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SchemaTests.swift": "97eb073cc8f297f1c84260acba6334b066d6730abb8d5bf32d5961b9a60de210"
-  }
+    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SchemaTests.swift": "97eb073cc8f297f1c84260acba6334b066d6730abb8d5bf32d5961b9a60de210",
+    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SyncProtocolTests.swift": "b3af4cdf94359e0858917c6f4ab72d392950baf0509f7155fc8c3a2696b29a55",
+    "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2"
+  },
+  "remaining_implementation": [
+    "Business LocalChain currently writes a placeholder payload and unbound-local scope; must connect to shared WireRecord and durable per-library scope before integration acceptance",
+    "Persist unique local library identity independently of legacy DefaultHousehold; preserve legacy records",
+    "Real PhotoKit cloud mapping/caching and picker UI, support and precision states",
+    "Three-way ancestor merge, coupled fields, future field protection, parent/child tombstone rules, A-B-A and late callbacks, paging and incoming persistence-failure checkpoint tests",
+    "Deterministic service adapter sharing codec/reducer including conditional saves, ACK loss, partial failures, true usage identity",
+    "Journal OS process termination, actual save error and protected-data/capacity classifications, refresh outcome, migration failures",
+    "Media revision ACK/download guards and policy/planner/quota tests",
+    "Snapshot backup and staged generation restore with security/path/hash/limits and fault tests",
+    "Basic device backup file eligibility assertions",
+    "Full per-assertion contract evidence map, final focused candidate suite/build, one independent read-only review, impact map and Owner pack",
+    "Publish one Draft PR only after approval block cleared"
+  ]
 }

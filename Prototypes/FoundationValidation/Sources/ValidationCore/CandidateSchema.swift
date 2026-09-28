@@ -41,7 +41,7 @@ import SwiftData
 enum CandidateSchema: VersionedSchema {
     static let versionIdentifier = Schema.Version(2, 0, 0)
     static var models: [any PersistentModel.Type] {
-        HouseholdOSSchemaV1.models + [WardrobeProfile.self, DurableIntent.self, MediaRepresentation.self]
+        HouseholdOSSchemaV1.models + [WardrobeProfile.self, DurableIntent.self, MediaRepresentation.self, SyncedDocument.self, SyncCheckpoint.self, ConflictCandidate.self, SentSnapshot.self]
     }
 }
 

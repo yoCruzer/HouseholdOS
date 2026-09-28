@@ -20,3 +20,14 @@ These are partial G1/G2/G6 evidence, not completed gates, iOS evidence, or live-
 ## SDK reading
 
 Installed iOS 26.6 CloudKit Swift interface supports CKSyncEngine on iOS 17. FetchChangesOptions has scope and operationGroup but no desiredKeys; direct CKDatabase records fetch supports desiredKeys. Asset scheduling must be validated with a controlled media zone or narrow direct fetch. [Apple delegate ordering](https://developer.apple.com/documentation/cloudkit/cksyncenginedelegate-1q7g8) prohibits reentrant send/fetch from handleEvent. [Encrypted values](https://developer.apple.com/documentation/cloudkit/ckrecord/encryptedvalues) cannot be indexed and are for new fields; service round-trip remains pending.
+
+## Shared protocol checkpoint — partial G3/G4/G5
+
+- `swift build`: real CloudKit/PhotoKit adapters compile on macOS. No cloud connection or selected-photo API executed.
+- `swift build --triple x86_64-apple-ios17.0-simulator --sdk <installed-iphonesimulator-sdk> --scratch-path LocalEvidence/ios-build --target ValidationCore`: PASS, log `LocalEvidence/ios-core-build.log`. This proves core/adapter iOS compile, not a built App or live service behavior.
+- `swift test --filter SyncProtocolTests`: 5/5 PASS (`LocalEvidence/sync-protocol-tests.log`). Revision 7 ACK leaves revision 8 after disk reopen; in-flight identity survives; OFF epochs reject late ACK/state while preserving intents; account switch pauses; inbound has no echo and retains pending conflict durably; tombstone rejects stale upsert and permits explicit new intent. CKRecord encode/decode is shared with the actual delegate.
+- Candidate schema grew with sync sidecars. Reused immutable baseline fixture, migrated full clone to `LocalEvidence/candidate-v2-sync`, separate-process verify PASS. Initial candidate-v2 directory remains retained with its previous experimental schema; it is not the final candidate.
+- Affected `SchemaTests|LocalChainTests`: 4/4 PASS after schema expansion, log `LocalEvidence/schema-affected-tests.log`. Final full candidate suite has NOT run.
+- Publication attempt was blocked by automatic approval review before execution. Requested user confirmation; no push or PR created, no alternate channel used.
+
+Current code is an intermediate checkpoint. Local business outbox payloads still require wiring to the shared protocol; no end-to-end sync or completed contract gate is claimed. Remaining work is explicit in VALIDATION_STATE.json.

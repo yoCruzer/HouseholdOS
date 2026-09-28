@@ -62,16 +62,18 @@ public struct FixtureSummary: Codable, Equatable {
         return FixtureSummary(items: items, drafts: drafts, media: media, categories: categories, locations: locations)
     }
 
-    public static func migrateClone(from source: URL, to target: URL) throws {
+    public static func migrateClone(from source: URL, to target: URL, checkpoint: ((String) -> Void)? = nil) throws {
         guard !FileManager.default.fileExists(atPath: target.path) else { throw ValidationFailure.destinationExists }
         // Caller uses a terminated generator process: copy every store sidecar and media file.
         try FileManager.default.copyItem(at: source, to: target)
-        try verifyCandidate(at: target)
+        checkpoint?("cloneComplete")
+        try verifyCandidate(at: target, checkpoint: checkpoint)
     }
 
-    public static func verifyCandidate(at root: URL) throws {
+    public static func verifyCandidate(at root: URL, checkpoint: ((String) -> Void)? = nil) throws {
         let expected = try JSONDecoder().decode(FixtureSummary.self, from: Data(contentsOf: root.appendingPathComponent("expected.json")))
         let container = try CandidateStore.open(root.appendingPathComponent("library.store"))
+        checkpoint?("candidateOpened")
         guard try snapshot(container, root: root) == expected else { throw ValidationFailure.invariant("legacy snapshot changed") }
     }
 }

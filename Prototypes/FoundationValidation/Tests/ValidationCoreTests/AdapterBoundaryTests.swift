@@ -48,6 +48,17 @@ final class AdapterBoundaryTests: XCTestCase {
             }
         }
     }
+    @MainActor func testEncryptedDataResetUsesActualSDKKeyAndNeverInitializesZone() throws {
+        try fixture { chain, core, adapter in
+            try adapter.classify(CKError(.zoneNotFound, userInfo: [CKErrorUserDidResetEncryptedDataKey: NSNumber(value: true)]))
+            let reopened = try LocalChain(root: chain.root)
+            let resumed = try SyncCore.local(context: reopened.context, library: reopened.libraryID, root: reopened.root)
+            XCTAssertTrue(try XCTUnwrap(resumed.session.pauseReason).contains("encrypted-data reset reported"))
+            XCTAssertTrue(try resumed.nextBatch().isEmpty)
+            XCTAssertNil(adapter.engine)
+        }
+    }
+
     @MainActor func testConditionalDeleteConflictUsesNativeDelegateReducerAndPauses() throws {
         try fixture { chain, core, adapter in
             let base = WireRecord(id: UUID(), operationID: UUID(), revision: 1, library: chain.libraryID, kind: "item", name: "base")

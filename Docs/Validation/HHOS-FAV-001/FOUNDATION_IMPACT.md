@@ -30,7 +30,7 @@
 - `HHOSVAL_Entity`：record/zone/library/operation/revision 是路由与条件写元信息；不放照片名称、价格、位置或成员内容。typed payload 放 `encryptedValues`，包括 Profile、媒体描述、Photos 引用和 recovery preview。真实 round-trip 尚未验证。不能假设 encrypted 字段可用作查询/索引。
 - `HHOSVAL_Original`：不可变 representation ID、media ID、revision、该份字节 hash 是完整性/关联元信息；`CKAsset` 承载测试原件。文件可能有 GPS/EXIF，实际云端资产保密性和字段策略须另行审查；不能把 encrypted payload 推广为所有资源已有相同保护。
 - UUID/hash 也可能构成关联信息。公开证据只导出计数、固定状态、合成 fixture 指纹与构建指纹；真实账号、Photos ID、GPS、原始云 dump、个人路径和真实照片 hash 留在私有配置/本机。
-- 原生 CloudKit 隐私机制的生产兼容、索引和加密密钥丢失/重置恢复信号仍须官方 SDK/平台复核。未知信号按未知处理，不伪造错误 key。
+- 官方文档及本机 SDK 已确认：encryptedValues 不能将既有普通字段改为加密字段，不能用于 public database，也不参与 CKQuery predicate/sort。`zoneNotFound` 可携带真实 `CKErrorUserDidResetEncryptedDataKey`；已注入验证该信号的持久暂停。无该信号时原因仍未知。实际平台密钥恢复、生产兼容与索引方案继续待验。来源见 VALIDATION_EVIDENCE 的官方 SDK 审计。
 
 ## 正式实现地图（后续单独授权）
 
@@ -59,3 +59,5 @@
 ## 明确尚不能承诺
 
 不能宣布 CKSyncEngine 可用于生产、Photos 跨端引用可靠、后台持续上传、完整 Live Photo/RAW 备份、生产包机密性、系统备份成功、可安全抹除旧机。最终独立审查与候选运行结束前，也不能宣布全部本地核心合同通过。
+
+最小 wire DTO 只证明本次 typed Profile/身份/金额 unknown 与确定值/代表事实意图的协议边界，不能直接承担生产全模型同步；其 fixture 投影日期不得作为正式日期映射复用。G7 三档策略目前验证 planner 和原件调度意图，不承诺完整设置 UI 或实时重写所有既有 metadata。

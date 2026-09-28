@@ -109,7 +109,9 @@ import SwiftData
 
         switch error.code {
         case .userDeletedZone: try core.pause("userDeletedZone")
-        case .zoneNotFound: try core.pause("zoneNotFound; cause requires evidence")
+        case .zoneNotFound:
+            let reset = error.userInfo[CKErrorUserDidResetEncryptedDataKey] as? NSNumber
+            try core.pause(reset?.boolValue == true ? "zoneNotFound; user encrypted-data reset reported" : "zoneNotFound; cause requires evidence")
         case .quotaExceeded: try core.pause("quota exceeded; uploads paused")
         case .notAuthenticated: try core.pause("account unavailable")
         case .requestRateLimited, .serviceUnavailable, .networkFailure, .networkUnavailable:

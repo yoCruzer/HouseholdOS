@@ -18,6 +18,14 @@ import Darwin
                     raise(SIGSTOP)
                 }
             })
+        case "crash-migrate":
+            guard args.count == 5 else { throw ValidationFailure.invariant("clone path and checkpoint required") }
+            try LegacyFixture.migrateClone(from: root, to: URL(fileURLWithPath: args[3]), checkpoint: { phase in
+                if phase == args[4] {
+                    FileHandle.standardOutput.write(Data("CHECKPOINT \(phase)\n".utf8))
+                    raise(SIGSTOP)
+                }
+            })
         case "recover-capture":
             let chain = try LocalChain(root: root)
             try chain.recover()

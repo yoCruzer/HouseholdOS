@@ -20,9 +20,8 @@ def execute(*args, check=True):
         raise RuntimeError(f'CLI failed with exit {result.returncode}; see local evidence')
     return result
 
-for phase in ['prepared', 'committed', 'originalFinalized']:
-    root = run / phase
-    process = subprocess.Popen([str(exe), 'crash-capture', str(root), phase], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def kill_at_checkpoint(phase, *arguments):
+    process = subprocess.Popen([str(exe), *map(str, arguments)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     poller = selectors.DefaultSelector(); poller.register(process.stdout, selectors.EVENT_READ)
     deadline = time.monotonic() + 20
     reached = False
@@ -41,6 +40,13 @@ for phase in ['prepared', 'committed', 'originalFinalized']:
         raise RuntimeError(f'checkpoint not reached: {phase}')
     process.kill(); code = process.wait(timeout=5)
     assert code == -signal.SIGKILL
+    (run / (phase + '-termination.log')).write_text(process.stderr.read().decode(errors='replace'))
+    poller.close()
+    return code
+
+for phase in ['prepared', 'committed', 'originalFinalized']:
+    root = run / phase
+    code = kill_at_checkpoint(phase, 'crash-capture', root, phase)
     journal = json.loads(next((root / 'journals').glob('*.json')).read_text())
     recovered = execute('recover-capture', root)
     counts = json.loads(recovered.stdout.strip().splitlines()[-1])
@@ -59,6 +65,16 @@ execute('migrate', legacy, clone)
 execute('verify', clone)
 execute('verify', clone)
 assert digest_tree(legacy) == before
+# Kill the actual migration process on each side of the native open/migrate call.
+# This does not claim injection inside SQLite's private migration transaction.
+for phase in ['cloneComplete', 'candidateOpened']:
+    target = run / ('migration-' + phase)
+    code = kill_at_checkpoint(phase, 'crash-migrate', legacy, target, phase)
+    execute('verify', target)
+    execute('verify', target)
+    assert digest_tree(legacy) == before
+    results.append({'case':'migration-' + phase, 'termination':'SIGKILL', 'exit':code,
+                    'reopenTwice':'PASS', 'sourceImmutable':True})
 # Observable historical entity identity is taken from the actual store metadata.
 probe = run / 'identity-probe'
 shutil.copytree(legacy, probe)

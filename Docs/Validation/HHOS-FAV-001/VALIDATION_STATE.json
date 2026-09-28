@@ -5,7 +5,7 @@
   "branch": "spike/foundation-validation",
   "worktree": ".",
   "status": "RUNNING",
-  "last_good_commit": "d996a1a2f409eef95c2f47f08f8043f3ea29b550",
+  "last_good_commit": "54d67a8afa7818688d6879ecdcadcd615a4b0a18",
   "gates": {
     "G0": {
       "status": "RUNNING",
@@ -24,7 +24,8 @@
         "Expanded candidate sync sidecars migrate from retained baseline fixture and reopen in separate process; new clone candidate-v2-sync",
         "Two independent local libraries have different persisted IDs; two replicas confirm same Draft to same Item ID (SharedChainTests).",
         "Actual baseline store observable Core Data entity-version hashes captured; whole-directory source hashes unchanged through clone migration and repeat reopen. Process evidence driver retains synthetic stores.",
-        "Corrupt synthetic clone and existing migration destination rejected; immutable baseline hashes unchanged. Same-name distinct Item IDs exercised by adapter partial-success regression."
+        "Corrupt synthetic clone and existing migration destination rejected; immutable baseline hashes unchanged. Same-name distinct Item IDs exercised by adapter partial-success regression.",
+        "Actual SIGKILL after clone completion and after native candidate open; both twice reopened with exact legacy snapshot/media and unchanged immutable source. Process evidence 5caf8b22."
       ]
     },
     "G2": {
@@ -61,7 +62,8 @@
         "SyncProtocolTests 5/5 LOGIC + local SwiftData persistence and real CKRecord codec; full contract coverage pending",
         "Parent deletion hides early and late children; old in-flight ACK cannot replace tombstone; offline conflict retained. More re-add/child-generation cases pending.",
         "Explicit re-add has new incarnation; old child records remain hidden/unsent. Prior conflicts retained as resolved history. Old backup restored over current remote tombstone cannot upload or revive old children.",
-        "Review R3/R4 failing regressions fixed: concurrent update vs local tombstone persists conflict and blocks stale send; inbound re-add requires new incarnation. userDeletedZone/zoneNotFound durable pause tested through native reducer."
+        "Review R3/R4 failing regressions fixed: concurrent update vs local tombstone persists conflict and blocks stale send; inbound re-add requires new incarnation. userDeletedZone/zoneNotFound durable pause tested through native reducer.",
+        "Actual installed SDK constant CKErrorUserDidResetEncryptedDataKey used and injected through native classifier; eight affected tests PASS; unknown zone loss remains unknown and paused."
       ]
     },
     "G6": {
@@ -109,7 +111,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Close remaining migration interruption and scope/policy evidence gaps; refresh final source/config/fixture fingerprints, run final candidate suite once and actual Simulator runtime, then finish case statuses/publication disposition.",
+  "next_safe_action": "Run single final deterministic candidate suite and actual App build/runtime; then consolidate final case statuses, dependency fingerprints and publication blocker disposition.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -129,11 +131,9 @@
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
   "remaining_implementation": [
-    "Close final assertion audit: migration interruption boundary, backup interruption evidence precision, exact date/DTO and metadata-policy claims; keep unsupported/live conditions explicit",
-    "Finalize Owner pack against actual controls and persist runtime export evidence; SDK key-reset/index restrictions need authoritative confirmation",
-    "Single independent read-only review completed; six findings remediated with affected tests/build. Final full deterministic candidate suite and actual App runtime still pending",
-    "Replace historical narrative state with final per-case statuses and source/config/SDK/fixture fingerprints; reconcile impact/Owner docs with final evidence",
-    "One Draft PR still requires clearance of earlier automatic approval-review block. No push retry or alternate channel used; original explicit confirmation request remains pending"
+    "Final candidate full deterministic suite, native App build and actual Simulator fresh-chain/relaunch/export evidence",
+    "Consolidate final per-assertion statuses/fingerprints and truthful scope notes; no LIVE or production readiness overclaim",
+    "Publish one Draft PR only after prior platform approval-review block is cleared; no alternate push/retry used"
   ],
   "historical_tested_fingerprints": {
     "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",

@@ -38,3 +38,6 @@ LocalData/
 *.log
 tmp/
 Temp/
+
+# HHOS-FAV-001 private runtime evidence
+Prototypes/FoundationValidation/LocalEvidence/

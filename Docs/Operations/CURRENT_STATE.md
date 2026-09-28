@@ -1,7 +1,7 @@
 # Current State
 
-Status: TESTFLIGHT_ROUND1_ACCEPTED_CLOSED
-Updated: 2026-09-15
+Status: HHOS_FAV_001_RUNNING
+Updated: 2026-09-28
 
 ## Closed Goal
 
@@ -293,3 +293,7 @@ builds passed. The generated Debug and Release bundles contain compiled AppIcon 
 `Assets.car`, Bundle ID `com.yocruzer.householdos`, version `0.1` (build `1`), display
 name `HouseholdOS`, and `ITSAppUsesNonExemptEncryption = false`. The focused smoke test
 passed 1/1 and the full suite passed 36/36 with no failures or skips.
+
+## Active validation
+
+HHOS-FAV-001 v1.2 is running in an isolated validation branch. Canonical accepted baseline is `f19469fe13be175d1b28d71ddb6b5a917abdcc32`. See CURRENT_TASK and its unique validation checkpoint. Goal 1 and TestFlight Round 1 remain closed.

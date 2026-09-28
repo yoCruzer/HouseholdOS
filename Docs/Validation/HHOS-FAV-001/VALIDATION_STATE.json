@@ -1,0 +1,96 @@
+{
+  "program": "HHOS-FAV-001",
+  "version": "1.2",
+  "baseline": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
+  "branch": "spike/foundation-validation",
+  "worktree": ".",
+  "status": "RUNNING",
+  "last_good_commit": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
+  "gates": {
+    "G0": {
+      "status": "RUNNING",
+      "evidence": [
+        "Initial native macOS SwiftData package build passed; iOS App and platform adapters pending"
+      ]
+    },
+    "G1": {
+      "status": "RUNNING",
+      "evidence": [
+        "Independent-process baseline fixture generation, full-directory clone migration and second-process candidate reopen preserve field/identity/media byte hashes; broader failure cases pending"
+      ]
+    },
+    "G2": {
+      "status": "RUNNING",
+      "evidence": [
+        "SchemaTests 1/1",
+        "LocalChainTests 3/3 including six fault positions; actual termination and remaining storage failures pending"
+      ]
+    },
+    "G3": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "G4": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "G5": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "G6": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "G7": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "G8": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "P1": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    },
+    "integration": {
+      "status": "NOT_STARTED",
+      "evidence": []
+    }
+  },
+  "external_blockers": [
+    "No explicitly authorized Development CloudKit container or validation signing configuration",
+    "No available physical test device; second device/Photos library not verified",
+    "iOS 17 runtime unavailable"
+  ],
+  "next_safe_action": "Compile shared CloudKit/PhotoKit adapters, expand revision/scoped durable protocol, then backup/restore and isolated iOS App",
+  "live_budget": {
+    "limit_bytes": 104857600,
+    "estimated_transferred_bytes": 0,
+    "actual_overhead": "unknown; no live service requests issued"
+  },
+  "active_operations": [],
+  "publication": {
+    "draft_pr": null
+  },
+  "toolchain": {
+    "xcode": "26.6 (17F113)",
+    "swift": "6.3.3",
+    "host": "Intel macOS",
+    "available_iOS_runtime": "26.5"
+  },
+  "tested_fingerprints": {
+    "Prototypes/FoundationValidation/Package.swift": "55e2d34e3cf759f620fa3234cf216b73c4f6b9e02519e40bda1194fa48c003f2",
+    "Prototypes/FoundationValidation/Sources/ValidationCLI/main.swift": "7a28c28ab891dc15b08122d9d6551ba9c3bb1b8e1a0b6961746672955ef62c1c",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/CandidateSchema.swift": "2ffe76fd641f2fabf2bec56cf80fa9d6d729abb5d262c69aee3c6500e7aeb8aa",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/LegacyTypes.swift": "4f2a824e49d6bd08644067db698bb70f603c64ff04ef6c168eefae52a84296e6",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceController.swift": "e8be49ca44f70b601dbeb0d250d3170b6abd90829900468afd87aa995b2933d4",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/Legacy/PersistenceModels.swift": "f1dd75be099200e55fd6fa9bf91cd4202e68f67a2a95bf485f2a0ff03af94bd6",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/LegacyFixture.swift": "c4d569d354ae5a26ef72d6ece704cdc6791fc9fc8069da15351790c9bbb0997f",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/LocalChain.swift": "069109034f038fd2336b47ea552561f3c4f57c28a135016df4ca8be343e1029c",
+    "Prototypes/FoundationValidation/Sources/ValidationCore/MediaFiles.swift": "9d49f4560a279d2495e3020da1733d4061b52b227aa594872a67baf09d96ae74",
+    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/LocalChainTests.swift": "ecdf08e84cdded2f3abda7b1261c3c7af0e34d31c5bb6c0f6644ef46ce4b27c6",
+    "Prototypes/FoundationValidation/Tests/ValidationCoreTests/SchemaTests.swift": "97eb073cc8f297f1c84260acba6334b066d6730abb8d5bf32d5961b9a60de210"
+  }
+}

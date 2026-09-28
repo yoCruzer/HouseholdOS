@@ -1,0 +1,8 @@
+{
+  "baseline": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
+  "files": {
+    "HouseholdOSApp/Data/PersistenceModels.swift": "f1dd75be099200e55fd6fa9bf91cd4202e68f67a2a95bf485f2a0ff03af94bd6",
+    "HouseholdOSApp/Data/PersistenceController.swift": "e8be49ca44f70b601dbeb0d250d3170b6abd90829900468afd87aa995b2933d4"
+  },
+  "note": "Byte-identical source copies. Supporting domain raw enums and fixed legacy household are reproduced in LegacyTypes.swift. No candidate model generates legacy stores."
+}

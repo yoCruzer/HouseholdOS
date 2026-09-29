@@ -192,3 +192,19 @@ Reviewer `final_readonly_review` inspected `d996a1a` plus the pre-review candida
 ## Publication follow-up
 
 Owner explicitly confirmed publication after the earlier automatic approval-review rejection. Ordinary push succeeded and one Draft PR [#5](https://github.com/yoCruzer/HouseholdOS/pull/5) was created and attached to the task. This supersedes historical publication-blocked statements above. The follow-up changes only handoff documentation; tested code remains `6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa`, so tests/build were not rerun. LIVE evidence remains pending and all acceptance criteria are not yet satisfied. No merge, ready transition, auto-merge or Foundation Freeze.
+
+## PR5-IR-Closure-01 final local evidence
+
+Code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`; source/config/test/tool aggregate `9f8100e7a9208b75a118e157e0a4648c66185ed1251196db738d1bd37ad8d989`. This section supersedes prior candidate-wide local completion assertions; the original failed review and historical evidence remain intact.
+
+- Archive SHA256SUMS: all 9 listed files PASS. Fixed reviewed HEAD matched existing clean validation worktree and open Draft PR #5; no newer remote code. SSH authentication failed; normal HTTPS fetch using existing gh credential helper succeeded. Original directory files were not reset/stashed/restored.
+- `ir-closure-red.log`: 5 tests / 29 failures; `e-closure-red.log`: 2 tests / 2 failures. Reproduction used real SwiftData/shared paths. Initial erroneous file path produced a zero-test run and was corrected before this log; no zero-test pass claimed.
+- Focused/affected logs and final exact hashes are in state. One consolidated read-only review identified actual stale child snapshots and per-record limit error reduction; both fixed and asserted in the final collection. Reviewer did not independently rerun tests or re-review final code.
+- `closure-final-tests.log`: **65 tests, 0 failures, 0 skips, exit 0**. Includes all 14 closure tests plus existing 51. Intentional read-only store fault emits a Cocoa/CoreData error; its assertions pass. No other full final run or duplicate CI run.
+- `closure-final-app-build.log`: unsigned native Debug iOS Simulator **BUILD SUCCEEDED**, exit 0, Xcode26.6/Swift6.3.3/iOS SDK26.5; deployment remains iOS17.
+- `closure-final-process-checks.log`: **PASS**, separate processes for true old V1 generation, migration, explicit bootstrap, partial ACK, repeat bootstrap and target apply; source whole-tree hashes unchanged. Prepared preview failure exits and later processes recover/confirm twice with one logical record and preserved bytes.
+- `closure-migration-crash-checks.log`: **PASS**, same schema/legacy inputs as final candidate. Actual SIGKILL at prepared/committed/original-finalized and before/after native migration open; two reopens, corrupt clone and existing-target rejection. Prepared SIGKILL now recovers to a Draft rather than leaving only staging bytes, per E-01.
+- `closure-ios-{initial-report,reopen-report,runtime}.json`: **PASS** on iPhone16/iOS26.5 Simulator, real App preview failure/recovery/confirmation/backup/restore and terminated-process relaunch, same snapshot. Independent closure self-test directory preserves prior historical run. No real Photos, service or signing operation.
+- Exact item/test/combined-case mapping is in `IR_CLOSURE.md` and `review_closure` machine state. Shipping App, formal Xcode project, tests and legacy model copies remain unchanged; shipping 45/45 is historical only.
+
+Result: READY_FOR_INDEPENDENT_REVIEW — LOCAL_REMEDIATION_COMPLETE; LIVE_EVIDENCE_PENDING. This closes the seven local整改 items; full Program acceptance remains false. No platform readiness/erase-old-device promise and no Foundation Freeze.

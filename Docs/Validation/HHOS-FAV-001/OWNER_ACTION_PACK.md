@@ -1,6 +1,6 @@
 # Owner Action Pack — HHOS-FAV-001 v1.2
 
-状态：集中待执行；没有真实 CloudKit、真机 Photos 或双端恢复 PASS。此包让缺失平台证据一次准备、集中操作、统一导出。无需主 Apple ID 登出、系统密钥重置或清空 iCloud。
+状态：本轮停在 PR5 独立复核，以下动作保留到后续授权阶段；现在不要求 Owner 执行设备补证。没有真实 CloudKit、真机 Photos 或双端恢复 PASS。此包让缺失平台证据一次准备、集中操作、统一导出。无需主 Apple ID 登出、系统密钥重置或清空 iCloud。
 
 ## 1. 设置（已有资源；不创建 Developer Portal 资源）
 
@@ -75,3 +75,7 @@ quota、网络、节流、部分成功、删除与旧备份/旧 ACK 等破坏性
 需要私下保留但不公开：签名 entitlement/config、真实账号/Photos ID、真实文件 hash、照片/GPS、本机个人路径、完整云 dump、备份包。不要把私有配置或真实备份加入 Git。
 
 一次独立审查及本地最终候选验证已完成；本包用于补齐真实平台证据。平台准备失败不影响已保存的本地工程。未得到目标端 snapshot/精度证据前，无任何“安全抹除旧机”建议。清理云测试资源必须核对登记 namespace；本 App 不提供自动清空按钮。
+
+## PR5 closure entry-point note
+
+“重开并恢复 journal”现在会尝试继续 prepared 录入，成功后可用“确认最近 Draft”；失败或未来格式 journal 保留并显示待恢复提示。CLI `recover-capture` 使用同一入口。`legacy-sync`、`bootstrap-legacy <clone> <sourceID> <itemID>` 和 `simulate-legacy-delivery` 仅用于合成旧库/确定性交付证据；后者不是 CloudKit 连接，也不替代上述平台步骤。最终本地整改证据与能力边界见 IR_CLOSURE.md。

@@ -1,7 +1,7 @@
 # Current State
 
-Status: HHOS_FAV_001_PR5_IR_CLOSURE_RUNNING
-Updated: 2026-09-28
+Status: HHOS_FAV_001_READY_FOR_INDEPENDENT_REVIEW
+Updated: 2026-09-29
 
 ## Closed Goal
 
@@ -301,3 +301,5 @@ HHOS-FAV-001 v1.2 local implementation is complete in its isolated validation br
 Final local candidate: `6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa`. Harness suite 51/51, actual unsigned iOS Simulator build and fresh-chain/process-relaunch reports PASS. One independent read-only review and six remediations recorded. This does not grant Foundation Freeze or validate live CloudKit/Photos/production camera. Owner explicitly confirmed publication after the earlier approval-review rejection; ordinary push and Draft PR #5 creation succeeded. See validation state and Owner Action Pack.
 
 PR5-IR-Closure-01 activated from reviewed HEAD faae13d. Local completion is reopened only for the seven review closure items; previous results remain historical. See CURRENT_TASK and VALIDATION_STATE.
+
+PR5-IR-Closure-01 local remediation is complete at code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`: IR-01–IR-05 and E-01/E-02 closed with final 65/65 deterministic tests, unsigned native build, separate-process legacy/prepared recovery and Simulator restart evidence. Historical paragraphs above describe the earlier candidate. Current authority is CURRENT_TASK / IR_CLOSURE / VALIDATION_STATE. Await independent review; LIVE evidence stays pending and Program acceptance remains incomplete.

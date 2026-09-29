@@ -1,7 +1,7 @@
 # Current Task
 
 - Program: HHOS-FAV-001
-- Status: RUNNING — PR5-IR-Closure-01
+- Status: AWAITING_OWNER_REVIEW — READY_FOR_INDEPENDENT_REVIEW
 - Branch: `spike/foundation-validation`
 - Accepted baseline: `f19469fe13be175d1b28d71ddb6b5a917abdcc32`
 - Owner authorization: uploaded v1.2 execution package and explicit execution request.
@@ -19,3 +19,7 @@ Program-specific authorization permits isolated candidate schema/sync/media expe
 Owner authorized [PR5-IR-Closure-01](../Validation/HHOS-FAV-001/ReviewClosure-01/GOAL.md) and its [acceptance contract](../Validation/HHOS-FAV-001/ReviewClosure-01/REMEDIATION_CONTRACT.md). Continue v1.2 on the existing branch and Draft PR #5. Reviewed/start HEAD: `faae13d93a83694a77da3d962423de2193f0fe88`; clean validation worktree. Original worktree's two String Catalog edits remain protected.
 
 Reproduce and close IR-01–IR-05 and E-01/E-02 with shared native paths, focused/affected tests and final deterministic harness suite/native build. Historical 51/51 is not remediation evidence. No shipping App changes, live cloud/Photos/device work, merge, ready or Freeze. Final handoff is independent review with live evidence pending.
+
+## PR5 closure handoff
+
+LOCAL_REMEDIATION_COMPLETE; LIVE_EVIDENCE_PENDING. Code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`; final harness 65/65, unsigned native build and Simulator prepared recovery/relaunch PASS. IR-01–IR-05 and E-01/E-02 are mapped in [IR_CLOSURE](../Validation/HHOS-FAV-001/IR_CLOSURE.md). One read-only review's two follow-up counterexamples were fixed; final independent acceptance is not claimed. Stop for independent review; do not begin platform validation now.

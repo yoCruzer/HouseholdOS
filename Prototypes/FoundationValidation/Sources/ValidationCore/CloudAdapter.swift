@@ -8,6 +8,8 @@ import SwiftData
     let zone: CKRecordZone.ID
     private(set) var engine: CKSyncEngine?
     private var fetchFailed = false
+    private var preparedBatch: [WireRecord] = []
+    private var reducedLimitBatch: Set<UUID> = []
     private(set) var fetchedRecordCount = 0
     private(set) var lastFailure: String?
 
@@ -35,7 +37,7 @@ import SwiftData
     }
     func send() async throws {
         guard core.accepts(callbackScope), core.session.bootstrapComplete, let engine else { throw ValidationFailure.invariant("bootstrap incomplete") }
-        let batch = try core.nextBatch()
+        let batch = try prepareBatch()
         engine.state.add(pendingRecordZoneChanges: batch.map { .saveRecord(CKRecord.ID(recordName: $0.id.uuidString, zoneID: zone)) })
         try await engine.sendChanges(.init(scope: .zoneIDs([zone])))
     }
@@ -95,10 +97,11 @@ import SwiftData
     func applySendResults(saved: [CKRecord], errors: [CKError]) throws {
         guard core.accepts(callbackScope) else { return }
         for record in saved { try core.acknowledge(record, callback: callbackScope) }
-        for error in errors {
+        if errors.contains(where: { $0.code == .limitExceeded }) { try reduceBatchLimit() }
+        for error in errors where error.code != .limitExceeded {
             if error.code == .serverRecordChanged, let server = error.serverRecord {
                 try core.apply(server, callback: callbackScope)
-                if try core.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: { $0.entityID.uuidString == server.recordID.recordName && $0.scope == callbackScope.key }) {
+                if try core.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: { try $0.entityID.uuidString == server.recordID.recordName && $0.scope == callbackScope.key && !$0.isResolved(in: core.context) }) {
                     try core.pause("server conflict requires durable reconciliation")
                 }
             } else { try classify(error) }
@@ -112,6 +115,7 @@ import SwiftData
         case .zoneNotFound:
             let reset = error.userInfo[CKErrorUserDidResetEncryptedDataKey] as? NSNumber
             try core.pause(reset?.boolValue == true ? "zoneNotFound; user encrypted-data reset reported" : "zoneNotFound; cause requires evidence")
+        case .limitExceeded: try reduceBatchLimit()
         case .quotaExceeded: try core.pause("quota exceeded; uploads paused")
         case .notAuthenticated: try core.pause("account unavailable")
         case .requestRateLimited, .serviceUnavailable, .networkFailure, .networkUnavailable:
@@ -120,13 +124,26 @@ import SwiftData
         default: lastFailure = "service failure; explicit retry/reconciliation required"
         }
     }
+    func prepareBatch() throws -> [WireRecord] {
+        guard core.accepts(callbackScope) else { return [] }
+        preparedBatch = try core.nextBatch()
+        return preparedBatch
+    }
+    private func reduceBatchLimit() throws {
+        guard core.accepts(callbackScope), !preparedBatch.isEmpty else { return }
+        let operations = Set(preparedBatch.map(\.operationID))
+        guard operations != reducedLimitBatch else { return } // One reduction per actual batch, not per failed record.
+        reducedLimitBatch = operations
+        if preparedBatch.count > 1 {
+            core.session.batchLimit = max(1, preparedBatch.count / 2); try core.saveSession()
+        } else { try core.pause("single record exceeds service limit; content retained for explicit repair") }
+    }
     func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext, syncEngine: CKSyncEngine) async -> CKSyncEngine.RecordZoneChangeBatch? {
         guard core.accepts(callbackScope) else { return nil }
         do {
-            let records = try core.nextBatch().compactMap { wire -> CKRecord? in
-                let id = CKRecord.ID(recordName: wire.id.uuidString, zoneID: zone)
-                guard context.options.scope.contains(id) else { return nil }
-                return try CloudCodec.encode(wire, zone: zone, systemFields: core.document(wire.id)?.systemFields)
+            preparedBatch = try prepareBatch().filter { context.options.scope.contains(CKRecord.ID(recordName: $0.id.uuidString, zoneID: zone)) }
+            let records = try preparedBatch.map { wire in
+                try CloudCodec.encode(wire, zone: zone, systemFields: core.document(wire.id)?.systemFields)
             }
             return records.isEmpty ? nil : .init(recordsToSave: records, atomicByZone: false)
         } catch {

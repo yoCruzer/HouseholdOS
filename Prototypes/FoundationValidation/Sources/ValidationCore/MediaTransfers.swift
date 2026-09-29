@@ -45,10 +45,14 @@ struct MediaTransferState: Codable {
         guard let asset = try chain.context.fetch(FetchDescriptor<MediaAssetRecord>()).first(where: { $0.id == mediaID }),
               let row = try core.document(asset.ownerID),
               !(try JSONDecoder().decode(WireRecord.self, from: row.payload).deleted),
-              let representation = try chain.context.fetch(FetchDescriptor<MediaRepresentation>()).filter({ $0.mediaID == mediaID }).max(by: { $0.revision < $1.revision }) else {
+              let media = try core.document(mediaID),
+              (try JSONDecoder().decode(WireRecord.self, from: media.payload).parentIncarnation ?? asset.ownerID) == (try JSONDecoder().decode(WireRecord.self, from: row.payload).effectiveIncarnation) else {
             throw ValidationFailure.invariant("media is not currently attached to a live parent")
         }
-        return representation
+        guard try !chain.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: {
+            try ($0.entityID == mediaID || $0.entityID == asset.ownerID) && $0.scope == core.session.scope.key && !$0.isResolved(in: chain.context)
+        }) else { throw ValidationFailure.invariant("media lifecycle conflict requires reconciliation") }
+        return try core.currentRepresentation(mediaID)
     }
     func beginUpload(_ mediaID: UUID, now: Date = .now) throws -> TransferTicket {
         guard core.accepts(core.session.scope), core.session.bootstrapComplete, state.policy == .appOwnedOriginals,

@@ -77,3 +77,99 @@ public struct FixtureSummary: Codable, Equatable {
         guard try snapshot(container, root: root) == expected else { throw ValidationFailure.invariant("legacy snapshot changed") }
     }
 }
+
+// A separate, newly generated fixture uses the unchanged V1 schema and real JPEG.
+// Existing legacy fixtures and their source manifest remain immutable.
+@MainActor extension LegacyFixture {
+    public static func generateSyncFixture(at root: URL) throws {
+        guard !FileManager.default.fileExists(atPath: root.path) else { throw ValidationFailure.destinationExists }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let container = try PersistenceController.makeContainer(storeURL: root.appendingPathComponent("library.store"))
+        let c = ModelContext(container); c.autosaveEnabled = false
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        let item = ItemRecord(name: "Legacy JPEG item", categoryID: UUID(), createdAt: date, updatedAt: date, captureSource: .camera)
+        let media = MediaAssetRecord(ownerKind: .item, ownerID: item.id, originalFileName: "legacy-original.jpg", thumbnailFileName: nil, contentTypeIdentifier: "public.jpeg", createdAt: date, sortOrder: 0)
+        item.coverMediaID = media.id
+        try MediaFiles.syntheticJPEG().write(to: root.appendingPathComponent(media.originalFileName), options: .atomic)
+        c.insert(item); c.insert(media); try c.save()
+        try JSONEncoder().encode(snapshot(container, root: root)).write(to: root.appendingPathComponent("expected.json"), options: .atomic)
+        try JSONEncoder().encode(UUID()).write(to: root.appendingPathComponent("legacy-source-id.json"), options: .atomic)
+    }
+}
+
+struct LegacyBootstrapReceipt: Codable, Equatable {
+    var sourceID: UUID
+    var householdID: UUID
+    var itemID: UUID
+    var sourceDraftID: UUID?
+    var libraryID: UUID
+    var mediaIDs: [UUID]
+    var operationIDs: [UUID]
+}
+
+@MainActor extension LocalChain {
+    // Explicit admission only for named legacy Items. This prototype maps stable identity,
+    // name/category/sourceDraftID and static JPEG media, not all production history/fields.
+    public func bootstrapLegacy(sourceID: UUID, itemIDs: [UUID], failCommit: Bool = false) throws {
+        let sync = try SyncCore.local(context: context, library: libraryID, root: root)
+        do {
+            for id in itemIDs {
+                let key = "legacy-bootstrap/" + sourceID.uuidString + "/" + id.uuidString
+                if let row = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == key }) {
+                    let receipt = try JSONDecoder().decode(LegacyBootstrapReceipt.self, from: row.data)
+                    guard receipt.libraryID == libraryID, receipt.itemID == id else { throw ValidationFailure.invariant("legacy mapping mismatch") }
+                    continue
+                }
+                guard let item = try context.fetch(FetchDescriptor<ItemRecord>()).first(where: { $0.id == id }),
+                      try sync.document(id) == nil else { throw ValidationFailure.invariant("legacy mapping requires an explicitly unmapped Item") }
+                var operations: [UUID] = []
+                let wire = WireRecord(id: item.id, operationID: UUID(), revision: 1, library: libraryID, kind: "item", name: item.name, category: item.categoryID?.uuidString, sourceDraftID: item.sourceDraftID)
+                try sync.stageWrite(wire); operations.append(wire.operationID)
+                let assets = try context.fetch(FetchDescriptor<MediaAssetRecord>()).filter { $0.ownerID == id && $0.ownerKind == .item }
+                for asset in assets {
+                    guard asset.contentTypeIdentifier == "public.jpeg" else { throw ValidationFailure.invariant("legacy bootstrap fixture supports static JPEG only") }
+                    let original = try BackupRestore.safeURL(asset.originalFileName, in: root)
+                    let bytes = try Data(contentsOf: original), preview = try MediaFiles.preview(bytes)
+                    let representation = MediaRepresentation(mediaID: asset.id, revision: 1, precision: "importedBytes", originalHash: MediaFiles.hash(bytes), relativePath: asset.originalFileName)
+                    context.insert(representation)
+                    // Preserve the legacy original reference. Only add a derived recovery preview.
+                    let previewName = representation.id.uuidString + ".preview.jpg"
+                    try MediaFiles.write(preview, to: root.appendingPathComponent("media/" + previewName))
+                    asset.thumbnailFileName = previewName
+                    let media = WireRecord(id: asset.id, operationID: UUID(), revision: 1, library: libraryID, kind: "media", parentID: id,
+                        media: WireMedia(representationID: representation.id, revision: 1, hash: representation.originalHash, precision: representation.precision, contentType: "public.jpeg", preview: preview))
+                    try sync.stageWrite(media); operations.append(media.operationID)
+                }
+                let receipt = LegacyBootstrapReceipt(sourceID: sourceID, householdID: item.householdID, itemID: id, sourceDraftID: item.sourceDraftID, libraryID: libraryID, mediaIDs: assets.map(\.id), operationIDs: operations)
+                context.insert(SyncCheckpoint(key: key, data: try JSONEncoder().encode(receipt)))
+                sync.session.bootstrapComplete = false
+            }
+            sync.failNextCommit = failCommit
+            try sync.saveSession() // Mapping, business sidecars and outbox commit together.
+        } catch { context.rollback(); throw error }
+    }
+}
+
+// CLI deterministic process evidence: substitutes service delivery only, using the
+// same codec, durable apply, exact ACK and fetch barrier as the native adapter.
+@MainActor extension LegacyFixture {
+    public static func simulateDelivery(from source: URL, to target: URL, maximum: Int) throws -> [String: Any] {
+        let chain = try LocalChain(root: source)
+        let receiver = try LocalChain(root: target, libraryID: chain.libraryID)
+        let sender = try SyncCore.local(context: chain.context, library: chain.libraryID, root: source)
+        let inbound = try SyncCore.local(context: receiver.context, library: receiver.libraryID, root: target)
+        try sender.setEnabled(true); try inbound.setEnabled(true)
+        try sender.beginFetch(callback: sender.session.scope)
+        guard try sender.nextBatch().isEmpty else { throw ValidationFailure.invariant("bootstrap barrier bypassed") }
+        try sender.finishBootstrap(callback: sender.session.scope)
+        let batch = try sender.nextBatch()
+        for wire in batch.prefix(maximum) {
+            let record = try CloudCodec.encode(wire, zone: .init(zoneName: sender.session.scope.zone))
+            try inbound.apply(record, callback: inbound.session.scope)
+            try sender.acknowledge(record, callback: sender.session.scope)
+        }
+        let items = try receiver.context.fetch(FetchDescriptor<ItemRecord>())
+        return ["targetCounts": try receiver.counts(), "pending": try sender.pending().count,
+                "ids": items.map { $0.id.uuidString }, "names": items.map(\.name), "barrier": "PASS", "evidence": "LOCAL_PLATFORM+LOGIC"]
+    }
+}

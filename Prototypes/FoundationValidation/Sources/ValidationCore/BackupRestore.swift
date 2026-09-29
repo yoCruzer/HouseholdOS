@@ -83,8 +83,9 @@ enum BackupFault: Error { case cancelled, capacity, interrupted, beforeSwitch, a
         let representations = try chain.context.fetch(FetchDescriptor<MediaRepresentation>())
         var paths = Set<String>()
         var represented: [BackupRepresentation] = []
+        let core = try SyncCore.local(context: chain.context, library: chain.libraryID, root: chain.root)
         for asset in media {
-            let current = representations.filter { $0.mediaID == asset.id }.max { $0.revision < $1.revision }
+            let current = try core.document(asset.id) == nil ? nil : core.currentRepresentation(asset.id)
             if let current {
                 if full && current.precision == "pickerDeliveredRepresentation" {
                     throw ValidationFailure.invariant("Full unavailable: picker delivery does not prove complete original resource fidelity")
@@ -209,12 +210,12 @@ enum BackupFault: Error { case cancelled, capacity, interrupted, beforeSwitch, a
                 throw ValidationFailure.invariant("restored representation not covered by manifest")
             }
         }
-        for row in try c.fetch(FetchDescriptor<SyncCheckpoint>()) where row.key == "session" || row.key == "media-transfers" { c.delete(row) }
+        for row in try c.fetch(FetchDescriptor<SyncCheckpoint>()) where row.key == "session" || row.key == "media-transfers" || row.key.hasPrefix("sent-base/") { c.delete(row) }
         for snapshot in try c.fetch(FetchDescriptor<SentSnapshot>()) { c.delete(snapshot) }
         let scope = SyncScope(container: "unbound", environment: "Development", account: "unbound", library: manifest.libraryID, zone: "HHOSVAL_" + manifest.libraryID.uuidString, epoch: UUID())
         for row in try c.fetch(FetchDescriptor<SyncedDocument>()) { row.systemFields = nil; row.ancestor = nil; row.scope = scope.key }
         for intent in try c.fetch(FetchDescriptor<DurableIntent>()) { intent.scope = scope.key }
-        for conflict in try c.fetch(FetchDescriptor<ConflictCandidate>()) { conflict.scope = scope.key }
+        for conflict in try c.fetch(FetchDescriptor<ConflictCandidate>()) { try conflict.rebind(to: scope.key, in: c) }
         let sync = try SyncCore(context: c, scope: scope, mediaRoot: stage)
         sync.session.pauseReason = "restored snapshot requires cloud admission against current tombstones"
         try sync.saveSession()

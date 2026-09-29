@@ -18,6 +18,12 @@ struct FileJournal: Codable {
     var originalHash: String
     var originalName: String
     var previewName: String
+    var profileID: UUID?
+    var representationID: UUID?
+    var draftOperationID: UUID?
+    var mediaOperationID: UUID?
+    var precision: String?
+    var photoReference: String?
 }
 
 @MainActor public final class LocalChain {
@@ -25,6 +31,7 @@ struct FileJournal: Codable {
     let container: ModelContainer
     let context: ModelContext
     public let libraryID: UUID
+    public private(set) var recoveryIssues: [String] = []
     public private(set) var lastCaptureOutcome: CaptureOutcome = .notCommitted
     public init(root: URL, libraryID requestedLibrary: UUID? = nil, allowsSave: Bool = true) throws {
         self.root = root
@@ -47,11 +54,12 @@ struct FileJournal: Codable {
     @discardableResult public func capture(_ bytes: Data, fault: LocalFault = .none, precision: String = "importedBytes", photoReference: String? = nil, checkpoint: ((String) -> Void)? = nil) throws -> UUID {
         lastCaptureOutcome = .notCommitted
         let draftID = UUID(), mediaID = UUID()
-        let journal = FileJournal(draftID: draftID, mediaID: mediaID, originalHash: MediaFiles.hash(bytes), originalName: "\(mediaID).original", previewName: "\(mediaID).preview.jpg")
+        let journal = FileJournal(draftID: draftID, mediaID: mediaID, originalHash: MediaFiles.hash(bytes), originalName: "\(mediaID).original", previewName: "\(mediaID).preview.jpg", profileID: UUID(), representationID: UUID(), draftOperationID: UUID(), mediaOperationID: UUID(), precision: precision, photoReference: photoReference)
         let journalURL = root.appendingPathComponent("journals/\(mediaID).json")
         try MediaFiles.write(JSONEncoder().encode(journal), to: journalURL)
         if fault == .originalWrite { throw fault }
         try MediaFiles.write(bytes, to: root.appendingPathComponent("staging/\(journal.originalName)"))
+        checkpoint?("originalPrepared")
         if fault == .previewWrite { throw fault }
         guard let imageSource = CGImageSourceCreateWithData(bytes as CFData, nil), let type = CGImageSourceGetType(imageSource) as String?, ["public.jpeg", "public.heic"].contains(type) else {
             throw ValidationFailure.invariant("only static JPEG/HEIC is supported; prepared bytes retained")
@@ -59,20 +67,7 @@ struct FileJournal: Codable {
         let preview = try MediaFiles.preview(bytes)
         try MediaFiles.write(preview, to: root.appendingPathComponent("staging/\(journal.previewName)"))
         checkpoint?("prepared")
-        do {
-            let date = Date()
-            context.insert(CaptureDraftRecord(id: draftID, householdID: libraryID, name: "Synthetic capture", createdAt: date, updatedAt: date, captureSource: precision == "pickerDeliveredRepresentation" ? .photoLibrary : .camera))
-            let profile = WardrobeProfile(ownerID: draftID, size: "M", material: "cotton")
-            context.insert(profile)
-            context.insert(MediaAssetRecord(id: mediaID, ownerKind: .draft, ownerID: draftID, originalFileName: journal.originalName, thumbnailFileName: journal.previewName, contentTypeIdentifier: type, createdAt: date, sortOrder: 0))
-            let representation = MediaRepresentation(mediaID: mediaID, revision: 1, precision: precision, originalHash: journal.originalHash, relativePath: "media/\(journal.originalName)", photosReference: photoReference)
-            context.insert(representation)
-            let sync = try SyncCore.local(context: context, library: libraryID, root: root)
-            try sync.stageWrite(WireRecord(id: draftID, operationID: UUID(), revision: 1, library: libraryID, kind: "draft", name: "Synthetic capture", profile: WireProfile(id: profile.id, size: profile.size, material: profile.material)))
-            try sync.stageWrite(WireRecord(id: mediaID, operationID: UUID(), revision: 1, library: libraryID, kind: "media", parentID: draftID, media: WireMedia(representationID: representation.id, revision: 1, hash: journal.originalHash, precision: representation.precision, contentType: type, preview: preview, photosReference: photoReference)))
-            if fault == .beforeSave { throw fault }
-            try context.save()
-        } catch { context.rollback(); throw error }
+        try commitPrepared(journal, type: type, preview: preview, fault: fault)
         lastCaptureOutcome = .saved
         checkpoint?("committed")
         do {
@@ -84,6 +79,27 @@ struct FileJournal: Codable {
         }
         if fault == .refresh { lastCaptureOutcome = .savedRefreshUnavailable }
         return draftID
+    }
+
+    private func commitPrepared(_ journal: FileJournal, type: String, preview: Data, fault: LocalFault) throws {
+        do {
+            guard let profileID = journal.profileID, let representationID = journal.representationID,
+                  let draftOperationID = journal.draftOperationID, let mediaOperationID = journal.mediaOperationID else { throw ValidationFailure.invariant("prepared identity missing") }
+            let draftID = journal.draftID, mediaID = journal.mediaID
+            let precision = journal.precision ?? "importedBytes", photoReference = journal.photoReference
+            let date = Date()
+            context.insert(CaptureDraftRecord(id: draftID, householdID: libraryID, name: "Synthetic capture", createdAt: date, updatedAt: date, captureSource: precision == "pickerDeliveredRepresentation" ? .photoLibrary : .camera))
+            let profile = WardrobeProfile(id: profileID, ownerID: draftID, size: "M", material: "cotton")
+            context.insert(profile)
+            context.insert(MediaAssetRecord(id: mediaID, ownerKind: .draft, ownerID: draftID, originalFileName: journal.originalName, thumbnailFileName: journal.previewName, contentTypeIdentifier: type, createdAt: date, sortOrder: 0))
+            let representation = MediaRepresentation(id: representationID, mediaID: mediaID, revision: 1, precision: precision, originalHash: journal.originalHash, relativePath: "media/\(journal.originalName)", photosReference: photoReference)
+            context.insert(representation)
+            let sync = try SyncCore.local(context: context, library: libraryID, root: root)
+            try sync.stageWrite(WireRecord(id: draftID, operationID: draftOperationID, revision: 1, library: libraryID, kind: "draft", name: "Synthetic capture", profile: WireProfile(id: profile.id, size: profile.size, material: profile.material)))
+            try sync.stageWrite(WireRecord(id: mediaID, operationID: mediaOperationID, revision: 1, library: libraryID, kind: "media", parentID: draftID, media: WireMedia(representationID: representation.id, revision: 1, hash: journal.originalHash, precision: representation.precision, contentType: type, preview: preview, photosReference: photoReference)))
+            if fault == .beforeSave { throw fault }
+            try context.save()
+        } catch { context.rollback(); throw error }
     }
 
     func finalize(_ journal: FileJournal, journalURL: URL, fault: LocalFault = .none, checkpoint: ((String) -> Void)? = nil) throws {
@@ -103,12 +119,39 @@ struct FileJournal: Codable {
         try FileManager.default.removeItem(at: journalURL)
     }
 
-    public func recover() throws {
-        let referenced = Set(try context.fetch(FetchDescriptor<MediaAssetRecord>()).map(\.id))
-        for url in try FileManager.default.contentsOfDirectory(at: root.appendingPathComponent("journals"), includingPropertiesForKeys: nil) {
-            let journal = try JSONDecoder().decode(FileJournal.self, from: Data(contentsOf: url))
-            if referenced.contains(journal.mediaID) { try finalize(journal, journalURL: url) }
-            // Uncommitted staging may be the only recoverable copy. Retain it and its journal.
+    public func recover(fault: LocalFault = .none) throws {
+        recoveryIssues = []
+        for url in try FileManager.default.contentsOfDirectory(at: root.appendingPathComponent("journals"), includingPropertiesForKeys: nil).sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            do {
+                let bytes = try Data(contentsOf: url)
+                let known: Set<String> = ["draftID", "mediaID", "originalHash", "originalName", "previewName", "profileID", "representationID", "draftOperationID", "mediaOperationID", "precision", "photoReference"]
+                guard let object = try JSONSerialization.jsonObject(with: bytes) as? [String: Any], Set(object.keys).isSubset(of: known) else {
+                    throw ValidationFailure.invariant("future journal preserved for compatible recovery")
+                }
+                var journal = try JSONDecoder().decode(FileJournal.self, from: bytes)
+                guard journal.originalName == "\(journal.mediaID).original", journal.previewName == "\(journal.mediaID).preview.jpg" else { throw ValidationFailure.invariant("unsafe journal") }
+                let referenced = try context.fetch(FetchDescriptor<MediaAssetRecord>()).contains { $0.id == journal.mediaID }
+                if !referenced {
+                    // Old journals receive identities once, durably, before any DB mutation.
+                    journal.profileID = journal.profileID ?? UUID(); journal.representationID = journal.representationID ?? UUID()
+                    journal.draftOperationID = journal.draftOperationID ?? UUID(); journal.mediaOperationID = journal.mediaOperationID ?? UUID()
+                    try MediaFiles.write(JSONEncoder().encode(journal), to: url)
+                    let original = try Data(contentsOf: root.appendingPathComponent("staging/" + journal.originalName))
+                    guard MediaFiles.hash(original) == journal.originalHash,
+                          let image = CGImageSourceCreateWithData(original as CFData, nil), let type = CGImageSourceGetType(image) as String?,
+                          ["public.jpeg", "public.heic"].contains(type) else { throw ValidationFailure.invariant("prepared original missing or corrupt") }
+                    if fault == .previewWrite { throw fault }
+                    let preview = try MediaFiles.preview(original)
+                    try MediaFiles.write(preview, to: root.appendingPathComponent("staging/" + journal.previewName))
+                    try commitPrepared(journal, type: type, preview: preview, fault: fault)
+                }
+                if fault == .afterSave || fault == .finalize { throw fault }
+                try finalize(journal, journalURL: url, fault: fault)
+            } catch {
+                // Keep the journal and original for another attempt; one broken entry
+                // must not prevent independent recoverable captures from advancing.
+                recoveryIssues.append("Prepared capture retained; recovery requires retry or source repair")
+            }
         }
     }
 

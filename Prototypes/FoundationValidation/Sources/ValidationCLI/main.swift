@@ -31,6 +31,26 @@ import Darwin
             try chain.recover()
             let result = try JSONSerialization.data(withJSONObject: chain.counts(), options: [.sortedKeys])
             FileHandle.standardOutput.write(result + Data("\n".utf8))
+        case "confirm":
+            guard args.count == 4, let id = UUID(uuidString: args[3]) else { throw ValidationFailure.invariant("draft ID required") }
+            let chain = try LocalChain(root: root); _ = try chain.confirm(id)
+            print(String(decoding: try JSONSerialization.data(withJSONObject: chain.counts(), options: [.sortedKeys]), as: UTF8.self))
+        case "prepare-preview-failure":
+            let chain = try LocalChain(root: root)
+            do { _ = try chain.capture(MediaFiles.syntheticJPEG(), fault: .previewWrite) }
+            catch LocalFault.previewWrite { print("EXPECTED_PREVIEW_FAILURE") }
+        case "simulate-legacy-delivery":
+            guard args.count == 5, let maximum = Int(args[4]), maximum > 0 else { throw ValidationFailure.invariant("target directory and batch bound required") }
+            let result = try LegacyFixture.simulateDelivery(from: root, to: URL(fileURLWithPath: args[3]), maximum: maximum)
+            print(String(decoding: try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys]), as: UTF8.self))
+        case "legacy-sync":
+            try LegacyFixture.generateSyncFixture(at: root)
+            print("Legacy JPEG fixture generated")
+        case "bootstrap-legacy":
+            guard args.count == 5, let sourceID = UUID(uuidString: args[3]), let itemID = UUID(uuidString: args[4]) else { throw ValidationFailure.invariant("explicit source and item IDs required") }
+            let chain = try LocalChain(root: root)
+            try chain.bootstrapLegacy(sourceID: sourceID, itemIDs: [itemID])
+            print(String(decoding: try JSONSerialization.data(withJSONObject: chain.counts(), options: [.sortedKeys]), as: UTF8.self))
         case "legacy":
             let summary = try LegacyFixture.generate(at: root)
             print("Legacy generated: \(summary.items.count) items, \(summary.drafts.count) drafts, \(summary.media.count) media")

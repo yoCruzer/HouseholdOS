@@ -50,7 +50,7 @@ for phase in ['prepared', 'committed', 'originalFinalized']:
     journal = json.loads(next((root / 'journals').glob('*.json')).read_text())
     recovered = execute('recover-capture', root)
     counts = json.loads(recovered.stdout.strip().splitlines()[-1])
-    committed = phase != 'prepared'
+    committed = True
     assert counts['drafts'] == int(committed) and counts['outbox'] == (2 if committed else 0)
     original = root / ('media' if committed else 'staging') / journal['originalName']
     assert hashlib.sha256(original.read_bytes()).hexdigest() == journal['originalHash']

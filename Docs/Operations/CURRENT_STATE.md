@@ -1,6 +1,6 @@
 # Current State
 
-Status: HHOS_FAV_001_AWAITING_OWNER_REVIEW
+Status: HHOS_FAV_001_PR5_IR_CLOSURE_RUNNING
 Updated: 2026-09-28
 
 ## Closed Goal
@@ -299,3 +299,5 @@ passed 1/1 and the full suite passed 36/36 with no failures or skips.
 HHOS-FAV-001 v1.2 local implementation is complete in its isolated validation branch; LIVE evidence remains pending; Draft PR [#5](https://github.com/yoCruzer/HouseholdOS/pull/5) is published. Canonical accepted baseline is `f19469fe13be175d1b28d71ddb6b5a917abdcc32`. See CURRENT_TASK and its unique validation checkpoint. Goal 1 and TestFlight Round 1 remain closed.
 
 Final local candidate: `6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa`. Harness suite 51/51, actual unsigned iOS Simulator build and fresh-chain/process-relaunch reports PASS. One independent read-only review and six remediations recorded. This does not grant Foundation Freeze or validate live CloudKit/Photos/production camera. Owner explicitly confirmed publication after the earlier approval-review rejection; ordinary push and Draft PR #5 creation succeeded. See validation state and Owner Action Pack.
+
+PR5-IR-Closure-01 activated from reviewed HEAD faae13d. Local completion is reopened only for the seven review closure items; previous results remain historical. See CURRENT_TASK and VALIDATION_STATE.

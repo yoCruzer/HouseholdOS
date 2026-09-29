@@ -4,7 +4,7 @@
   "baseline": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
   "branch": "spike/foundation-validation",
   "worktree": ".",
-  "status": "IMPLEMENTATION_COMPLETE_LIVE_EVIDENCE_PENDING",
+  "status": "RUNNING_PR5_IR_CLOSURE_01",
   "last_good_commit": "6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa",
   "gates": {
     "G0": {
@@ -18,24 +18,44 @@
       "reason": "True legacy fixture identity/fields/media, complete clone migration, repeat reopen, crash boundaries and failures preserved source"
     },
     "G2": {
-      "status": "PASS",
+      "status": "RUNNING",
       "evidence_level": "LOCAL_PLATFORM+LOGIC",
-      "reason": "Same transaction, full rollback, file journal, real process termination and storage classification"
+      "reason": "Review counterexamples require closure; unaffected historical evidence retained.",
+      "historical_result": {
+        "status": "PASS",
+        "evidence_level": "LOCAL_PLATFORM+LOGIC",
+        "reason": "Same transaction, full rollback, file journal, real process termination and storage classification"
+      }
     },
     "G3": {
-      "status": "PASS",
+      "status": "RUNNING",
       "evidence_level": "LOCAL_PLATFORM+LOGIC",
-      "reason": "Durable intent/exact ACK/inbound checkpoint and native shared partial/error reducers; true service event timing listed externally"
+      "reason": "Review counterexamples require closure; unaffected historical evidence retained.",
+      "historical_result": {
+        "status": "PASS",
+        "evidence_level": "LOCAL_PLATFORM+LOGIC",
+        "reason": "Durable intent/exact ACK/inbound checkpoint and native shared partial/error reducers; true service event timing listed externally"
+      }
     },
     "G4": {
-      "status": "PASS",
+      "status": "RUNNING",
       "evidence_level": "LOCAL_PLATFORM+LOGIC",
-      "reason": "Bootstrap/scope/epoch/merge/conflict/future data guards; actual account events await environment"
+      "reason": "Review counterexamples require closure; unaffected historical evidence retained.",
+      "historical_result": {
+        "status": "PASS",
+        "evidence_level": "LOCAL_PLATFORM+LOGIC",
+        "reason": "Bootstrap/scope/epoch/merge/conflict/future data guards; actual account events await environment"
+      }
     },
     "G5": {
-      "status": "PASS",
+      "status": "RUNNING",
       "evidence_level": "LOCAL_PLATFORM+LOGIC",
-      "reason": "Tombstone/re-add/child/restore, SDK zone-loss/reset pause injection"
+      "reason": "Review counterexamples require closure; unaffected historical evidence retained.",
+      "historical_result": {
+        "status": "PASS",
+        "evidence_level": "LOCAL_PLATFORM+LOGIC",
+        "reason": "Tombstone/re-add/child/restore, SDK zone-loss/reset pause injection"
+      }
     },
     "G6": {
       "status": "BLOCKED_EXTERNAL",
@@ -43,14 +63,24 @@
       "reason": "Static JPEG/HEIC/fallback/representations validated; authorized Photos sustained access and cross-device mapping not executed"
     },
     "G7": {
-      "status": "BLOCKED_EXTERNAL",
+      "status": "RUNNING",
       "local_result": "PASS",
-      "reason": "Shared planner/queue/revision/backoff/budget validated; actual CKAsset and original-on-demand proof missing"
+      "reason": "Review counterexamples require closure; unaffected historical evidence retained.",
+      "historical_result": {
+        "status": "BLOCKED_EXTERNAL",
+        "local_result": "PASS",
+        "reason": "Shared planner/queue/revision/backoff/budget validated; actual CKAsset and original-on-demand proof missing"
+      }
     },
     "G8": {
-      "status": "PASS",
+      "status": "RUNNING",
       "evidence_level": "LOCAL_PLATFORM+LOGIC",
-      "reason": "Single-writer local directory snapshot, complete reference verification, generation switch/recovery/admission and same-device target bytes; no double-device erasure claim"
+      "reason": "Review counterexamples require closure; unaffected historical evidence retained.",
+      "historical_result": {
+        "status": "PASS",
+        "evidence_level": "LOCAL_PLATFORM+LOGIC",
+        "reason": "Single-writer local directory snapshot, complete reference verification, generation switch/recovery/admission and same-device target bytes; no double-device erasure claim"
+      }
     },
     "P1": {
       "status": "PASS",
@@ -68,7 +98,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Await Owner review and authorized Owner platform evidence using OWNER_ACTION_PACK.md; no Foundation Freeze or production implementation.",
+  "next_safe_action": "Reproduce review counterexamples in native shared paths; repair and validate affected code.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -87,7 +117,16 @@
     "available_iOS_runtime": "26.5",
     "iOS_SDK": "26.5 (installed in Xcode 26.6)"
   },
-  "remaining_implementation": [],
+  "remaining_implementation": [
+    "IR-01",
+    "IR-02",
+    "IR-03",
+    "IR-04",
+    "IR-05",
+    "E-01",
+    "E-02",
+    "combined regressions and final candidate evidence"
+  ],
   "evidence_note": "Final candidate input and artifact hashes above cover final code. Earlier checkpoints in VALIDATION_EVIDENCE are historical. Documentation-only finalization does not change runtime evidence.",
   "independent_review": {
     "status": "COMPLETED_ONCE",
@@ -797,10 +836,38 @@
     "matching_prs": 1,
     "read_only": true
   },
-  "local_work_complete": true,
+  "local_work_complete": false,
   "all_acceptance_criteria_satisfied": false,
   "blocking_audit": {
     "consecutive_impasse_goal_turns": 0,
     "note": "This turn completed local evidence and deliverables; do not mark goal blocked merely because publication/live are external. Future no-progress turns must revalidate same impasse."
+  },
+  "review_closure": {
+    "id": "PR5-IR-Closure-01",
+    "reviewed_head": "faae13d93a83694a77da3d962423de2193f0fe88",
+    "archive_checksums": "9/9 PASS",
+    "items": {
+      "IR-01": {
+        "status": "RUNNING"
+      },
+      "IR-02": {
+        "status": "RUNNING"
+      },
+      "IR-03": {
+        "status": "RUNNING"
+      },
+      "IR-04": {
+        "status": "RUNNING"
+      },
+      "IR-05": {
+        "status": "RUNNING"
+      },
+      "E-01": {
+        "status": "RUNNING"
+      },
+      "E-02": {
+        "status": "RUNNING"
+      }
+    }
   }
 }

@@ -26,7 +26,7 @@ import UniformTypeIdentifiers
     @State private var setupURL: URL?
 
     private var programRoot: URL {
-        URL.applicationSupportDirectory.appendingPathComponent(ProcessInfo.processInfo.arguments.contains("--self-test") ? "HHOS-FAV-001-synthetic-self-test" : "HHOS-FAV-001", isDirectory: true)
+        URL.applicationSupportDirectory.appendingPathComponent(ProcessInfo.processInfo.arguments.contains("--self-test") ? "HHOS-FAV-001-closure-self-test" : "HHOS-FAV-001", isDirectory: true)
     }
     var body: some View {
         NavigationStack {
@@ -53,7 +53,9 @@ import UniformTypeIdentifiers
                     Button("重开并恢复 journal") { perform {
                         chain = try LocalChain(root: requireChain().root)
                         live = nil
-                        try requireChain().recover(); message = "本地库已重新打开"
+                        try requireChain().recover()
+                        lastDraft = try requireChain().context.fetch(FetchDescriptor<CaptureDraftRecord>()).first?.id
+                        message = try requireChain().recoveryIssues.isEmpty ? "本地库已恢复，可继续确认 Draft" : "可恢复录入已处理；仍有原件缺失或失败的 journal 保留待重试"
                     }}
                 }
                 Section("Photos 测试") {
@@ -194,7 +196,9 @@ import UniformTypeIdentifiers
                 if FileManager.default.fileExists(atPath: configurationURL.path) {
                     try installConfiguration(JSONDecoder().decode(LiveConfiguration.self, from: Data(contentsOf: configurationURL)))
                 }
-                try requireChain().recover(); message = "独立本地环境就绪"
+                try requireChain().recover()
+                lastDraft = try requireChain().context.fetch(FetchDescriptor<CaptureDraftRecord>()).first?.id
+                message = try requireChain().recoveryIssues.isEmpty ? "独立本地环境就绪" : "部分录入尚待恢复；原件与 journal 已保留"
                 if ProcessInfo.processInfo.arguments.contains("--self-test") { try runSyntheticSelfTest() }
             }}
             .onChange(of: selected) { _, item in
@@ -254,7 +258,10 @@ import UniformTypeIdentifiers
         let generations = programRoot.appendingPathComponent("generations")
         let reopening = FileManager.default.fileExists(atPath: backup.path)
         if !reopening {
-            let id = try source.capture(MediaFiles.syntheticJPEG(seed: 42))
+            do { _ = try source.capture(MediaFiles.syntheticJPEG(seed: 42), fault: .previewWrite) }
+            catch LocalFault.previewWrite { }
+            try source.recover()
+            guard source.recoveryIssues.isEmpty, let id = try source.context.fetch(FetchDescriptor<CaptureDraftRecord>()).first?.id else { throw ValidationFailure.invariant("prepared recovery failed") }
             _ = try source.confirm(id)
             _ = try BackupRestore.export(source, to: backup, full: true)
             _ = try BackupRestore.restore(backup, into: generations)

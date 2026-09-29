@@ -32,7 +32,7 @@ final class LocalChainTests: XCTestCase {
             XCTAssertThrowsError(try chain.capture(bytes, fault: fault))
             let reopened = try LocalChain(root: root)
             try reopened.recover()
-            let committed = [.afterSave, .finalize, .cleanup].contains(fault)
+            let committed = fault != .originalWrite
             XCTAssertEqual(try reopened.counts()["drafts"], committed ? 1 : 0, fault.rawValue)
             XCTAssertEqual(try reopened.counts()["outbox"], committed ? 2 : 0, fault.rawValue)
             if fault != .originalWrite {

@@ -100,7 +100,10 @@ import SwiftData
         if errors.contains(where: { $0.code == .limitExceeded }) { try reduceBatchLimit() }
         for error in errors where error.code != .limitExceeded {
             if error.code == .serverRecordChanged, let server = error.serverRecord {
-                try core.apply(server, callback: callbackScope)
+                let reconciled = try error.clientRecord.map {
+                    try core.reconcileSupersededServerRecord(server, rejected: $0, callback: callbackScope)
+                } ?? false
+                if !reconciled { try core.apply(server, callback: callbackScope) }
                 if try core.context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: { try $0.entityID.uuidString == server.recordID.recordName && $0.scope == callbackScope.key && !$0.isResolved(in: core.context) }) {
                     try core.pause("server conflict requires durable reconciliation")
                 }
@@ -129,6 +132,22 @@ import SwiftData
         preparedBatch = try core.nextBatch()
         return preparedBatch
     }
+    struct PreparedRequest {
+        let record: CKRecord
+        let persistedVersion: Data?
+    }
+    // Both the engine delegate and deterministic conditional service use this sender.
+    func prepareRequest(_ wire: WireRecord) throws -> PreparedRequest {
+        guard core.accepts(callbackScope), core.session.bootstrapComplete,
+              let snapshot = try core.context.fetch(FetchDescriptor<SentSnapshot>()).first(where: {
+                  $0.scope == callbackScope.key && $0.operationID == wire.operationID
+              }), try JSONDecoder().decode(WireRecord.self, from: snapshot.payload) == wire else {
+            throw ValidationFailure.invariant("request lacks current durable send snapshot")
+        }
+        let version = try core.document(wire.id)?.systemFields
+        let fields = try version.map(core.nativeSystemFields)
+        return PreparedRequest(record: try CloudCodec.encode(wire, zone: zone, systemFields: fields), persistedVersion: version)
+    }
     private func reduceBatchLimit() throws {
         guard core.accepts(callbackScope), !preparedBatch.isEmpty else { return }
         let operations = Set(preparedBatch.map(\.operationID))
@@ -142,9 +161,7 @@ import SwiftData
         guard core.accepts(callbackScope) else { return nil }
         do {
             preparedBatch = try prepareBatch().filter { context.options.scope.contains(CKRecord.ID(recordName: $0.id.uuidString, zoneID: zone)) }
-            let records = try preparedBatch.map { wire in
-                try CloudCodec.encode(wire, zone: zone, systemFields: core.document(wire.id)?.systemFields)
-            }
+            let records = try preparedBatch.map { try prepareRequest($0).record }
             return records.isEmpty ? nil : .init(recordsToSave: records, atomicByZone: false)
         } catch {
             lastFailure = "batch preparation failed"; core.session.pauseReason = lastFailure

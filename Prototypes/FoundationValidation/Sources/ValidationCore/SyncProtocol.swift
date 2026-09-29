@@ -126,6 +126,17 @@ struct WireRecord: Codable, Equatable, Sendable {
     }
 }
 
+// Durable operation provenance, not a second business snapshot. It survives restore
+// without transport tags; the current server must still confirm the exact payload.
+struct OperationReceipt: Codable {
+    var payload: Data
+    var scope: String
+    var sentBase: Data?
+    var wasSent: Bool
+    var confirmed: Bool = false
+    var supersededBy: UUID?
+}
+
 struct SessionState: Codable {
     var scope: SyncScope
     var enabled = false
@@ -195,6 +206,10 @@ enum CloudCodec {
     let mediaRoot: URL?
     var session: SessionState
     var failNextCommit = false
+    // Test transport may wrap native archives with an opaque conditional token.
+    // Default/live paths always use the actual CloudKit system fields.
+    var archiveServerRecord: (CKRecord) -> Data = CloudCodec.systemFields
+    var nativeSystemFields: (Data) throws -> Data = { $0 }
     init(context: ModelContext, scope: SyncScope, mediaRoot: URL? = nil) throws {
         self.context = context; self.mediaRoot = mediaRoot
         if let saved = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == "session" }) {
@@ -271,6 +286,20 @@ enum CloudCodec {
                     if candidate.operationID == old.operationID { try conflict.resolve(in: context) }
                 }
             }
+            if old.parentID != nil, old.parentID == record.parentID,
+               (old.parentIncarnation ?? old.parentID) != record.parentIncarnation,
+               let parent = try document(record.parentID!),
+               let parentWire = try? JSONDecoder().decode(WireRecord.self, from: parent.payload),
+               !parentWire.deleted, record.parentIncarnation == parentWire.effectiveIncarnation {
+                for intent in try pending() where intent.entityID == record.id {
+                    let prior = try JSONDecoder().decode(WireRecord.self, from: intent.payload)
+                    guard prior.parentID == old.parentID, (prior.parentIncarnation ?? prior.parentID) != record.parentIncarnation else { continue }
+                    var receipt = try operationReceipt(prior.operationID) ?? OperationReceipt(payload: intent.payload, scope: intent.scope, wasSent: false)
+                    receipt.supersededBy = record.operationID
+                    try saveReceipt(receipt, operation: prior.operationID)
+                    try retireDelivery(prior.operationID)
+                }
+            }
             current.payload = try record.encoded()
         } else { context.insert(try SyncedDocument(record, scope: session.scope.key)) }
         if !(try context.fetch(FetchDescriptor<DurableIntent>()).contains { $0.operationID == record.operationID }) {
@@ -319,41 +348,109 @@ enum CloudCodec {
             if !(try context.fetch(FetchDescriptor<SyncCheckpoint>()).contains { $0.key == baseKey }) {
                 context.insert(SyncCheckpoint(key: baseKey, data: try document(intent.entityID)?.ancestor ?? Data()))
             }
+            if try operationReceipt(intent.operationID) == nil {
+                try saveReceipt(OperationReceipt(payload: intent.payload, scope: intent.scope,
+                    sentBase: try document(intent.entityID)?.ancestor, wasSent: true), operation: intent.operationID)
+            }
             records.append(try JSONDecoder().decode(WireRecord.self, from: intent.payload))
         }
         records.sort { $0.operationID.uuidString < $1.operationID.uuidString }
         try commit()
         return records
     }
-    func acknowledge(_ record: CKRecord, callback: SyncScope) throws {
-        guard accepts(callback) else { return }
-        let wire = try CloudCodec.decode(record, scope: callback)
-        guard let snapshot = try context.fetch(FetchDescriptor<SentSnapshot>()).first(where: { $0.scope == callback.key && $0.operationID == wire.operationID }),
-              try JSONDecoder().decode(WireRecord.self, from: snapshot.payload) == wire else { return }
-        for intent in try pending() where intent.operationID == wire.operationID { context.delete(intent) }
-        context.delete(snapshot)
-        if let document = try document(wire.id) {
-            let ancestor = try document.ancestor.map { try JSONDecoder().decode(WireRecord.self, from: $0) }
-            let candidates = try context.fetch(FetchDescriptor<ConflictCandidate>()).filter { $0.entityID == wire.id && $0.scope == callback.key }
-            // An exact operation ACK retires its intent, but cannot roll back a later
-            // fetched server version/change tag or an unresolved concurrent candidate.
-            let unresolved = try candidates.contains { try !$0.isResolved(in: context) }
-            let current = try JSONDecoder().decode(WireRecord.self, from: document.payload)
-            let base = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first { $0.key == "sent-base/" + wire.operationID.uuidString }
-            let sameObservedBase = base.map { $0.data == (document.ancestor ?? Data()) } ?? (ancestor == nil || ancestor?.operationID == wire.operationID)
-            if !unresolved && current.effectiveIncarnation == wire.effectiveIncarnation && current.parentID == wire.parentID && current.parentIncarnation == wire.parentIncarnation && sameObservedBase {
-                document.ancestor = try wire.encoded()
-                document.systemFields = CloudCodec.systemFields(record)
+    func operationReceipt(_ operation: UUID) throws -> OperationReceipt? {
+        try context.fetch(FetchDescriptor<SyncCheckpoint>()).first { $0.key == "operation-receipt/" + operation.uuidString }
+            .map { try JSONDecoder().decode(OperationReceipt.self, from: $0.data) }
+    }
+    func saveReceipt(_ value: OperationReceipt, operation: UUID) throws {
+        let key = "operation-receipt/" + operation.uuidString
+        let bytes = try JSONEncoder().encode(value)
+        if let row = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == key }) { row.data = bytes }
+        else { context.insert(SyncCheckpoint(key: key, data: bytes)) }
+    }
+    func retireDelivery(_ operation: UUID) throws {
+        for intent in try pending() where intent.operationID == operation { context.delete(intent) }
+        for row in try context.fetch(FetchDescriptor<SentSnapshot>()) where row.scope == session.scope.key && row.operationID == operation { context.delete(row) }
+        for row in try context.fetch(FetchDescriptor<SyncCheckpoint>()) where row.key == "sent-base/" + operation.uuidString { context.delete(row) }
+    }
+    // ACK and fetched self-delivery share the same exact provenance and retirement.
+    // A known historical operation is consumed without rolling back a later base.
+    func receiveOwnOperation(_ record: CKRecord, wire: WireRecord, raw: Data) throws -> Bool {
+        guard CloudCodec.writable(raw) else { return false }
+        var receipt = try operationReceipt(wire.operationID)
+        if receipt == nil, let snapshot = try context.fetch(FetchDescriptor<SentSnapshot>()).first(where: {
+            $0.scope == session.scope.key && $0.operationID == wire.operationID && $0.entityID == wire.id
+        }) {
+            let base = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first { $0.key == "sent-base/" + wire.operationID.uuidString }?.data
+            receipt = OperationReceipt(payload: snapshot.payload, scope: snapshot.scope, sentBase: base.flatMap { $0.isEmpty ? nil : $0 }, wasSent: true)
+        }
+        guard var proof = receipt, proof.scope == session.scope.key,
+              CloudCodec.writable(proof.payload),
+              try JSONDecoder().decode(WireRecord.self, from: proof.payload) == wire else { return false }
+        if proof.supersededBy != nil { return true }
+        guard proof.wasSent else { return false }
+        if proof.confirmed && session.restoring != true { return true }
+        if let row = try document(wire.id), row.scope == session.scope.key {
+            let current = try JSONDecoder().decode(WireRecord.self, from: row.payload)
+            let unresolved = try context.fetch(FetchDescriptor<ConflictCandidate>()).contains {
+                try $0.entityID == wire.id && $0.scope == session.scope.key && !$0.isResolved(in: context)
+            }
+            let sameBase = row.ancestor == proof.sentBase || row.ancestor == raw || (session.restoring == true && row.ancestor == nil)
+            if !unresolved && sameBase && current.effectiveIncarnation == wire.effectiveIncarnation &&
+                current.parentID == wire.parentID && current.parentIncarnation == wire.parentIncarnation {
+                row.ancestor = raw; row.systemFields = archiveServerRecord(record)
             }
         }
-        for base in try context.fetch(FetchDescriptor<SyncCheckpoint>()) where base.key == "sent-base/" + wire.operationID.uuidString { context.delete(base) }
-        try commit()
+        proof.confirmed = true
+        try saveReceipt(proof, operation: wire.operationID)
+        try retireDelivery(wire.operationID)
+        return true
+    }
+    // A fresh conditional rejection of the replacement is distinct from a late
+    // response for the retired child. Only the former may supply its retry base.
+    func reconcileSupersededServerRecord(_ server: CKRecord, rejected: CKRecord, callback: SyncScope) throws -> Bool {
+        guard accepts(callback) else { return false }
+        let remote = try CloudCodec.decode(server, scope: callback)
+        let local = try CloudCodec.decode(rejected, scope: callback)
+        let raw = server.encryptedValues["payload"] as! Data
+        guard CloudCodec.writable(raw), let proof = try operationReceipt(remote.operationID),
+              proof.scope == callback.key, proof.supersededBy == local.operationID,
+              try JSONDecoder().decode(WireRecord.self, from: proof.payload) == remote,
+              let row = try document(local.id), row.scope == callback.key,
+              try JSONDecoder().decode(WireRecord.self, from: row.payload) == local,
+              let snapshot = try context.fetch(FetchDescriptor<SentSnapshot>()).first(where: {
+                  $0.scope == callback.key && $0.operationID == local.operationID
+              }), try JSONDecoder().decode(WireRecord.self, from: snapshot.payload) == local,
+              var replacement = try operationReceipt(local.operationID), !replacement.confirmed,
+              replacement.sentBase == row.ancestor else { return false }
+        let native = try row.systemFields.map(nativeSystemFields)
+        let currentRequest = try CloudCodec.encode(local, zone: rejected.recordID.zoneID, systemFields: native)
+        guard rejected.recordChangeTag == currentRequest.recordChangeTag else { return false }
+        guard try !context.fetch(FetchDescriptor<ConflictCandidate>()).contains(where: {
+            try $0.entityID == local.id && $0.scope == callback.key && !$0.isResolved(in: context)
+        }) else { return false }
+        do {
+            row.ancestor = raw; row.systemFields = archiveServerRecord(server)
+            replacement.sentBase = raw
+            try saveReceipt(replacement, operation: local.operationID)
+            if let base = try context.fetch(FetchDescriptor<SyncCheckpoint>()).first(where: { $0.key == "sent-base/" + local.operationID.uuidString }) { base.data = raw }
+            try commit(); return true
+        } catch { context.rollback(); throw error }
+    }
+    func acknowledge(_ record: CKRecord, callback: SyncScope) throws {
+        guard accepts(callback) else { return }
+        do {
+            let wire = try CloudCodec.decode(record, scope: callback)
+            _ = try receiveOwnOperation(record, wire: wire, raw: record.encryptedValues["payload"] as! Data)
+            try commit()
+        } catch { context.rollback(); throw error }
     }
     func apply(_ record: CKRecord, callback: SyncScope) throws {
         guard accepts(callback) else { return }
         let remote = try CloudCodec.decode(record, scope: callback)
         let raw = record.encryptedValues["payload"] as! Data
         do {
+            if try receiveOwnOperation(record, wire: remote, raw: raw) { try commit(); return }
             if let existing = try document(remote.id) {
                 guard existing.scope == callback.key else { throw ValidationFailure.invariant("cross-scope inbound requires plan") }
                 let local = try JSONDecoder().decode(WireRecord.self, from: existing.payload)
@@ -362,7 +459,7 @@ enum CloudCodec {
                         // A conditional delete can lose to a concurrent server edit. Keep
                         // that content recoverable and block this entity until resolved.
                         try retainConflict(existing: existing, remote: raw)
-                        existing.systemFields = CloudCodec.systemFields(record)
+                        existing.systemFields = archiveServerRecord(record)
                         try commit()
                         return
                     }
@@ -373,6 +470,15 @@ enum CloudCodec {
                 // A replay of the exact predecessor cannot revoke an explicit re-add.
                 if remote.deleted, !local.deleted, local.replacesDeletion == remote.operationID,
                    local.effectiveIncarnation != remote.effectiveIncarnation {
+                    // Only the predecessor or an empty post-restore observation can
+                    // accept this base; a later observed incarnation must not regress.
+                    let unresolved = try context.fetch(FetchDescriptor<ConflictCandidate>()).contains {
+                        try $0.entityID == remote.id && $0.scope == callback.key && !$0.isResolved(in: context)
+                    }
+                    if !unresolved && (existing.ancestor == nil || existing.ancestor == raw) && CloudCodec.writable(raw) {
+                        existing.ancestor = raw; existing.systemFields = archiveServerRecord(record)
+                        try commit()
+                    }
                     return
                 }
                 // Cross-generation deletes/updates are not ordered by device-local revision.
@@ -393,41 +499,33 @@ enum CloudCodec {
                         try commit(); return
                     }
                 }
-                // Fetching the exact sent operation also resolves a lost ACK, never a newer edit.
-                for intent in try pending() where intent.operationID == remote.operationID {
-                    if try JSONDecoder().decode(WireRecord.self, from: intent.payload) == remote {
-                        context.delete(intent)
-                        for base in try context.fetch(FetchDescriptor<SyncCheckpoint>()) where base.key == "sent-base/" + remote.operationID.uuidString { context.delete(base) }
-                        for snapshot in try context.fetch(FetchDescriptor<SentSnapshot>()) where snapshot.operationID == remote.operationID { context.delete(snapshot) }
-                    }
-                }
                 let pendingLocal = try pending().contains { $0.entityID == remote.id }
                 if !CloudCodec.writable(raw) {
                     if pendingLocal { try retainConflict(existing: existing, remote: raw) }
                     existing.payload = raw // Preserve the exact future message, and block writes/sends.
                 } else if remote == local {
                     existing.ancestor = raw
-                    existing.systemFields = CloudCodec.systemFields(record)
+                    existing.systemFields = archiveServerRecord(record)
                 } else if remote.deleted {
                     if pendingLocal { try retainConflict(existing: existing, remote: raw) }
                     try discardDelivery(for: remote.id)
                     existing.payload = raw; existing.ancestor = raw
                 } else if let known = existing.ancestor, try JSONDecoder().decode(WireRecord.self, from: known) == remote {
-                    existing.systemFields = CloudCodec.systemFields(record)
+                    existing.systemFields = archiveServerRecord(record)
                 } else if pendingLocal {
                     let ancestor = try existing.ancestor.map { try JSONDecoder().decode(WireRecord.self, from: $0) }
                     if let ancestor, let merged = ThreeWayMerge.merge(ancestor: ancestor, local: local, remote: remote) {
                         try discardDelivery(for: remote.id)
-                        existing.ancestor = raw; existing.systemFields = CloudCodec.systemFields(record)
+                        existing.ancestor = raw; existing.systemFields = archiveServerRecord(record)
                         try stageWrite(merged)
                     } else { try retainConflict(existing: existing, remote: raw) }
                 } else {
                     existing.payload = raw; existing.ancestor = raw
                 }
-                existing.systemFields = CloudCodec.systemFields(record)
+                existing.systemFields = archiveServerRecord(record)
             } else {
                 let row = try SyncedDocument(remote, scope: callback.key)
-                row.payload = raw; row.ancestor = raw; row.systemFields = CloudCodec.systemFields(record)
+                row.payload = raw; row.ancestor = raw; row.systemFields = archiveServerRecord(record)
                 context.insert(row)
             }
             try projectVisibleRecord(remote.id)
@@ -639,6 +737,13 @@ enum ThreeWayMerge {
             }
         }
         for intent in try context.fetch(FetchDescriptor<DurableIntent>()) where intent.scope == oldScope { intent.scope = scope.key }
+        for checkpoint in try context.fetch(FetchDescriptor<SyncCheckpoint>()) where checkpoint.key.hasPrefix("operation-receipt/") {
+            var receipt = try JSONDecoder().decode(OperationReceipt.self, from: checkpoint.data)
+            if receipt.scope == scope.key || receipt.scope.hasPrefix("unbound/Development/unbound/") {
+                receipt.scope = scope.key
+                checkpoint.data = try JSONEncoder().encode(receipt)
+            }
+        }
         for conflict in try context.fetch(FetchDescriptor<ConflictCandidate>()) where conflict.scope == oldScope || conflict.scope == "resolved/" + oldScope { try conflict.rebind(to: scope.key, in: context) }
         session = SessionState(scope: scope, enabled: true, restoring: true)
         try saveSession() // Enabled for fetch only; bootstrapComplete is still false.

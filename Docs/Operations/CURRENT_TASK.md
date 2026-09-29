@@ -1,7 +1,7 @@
 # Current Task
 
 - Program: HHOS-FAV-001
-- Status: AWAITING_OWNER_REVIEW — READY_FOR_INDEPENDENT_REVIEW
+- Status: AWAITING_OWNER_REVIEW — R2_LOCAL_CLOSURE_COMPLETE; publication pending
 - Branch: `spike/foundation-validation`
 - Accepted baseline: `f19469fe13be175d1b28d71ddb6b5a917abdcc32`
 - Owner authorization: uploaded v1.2 execution package and explicit execution request.
@@ -25,3 +25,11 @@ Reproduce and close IR-01–IR-05 and E-01/E-02 with shared native paths, focuse
 LOCAL_REMEDIATION_COMPLETE; LIVE_EVIDENCE_PENDING. Code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`; final harness 65/65, unsigned native build and Simulator prepared recovery/relaunch PASS. IR-01–IR-05 and E-01/E-02 are mapped in [IR_CLOSURE](../Validation/HHOS-FAV-001/IR_CLOSURE.md). One read-only review's two follow-up counterexamples were fixed; final independent acceptance is not claimed. Stop for independent review; do not begin platform validation now.
 
 Owner explicitly confirmed publication after automatic approval rejection. The closure commits were ordinarily pushed and Draft PR #5 body updated. Publication is complete; this final documentation-only record does not change tested code. Stop at independent review; real platform evidence remains pending.
+
+## Active PR5-IR-Closure-02
+
+Owner explicitly authorized the [R2 goal](../Validation/HHOS-FAV-001/ReviewClosure-02/GOAL.md) and [interaction contract](../Validation/HHOS-FAV-001/ReviewClosure-02/INTERACTION_CONTRACT.md). Start HEAD: `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`; clean existing validation worktree, same branch and Draft PR #5. Close R2-01/R2-02/R2-03 with native red/green regressions and XS-01–XS-08 evidence. Previous closure evidence is historical, not proof of R2 completion. Current authorization supersedes the earlier stop-for-review instruction. Live evidence remains pending.
+
+R2 code candidate `1419c0122bac447cbfae8405f1672af7696ae4e8` passes75/75 deterministic tests, unsigned native build and Simulator process-relaunch checks. All R2 findings reproduced/fixed; eight sequence classes mapped in [R2_INTERACTION_CLOSURE](../Validation/HHOS-FAV-001/R2_INTERACTION_CLOSURE.md). Publication remains the final authorized action; then stop for independent review.
+
+Publication boundary: automatic approval review rejected the combined commit/push before execution. Local code/tests/evidence are complete; public branch/PR update awaits explicit publication approval. Remote remains `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`, OPEN/Draft. No alternate publication route was used.

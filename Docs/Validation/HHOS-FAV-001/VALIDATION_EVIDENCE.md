@@ -210,3 +210,7 @@ Code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`; source/config/test/to
 Result: READY_FOR_INDEPENDENT_REVIEW — LOCAL_REMEDIATION_COMPLETE; LIVE_EVIDENCE_PENDING. This closes the seven local整改 items; full Program acceptance remains false. No platform readiness/erase-old-device promise and no Foundation Freeze.
 
 PR5-IR-Closure-01 publication follow-up: Owner explicitly replied 明确允许 after the approval block; ordinary push through `310eeae` and Draft PR #5 body update succeeded. Final documentation-only publication record follows. Tested code remains `b45cb840c2e65ca25c062cde450c235a0195f670`; 65/65 and native build/runtime evidence remain valid. PR is OPEN/Draft, unmerged, with no auto-merge. Await independent review.
+
+## PR5-IR-Closure-02 final local evidence
+
+Code candidate `1419c0122bac447cbfae8405f1672af7696ae4e8`; input fingerprint `610606e16d629c5ae7fadbd57367ed1a90077ac16d362c930c75052b03ef3532`. R2 original red3/3 failed with9 expected assertions; saved-C1 follow-up failed conditional retry before repair. Final focused10/10, intermediate affected50/50, final deterministic **75/75,0 failures,0 skips**, unsigned Simulator build and actual App process relaunch PASS. Evidence files are `LocalEvidence/r2-*`; named scenario/terminal mapping and exact hashes are in VALIDATION_STATE and R2_INTERACTION_CLOSURE. Original workspace hashes match. No shipping App tests, duplicate CI, live cloud, Photos or signing operation. Legacy schema/fixture/process evidence reused unchanged; current suite includes bridge regression.

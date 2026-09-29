@@ -1,0 +1,11 @@
+请继续 HouseholdOS 的 HHOS-FAV-001，执行附件 `HouseholdOS_PR5_R2_Interaction_Closure_Pack_v1.0.zip`。这是同一 Draft PR #5 的 PR5-IR-Closure-02，不是重启 Program。
+
+解压、核对 SHA256SUMS.txt，完整读取 README.zh-CN.md、GOAL.md、INTERACTION_CONTRACT.md、ReviewSource/REVIEW.zh-CN.md，并查看 SCENARIOS.json。旧 Foundation v1.2及上轮已修行为继续有效；本包已含第二轮Review，不必另找旧ZIP。
+
+仓库 yoCruzer/HouseholdOS；已审 HEAD 449328ea87b40f773c4dcfa957f3ae00bf43e7ef；沿用 spike/foundation-validation、既有隔离worktree和Draft PR #5。先核对实际新增提交/现有成果，保护原目录全部修改，不stash/reset/重建。
+
+一次闭环R2-01（恢复re-add条件写依据）、R2-02（自回传不误伤后续编辑）、R2-03（旧子意图终态）。先复现再修共享代码，使用少量跨模块事件序列验证安全性、可完成性和重启后终态；不能只测“数据还在/下一批为空”。保留真实冲突和未知parent对照，禁止清队列、无条件覆盖或假服务端版本来凑绿灯。
+
+我授权本合同内的代码/测试/交接文档修改、commit、普通push和更新同一个Draft PR。内部自主推进、常规失败自行闭环，不逐项问继续或push；平台审批照常遵守，拒绝不绕过。日常focused/affected，收尾协调一次验证工程完整确定性测试与必要原生构建，不机械重复本机/CI或正式App全量UI。
+
+不扩通用测试/同步框架，不改正式App，不merge/ready/auto-merge/Freeze，不运行真实云/Photos/真机或操作签名资源，不要求我现在补设备证据。沿用当前模型/推理配置。最终返回三项处置、交互序列实际证据、代码候选与最终HEAD、PR状态；停在独立复核，真实平台证据继续pending。

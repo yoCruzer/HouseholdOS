@@ -1,6 +1,6 @@
 # Current State
 
-Status: HHOS_FAV_001_READY_FOR_INDEPENDENT_REVIEW
+Status: HHOS_FAV_001_R2_LOCAL_CLOSURE_COMPLETE
 Updated: 2026-09-29
 
 ## Closed Goal
@@ -305,3 +305,9 @@ PR5-IR-Closure-01 activated from reviewed HEAD faae13d. Local completion is reop
 PR5-IR-Closure-01 local remediation is complete at code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`: IR-01–IR-05 and E-01/E-02 closed with final 65/65 deterministic tests, unsigned native build, separate-process legacy/prepared recovery and Simulator restart evidence. Historical paragraphs above describe the earlier candidate. Current authority is CURRENT_TASK / IR_CLOSURE / VALIDATION_STATE. Await independent review; LIVE evidence stays pending and Program acceptance remains incomplete.
 
 PR5-IR-Closure-01 publication follow-up: Owner explicitly replied 明确允许 after the approval block; ordinary push through `310eeae` and Draft PR #5 body update succeeded. Final documentation-only publication record follows. Tested code remains `b45cb840c2e65ca25c062cde450c235a0195f670`; 65/65 and native build/runtime evidence remain valid. PR is OPEN/Draft, unmerged, with no auto-merge. Await independent review.
+
+PR5-IR-Closure-02 activated on the existing validation worktree at `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`. R2-01–R2-03 and their interaction assertions await native reproduction/remediation. Historical closure results remain preserved.
+
+PR5-IR-Closure-02 local closure: code `1419c0122bac447cbfae8405f1672af7696ae4e8`;75/75 deterministic tests, native unsigned build and Simulator process-relaunch PASS. R2-01/02/03 reproduced and fixed; conditional write, own echo, superseded-child terminal and bounded mixed delivery evidence are indexed in R2_INTERACTION_CLOSURE. Publication pending; real platform evidence pending.
+
+Publication boundary: automatic approval review rejected the combined commit/push before execution. Local code/tests/evidence are complete; public branch/PR update awaits explicit publication approval. Remote remains `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`, OPEN/Draft. No alternate publication route was used.

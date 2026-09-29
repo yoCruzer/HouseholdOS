@@ -1,0 +1,6 @@
+CONTROL cross_incarnation_merge_rejected=true
+R2-01 readd_preserved=true system_fields_nil=true ancestor_nil=true ready_count=1 conditional_tag_matches_server=false
+R2-02 ancestor_initially_present=false local8_preserved=true pending_revisions=[8] conflict_count=1 ready_count=0
+R2-02 ancestor_initially_present=true local8_preserved=true pending_revisions=[8] conflict_count=1 ready_count=0
+R2-03 acknowledged_current_ops=2 pending_count=1 only_old_child_pending=true next_ready_count=0 conflict_count=0
+CONTROL repeated_batch_counts=[100, 100, 100]

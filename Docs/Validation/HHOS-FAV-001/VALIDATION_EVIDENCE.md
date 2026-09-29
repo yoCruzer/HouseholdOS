@@ -208,3 +208,5 @@ Code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`; source/config/test/to
 - Exact item/test/combined-case mapping is in `IR_CLOSURE.md` and `review_closure` machine state. Shipping App, formal Xcode project, tests and legacy model copies remain unchanged; shipping 45/45 is historical only.
 
 Result: READY_FOR_INDEPENDENT_REVIEW — LOCAL_REMEDIATION_COMPLETE; LIVE_EVIDENCE_PENDING. This closes the seven local整改 items; full Program acceptance remains false. No platform readiness/erase-old-device promise and no Foundation Freeze.
+
+PR5-IR-Closure-01 publication follow-up: Owner explicitly replied 明确允许 after the approval block; ordinary push through `310eeae` and Draft PR #5 body update succeeded. Final documentation-only publication record follows. Tested code remains `b45cb840c2e65ca25c062cde450c235a0195f670`; 65/65 and native build/runtime evidence remain valid. PR is OPEN/Draft, unmerged, with no auto-merge. Await independent review.

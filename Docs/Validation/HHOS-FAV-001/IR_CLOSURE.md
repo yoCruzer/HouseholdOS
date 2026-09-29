@@ -28,4 +28,4 @@ Bridge limit: source identity, household, Item/sourceDraft IDs, new library mapp
 
 Live CloudKit/Photos/devices/iOS17 runtime remain pending. No signed resources, real services or Photos writes were used; no shipping changes, merge, ready, auto-merge or Freeze. Original directory's two catalog modifications are hash-preserved. Stop at independent review; no Owner device work requested now.
 
-Publication is blocked by automatic approval requiring a new explicit user confirmation after rejection. The closure commits have not been pushed and PR #5 body remains unchanged; local remediation evidence is complete. See VALIDATION_STATE publication.
+Owner explicitly confirmed publication after automatic approval rejection. The closure commits were ordinarily pushed and Draft PR #5 body updated. Publication is complete; this final documentation-only record does not change tested code. Stop at independent review; real platform evidence remains pending.

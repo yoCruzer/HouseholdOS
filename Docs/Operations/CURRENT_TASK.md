@@ -23,3 +23,5 @@ Reproduce and close IR-01–IR-05 and E-01/E-02 with shared native paths, focuse
 ## PR5 closure handoff
 
 LOCAL_REMEDIATION_COMPLETE; LIVE_EVIDENCE_PENDING. Code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`; final harness 65/65, unsigned native build and Simulator prepared recovery/relaunch PASS. IR-01–IR-05 and E-01/E-02 are mapped in [IR_CLOSURE](../Validation/HHOS-FAV-001/IR_CLOSURE.md). One read-only review's two follow-up counterexamples were fixed; final independent acceptance is not claimed. Stop for independent review; do not begin platform validation now.
+
+Publication is blocked by automatic approval requiring a new explicit user confirmation after rejection. The closure commits have not been pushed and PR #5 body remains unchanged; local remediation evidence is complete. See VALIDATION_STATE publication.

@@ -27,3 +27,5 @@ Combined coverage: re-add/deletion/children/restart; equal-revision different-by
 Bridge limit: source identity, household, Item/sourceDraft IDs, new library mapping and operation IDs are durable. Only explicit selected Item(s), name/category/sourceDraftID and static JPEG media descriptors/previews are mapped. Other production fields (status/archive/location/notes/timestamps and full historical facts) are not transmitted; their source records remain intact. No full historical-user-sync claim.
 
 Live CloudKit/Photos/devices/iOS17 runtime remain pending. No signed resources, real services or Photos writes were used; no shipping changes, merge, ready, auto-merge or Freeze. Original directory's two catalog modifications are hash-preserved. Stop at independent review; no Owner device work requested now.
+
+Publication is blocked by automatic approval requiring a new explicit user confirmation after rejection. The closure commits have not been pushed and PR #5 body remains unchanged; local remediation evidence is complete. See VALIDATION_STATE publication.

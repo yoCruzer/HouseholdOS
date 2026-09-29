@@ -103,7 +103,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Independent review of PR5-IR-Closure-01 on Draft PR #5. Do not start live/device work, merge, ready, auto-merge or Foundation Freeze.",
+  "next_safe_action": "Await the pending explicit publication confirmation; then ordinary push to yoCruzer/HouseholdOS spike/foundation-validation and update existing Draft PR #5. Local remediation complete; no more tests or platform/device work needed now.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -112,8 +112,13 @@
   "active_operations": [],
   "publication": {
     "draft_pr": "https://github.com/yoCruzer/HouseholdOS/pull/5",
-    "status": "FINAL_DOCS_PREPARED_PENDING_PUSH",
-    "transport": "SSH key unavailable; normal authenticated HTTPS fetch via existing gh credential helper succeeds; no credential export or persistent config change."
+    "status": "BLOCKED_AUTOMATIC_APPROVAL_REQUIRES_NEW_USER_CONFIRMATION",
+    "transport": "SSH key unavailable; normal authenticated HTTPS fetch via existing gh credential helper succeeds; no credential export or persistent config change.",
+    "local_handoff_head": "c8e7d40852c324f02382ddfbff67c847434c596b",
+    "remote_head_last_verified": "faae13d93a83694a77da3d962423de2193f0fe88",
+    "push_executed": false,
+    "pr_body_updated": false,
+    "reason": "Automatic approval rejected the combined commit/push and then the evidence-backed push retry. It explicitly requires a new user confirmation after rejection for this repository, branch and code/test/contract/redacted-document payload. No alternate publication route attempted."
   },
   "toolchain": {
     "xcode": "26.6 (17F113)",
@@ -863,8 +868,9 @@
   "local_work_complete": true,
   "all_acceptance_criteria_satisfied": false,
   "blocking_audit": {
-    "consecutive_impasse_goal_turns": 0,
-    "note": "This turn completed local evidence and deliverables; do not mark goal blocked merely because publication/live are external. Future no-progress turns must revalidate same impasse."
+    "consecutive_impasse_goal_turns": 2,
+    "condition": "Automatic approval requires new explicit user confirmation before publishing the completed closure payload.",
+    "note": "Current turn records actual publication blocker in the unique state. No repeated push, PR mutation or test run."
   },
   "review_closure": {
     "id": "PR5-IR-Closure-01",

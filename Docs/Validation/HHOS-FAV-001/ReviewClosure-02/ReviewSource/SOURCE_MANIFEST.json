@@ -1,0 +1,33 @@
+{
+  "repository": "yoCruzer/HouseholdOS",
+  "pr": 5,
+  "head": "449328ea87b40f773c4dcfa957f3ae00bf43e7ef",
+  "previous_review_head": "faae13d93a83694a77da3d962423de2193f0fe88",
+  "code_candidate": "b45cb840c2e65ca25c062cde450c235a0195f670",
+  "review_date": "2026-09-29",
+  "review_result": "REQUEST_CHANGES",
+  "sources": {
+    "SyncProtocol.swift": "11fa0d5bdcdf1f75bc03c5cec99ce80138a487bb",
+    "CloudAdapter.swift": "39bca543ac5d64fddeded59c1502b7985cef2d76",
+    "BackupRestore.swift": "6e9990919f846d09d04d579e5a9b64c998bfe59d",
+    "LocalChain.swift": "2eb316624c521efa52c9f00b74682e1dfee2d854",
+    "LegacyFixture.swift": "a40c1e5516b2967f960732ebae2ea0ef271a8538",
+    "MediaTransfers.swift": "7c2ef63491e2364c6124003d30678a58fc0ef1c4",
+    "IRClosureTests.swift": "8d991ab7ef094d511b7545ec1c0e4f9401b1eb9b"
+  },
+  "executed": "Pure Swift extracted reducer probes with explicit in-memory test doubles; NOT Apple platform tests",
+  "not_executed": [
+    "65-test native harness",
+    "NativeFollowupTests.swift",
+    "Xcode build",
+    "CloudKit service",
+    "SwiftData disk persistence",
+    "Photos/device tests"
+  ],
+  "mutations": {
+    "remote_repository": false,
+    "pr_metadata": false,
+    "github_review": false,
+    "merge": false
+  }
+}

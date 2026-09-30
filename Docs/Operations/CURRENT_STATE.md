@@ -1,7 +1,7 @@
 # Current State
 
-Status: TESTFLIGHT_ROUND1_ACCEPTED_CLOSED
-Updated: 2026-09-15
+Status: HHOS_FAV_001_R2_LOCAL_CLOSURE_COMPLETE
+Updated: 2026-09-29
 
 ## Closed Goal
 
@@ -267,7 +267,7 @@ The first explicit install attempt encountered the selected Simulator in `Shutdo
 
 - Goal 1: ACCEPTED / CLOSED
 - TestFlight Round 1 Device Quality Stabilization: ACCEPTED / CLOSED
-- Foundation Architecture Validation Program: NOT STARTED
+- Foundation Architecture Validation Program: HHOS-FAV-001 AWAITING_OWNER_REVIEW (local complete; Draft PR #5 published; live pending)
 - Goal 2: NOT STARTED
 - Goal 3: NOT STARTED
 - Traditional F1: not activated; the Owner explicitly authorized Goal 1 as one autonomous
@@ -293,3 +293,23 @@ builds passed. The generated Debug and Release bundles contain compiled AppIcon 
 `Assets.car`, Bundle ID `com.yocruzer.householdos`, version `0.1` (build `1`), display
 name `HouseholdOS`, and `ITSAppUsesNonExemptEncryption = false`. The focused smoke test
 passed 1/1 and the full suite passed 36/36 with no failures or skips.
+
+## Active validation
+
+HHOS-FAV-001 v1.2 local implementation is complete in its isolated validation branch; LIVE evidence remains pending; Draft PR [#5](https://github.com/yoCruzer/HouseholdOS/pull/5) is published. Canonical accepted baseline is `f19469fe13be175d1b28d71ddb6b5a917abdcc32`. See CURRENT_TASK and its unique validation checkpoint. Goal 1 and TestFlight Round 1 remain closed.
+
+Final local candidate: `6c534f3b9e051e96c3adcf1b2b9803e0a8e20efa`. Harness suite 51/51, actual unsigned iOS Simulator build and fresh-chain/process-relaunch reports PASS. One independent read-only review and six remediations recorded. This does not grant Foundation Freeze or validate live CloudKit/Photos/production camera. Owner explicitly confirmed publication after the earlier approval-review rejection; ordinary push and Draft PR #5 creation succeeded. See validation state and Owner Action Pack.
+
+PR5-IR-Closure-01 activated from reviewed HEAD faae13d. Local completion is reopened only for the seven review closure items; previous results remain historical. See CURRENT_TASK and VALIDATION_STATE.
+
+PR5-IR-Closure-01 local remediation is complete at code candidate `b45cb840c2e65ca25c062cde450c235a0195f670`: IR-01–IR-05 and E-01/E-02 closed with final 65/65 deterministic tests, unsigned native build, separate-process legacy/prepared recovery and Simulator restart evidence. Historical paragraphs above describe the earlier candidate. Current authority is CURRENT_TASK / IR_CLOSURE / VALIDATION_STATE. Await independent review; LIVE evidence stays pending and Program acceptance remains incomplete.
+
+PR5-IR-Closure-01 publication follow-up: Owner explicitly replied 明确允许 after the approval block; ordinary push through `310eeae` and Draft PR #5 body update succeeded. Final documentation-only publication record follows. Tested code remains `b45cb840c2e65ca25c062cde450c235a0195f670`; 65/65 and native build/runtime evidence remain valid. PR is OPEN/Draft, unmerged, with no auto-merge. Await independent review.
+
+PR5-IR-Closure-02 activated on the existing validation worktree at `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`. R2-01–R2-03 and their interaction assertions await native reproduction/remediation. Historical closure results remain preserved.
+
+PR5-IR-Closure-02 local closure: code `1419c0122bac447cbfae8405f1672af7696ae4e8`;75/75 deterministic tests, native unsigned build and Simulator process-relaunch PASS. R2-01/02/03 reproduced and fixed; conditional write, own echo, superseded-child terminal and bounded mixed delivery evidence are indexed in R2_INTERACTION_CLOSURE. Publication pending; real platform evidence pending.
+
+Publication boundary: automatic approval review rejected the combined commit/push before execution. Local code/tests/evidence are complete; public branch/PR update awaits explicit publication approval. Remote remains `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`, OPEN/Draft. No alternate publication route was used.
+
+PR5-IR-Closure-02 publication follow-up (2026-09-30): Owner explicitly authorized public publication after automatic approval rejection. `spike/foundation-validation` was ordinarily pushed through `9c38d54`, and the existing Draft PR #5 body was updated. Code candidate remains `1419c01`; this final documentation-only record does not change runtime evidence. OPEN/Draft, unmerged, no auto-merge. Await independent review; LIVE evidence pending.

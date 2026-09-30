@@ -1,0 +1,11 @@
+请执行我上传的 HouseholdOS_Foundation_Validation_Pack_v1.2.zip，Program ID 为 HHOS-FAV-001。v1.2完整替代旧执行包；默认使用我选择的 GPT-6 Astra／中，不把 High 当执行前提。
+
+解压、核对SHA256SUMS.txt，完整读取README.zh-CN.md、GOAL.md、VALIDATION_CONTRACT.md、ARCHITECTURE_CONTEXT.md。无法读取就报告，不凭旧聊天假装已读。
+
+仓库：yoCruzer/HouseholdOS；已接受基线：f19469fe13be175d1b28d71ddb6b5a917abdcc32；分支：spike/foundation-validation。先检查实际项目路径及已有worktree/代码/证据；旧路径和两份String Catalog是历史保护提示，保护目前全部既有修改，不stash/reset/覆盖。已有同Program成果则恢复并补差异，不重建。
+
+我授权本合同范围内的独立worktree、代码与验证、commit、普通push、创建/维护一个Draft PR。内部自主推进，常规失败自行诊断修复；不逐项问是否继续/是否push。平台审批必须遵守；不授权merge、mark ready、Foundation Freeze、正式App改造、Production CloudKit、Developer Portal资源创建或真实数据迁移。
+
+先跑通最小真实链路，再注入关键故障，fake与真实adapter共用核心逻辑。测试按影响范围，日常focused/affected，最终候选一次收尾；不机械重复本机/CI全量Unit/UI。持续保存checkpoint，完成所有安全可执行工作后集中交付。
+
+保留原件与明确媒体精度，不把Photos引用/上传ACK当完整备份；恢复不写系统相册。缺容器/真机/签名统一进入Owner Action Pack，不用mock冒充平台通过。最终交付Draft PR、证据、逐决策Freeze建议和正式实现地图后停止，不开始正式实现。

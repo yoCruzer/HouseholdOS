@@ -1,0 +1,41 @@
+{
+  "package": "HouseholdOS_PR5_IR_Closure_Pack_v1.0",
+  "program": "HHOS-FAV-001",
+  "task": "PR5-IR-Closure-01",
+  "version": "1.0",
+  "created_date": "2026-09-29",
+  "repository": "yoCruzer/HouseholdOS",
+  "pull_request": 5,
+  "accepted_baseline": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
+  "reviewed_pr_head": "faae13d93a83694a77da3d962423de2193f0fe88",
+  "branch": "spike/foundation-validation",
+  "live_preflight": {
+    "pr_state": "open",
+    "draft": true,
+    "merged": false,
+    "head": "faae13d93a83694a77da3d962423de2193f0fe88",
+    "source": "GitHub.get_pr_info (read-only) on this turn"
+  },
+  "review_source_archive": {
+    "filename": "HouseholdOS_PR5_Independent_Review_faae13d.zip",
+    "sha256": "5d1afdf2713d55e8b352e6f2cf7ac6ce8ade6ddaf22dfc7f9e280c34cfcb385b"
+  },
+  "original_review_files": {
+    "README.zh-CN.md": "3f0d629a5746b787895eec90b13407ed08074d9dff6bd835043f7a194706dc3c",
+    "REVIEW.zh-CN.md": "90b55cdf6fc94ad04cab91237e64cf431144502e9d9d4e80bb2eee6779450656",
+    "pure_logic_probe.swift": "ead8cbe958d275fbf15ca264352093aba85ed656ed03763171245eec48e29888",
+    "pure_logic_results.txt": "141394c0482fbe09f56b1a0d5e49a3154b367ab4ba843e2b1371cd06ede361f6"
+  },
+  "base_contract_in_repository": "Docs/Validation/HHOS-FAV-001/Contract-v1.2/",
+  "finding_ids": [
+    "IR-01",
+    "IR-02",
+    "IR-03",
+    "IR-04",
+    "IR-05",
+    "E-01",
+    "E-02"
+  ],
+  "implementation_status": "Instructions only; no source modification or native regression execution performed in creating this package.",
+  "authority": "User sending the startup prompt authorizes only this bounded remediation; no merge/ready/Freeze or live services."
+}

@@ -1,0 +1,3 @@
+MERGE_CROSS_INCARNATION accepted=true oldIncarnationRetained=true remoteReAddTokenPreserved=false
+BATCH_SELECTION repeated_without_ACK=[100,300,300] configuredLimit=100
+REPRESENTATION_SELECTION wirePointsTo=current-wire-B selected=old-local-A

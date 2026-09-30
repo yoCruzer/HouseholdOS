@@ -1,0 +1,11 @@
+请继续 HouseholdOS 的 HHOS-FAV-001，执行我上传的 `HouseholdOS_PR5_IR_Closure_Pack_v1.0.zip`。这是 PR #5 的一次集中整改（PR5-IR-Closure-01），不是重启 Program。
+
+解压并核对 SHA256SUMS.txt，完整读取 README.zh-CN.md、GOAL.md、REMEDIATION_CONTRACT.md、ReviewSource/REVIEW.zh-CN.md；仓库原 v1.2 合同继续适用。无法读取附件就明确报告，不凭记忆执行。
+
+仓库 yoCruzer/HouseholdOS；已审 HEAD faae13d93a83694a77da3d962423de2193f0fe88；沿用 spike/foundation-validation 和现有 Draft PR #5。先核对新增提交并恢复既有 worktree，保护原目录全部修改，不 reset/stash/重建 harness。
+
+本轮一次闭环 IR-01～IR-05，以及 E-01 原件/preview失败后的最小恢复、E-02 真实旧V1记录迁移到首次同步的最小桥接。先复现再修共享代码；两条证据缺口不能仅改措辞标完成。相关组合反例和最终候选证据必须闭环；有据不成立的发现如实记录，不能盲改或弱化断言。
+
+我授权合同范围内的代码/测试/交接文档修改、commit、普通 push、更新同一个 Draft PR。内部自主推进，常规失败自己诊断修复，不逐项问继续或push；平台审批照常遵守。日常focused/affected，最后一次验证工程完整确定性测试与必要原生构建；不要反复跑正式App全量Unit/UI，不机械重复本机/CI。
+
+不修改正式App，不merge/mark ready/auto-merge/Freeze，不运行真实云/Photos/设备测试或操作签名资源，不要求我现在做真机补证。沿用我选择的模型/推理配置。完成后返回逐项处置、实际测试、最终HEAD和PR，停在独立复核，真实平台证据继续pending。

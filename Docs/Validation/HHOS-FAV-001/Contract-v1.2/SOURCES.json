@@ -1,0 +1,107 @@
+{
+  "package": "HHOS-FAV-001-v1.2",
+  "checked_date": "2026-09-28",
+  "notes": [
+    "Reviewed v1.1 archive locally and repository through the live GitHub connector. No Apple platform validation or model A/B benchmark was performed.",
+    "Public docs describe API intent, not application PASS evidence. Inspect installed SDK and record exact host/OS/version.",
+    "Some Apple HTML pages are JS-only and markdown downloads were not readable through available tooling. Entries distinguish substantive retrieval from reference-only.",
+    "Model selection recommendation is task-specific judgment; actual Codex account availability and runtime settings are not controlled by this package."
+  ],
+  "repository_facts": [
+    {
+      "id": "R1",
+      "url": "https://api.github.com/repos/yoCruzer/HouseholdOS/branches?per_page=100",
+      "observed": "main=f19469fe13be175d1b28d71ddb6b5a917abdcc32; no spike/foundation-validation in returned remote branches. Local unpushed work unknown."
+    },
+    {
+      "id": "R2",
+      "url": "https://github.com/yoCruzer/HouseholdOS/pull/4",
+      "observed": "closed/merged; merge=f19469fe13be175d1b28d71ddb6b5a917abdcc32; head=dd3fc5940dc7c8bc87faa5e62bdbd89f348d80d3"
+    },
+    {
+      "id": "R3",
+      "url": "https://github.com/yoCruzer/HouseholdOS/blob/f19469fe13be175d1b28d71ddb6b5a917abdcc32/HouseholdOSApp/Data/PersistenceModels.swift",
+      "observed": "Five V1 model types; top-level declarations referenced by VersionedSchema; UUID unique constraints; local media filenames and fixed default category IDs. Migration plan has V1 only."
+    }
+  ],
+  "official_references": [
+    {
+      "id": "O1",
+      "url": "https://help.openai.com/en/articles/20001516-managing-usage-with-gpt-6-astra-in-work-and-codex",
+      "access": "Full article retrieved on review date",
+      "relevance": "Medium balances time and reasoning; higher effort can use more allowance and is not always better. Check instructions/files/access before increasing effort."
+    },
+    {
+      "id": "O2",
+      "url": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+      "access": "Model page retrieved",
+      "relevance": "Supported reasoning efforts include low/medium/high/xhigh/max; no HouseholdOS-specific success guarantee."
+    },
+    {
+      "id": "A1",
+      "url": "https://developer.apple.com/videos/play/wwdc2020/10652/",
+      "access": "Video transcript retrieved",
+      "relevance": "Picker selection versus PhotoKit library authorization."
+    },
+    {
+      "id": "A2",
+      "url": "https://developer.apple.com/videos/play/wwdc2021/10046/",
+      "access": "Video transcript retrieved",
+      "relevance": "Local identifiers are library-specific; cloud mapping may be missing or ambiguous and does not transfer bytes or prove authorization."
+    },
+    {
+      "id": "A3",
+      "url": "https://developer.apple.com/documentation/cloudkit/deciding-whether-cloudkit-is-right-for-your-app",
+      "access": "Substantive official text retrieved by search",
+      "relevance": "Tradeoff between managed persistence, CKSyncEngine, and lower-level CloudKit operations."
+    },
+    {
+      "id": "A4",
+      "url": "https://developer.apple.com/documentation/cloudkit/ckasset",
+      "access": "Substantive official text retrieved via indexed URL variant language=obj_6",
+      "relevance": "Asset data returned with fetched fields; desiredKeys excludes asset fields; staging URLs are temporary; orphan cleanup is periodic, not immediate quota promise."
+    },
+    {
+      "id": "A4b",
+      "url": "https://developer.apple.com/documentation/cloudkit/ckfetchrecordsoperation/desiredkeys-34l1l",
+      "access": "Substantive official text retrieved",
+      "relevance": "Field selection exists on direct fetch operation; not proof of identical CKSyncEngine parameter."
+    },
+    {
+      "id": "A5",
+      "url": "https://developer.apple.com/documentation/cloudkit/cksyncengine-5sie5/state-swift.class",
+      "access": "Substantive official text retrieved",
+      "relevance": "Engine serialization, pendingRecordZoneChanges and optional hasPendingUntrackedChanges. App still persists state."
+    },
+    {
+      "id": "A5b",
+      "url": "https://developer.apple.com/documentation/cloudkit/cksyncenginestate/haspendinguntrackedchanges",
+      "access": "Substantive official text retrieved",
+      "relevance": "Optional hint for manually tracked pending changes; not a replacement for app durable revision/ACK rules."
+    },
+    {
+      "id": "A6",
+      "url": "https://developer.apple.com/documentation/foundation/using-the-file-system-effectively",
+      "access": "Substantive official text retrieved by search; direct HTML JS-only",
+      "relevance": "Application Support backed up by default; exclusions for recreatable/redownloadable data. Does not imply any one upload ACK justifies excluding user originals."
+    },
+    {
+      "id": "A6b",
+      "url": "https://developer.apple.com/documentation/foundation/urlresourcevalues/isexcludedfrombackup",
+      "access": "Substantive official text retrieved",
+      "relevance": "Backup flag limitations and possible reset by file operations; not evidence of completed device backup."
+    },
+    {
+      "id": "A7",
+      "url": "https://developer.apple.com/documentation/cloudkit/encrypting-user-data",
+      "access": "Official reference opened, JS-only; current full article could not be parsed. Recheck SDK/documentation at implementation.",
+      "relevance": "Encrypted fields, schema constraints and encrypted-data recovery require exact platform evidence; do not invent key-reset error payloads."
+    },
+    {
+      "id": "A8",
+      "url": "https://developer.apple.com/documentation/swiftdata/schemamigrationplan",
+      "access": "Reference carried from v1.1, not revalidated in runtime",
+      "relevance": "Migration API; actual baseline-model compatibility requires real disk-backed fixture tests."
+    }
+  ]
+}

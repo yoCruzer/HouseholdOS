@@ -1,0 +1,314 @@
+{
+  "format_version": 1,
+  "program": "HHOS-FAV-001",
+  "remediation": "PR5-IR-Closure-02",
+  "reviewed_head": "449328ea87b40f773c4dcfa957f3ae00bf43e7ef",
+  "kind": "DECLARATIVE_ACCEPTANCE_INDEX_NOT_EXECUTED_TESTS",
+  "execution_note": "复用现有XCTest即可；不要求解析该JSON，不对应8个Goal或8次full suite。实际结果写唯一VALIDATION_STATE。",
+  "event_order_note": "仅调度有可解释因果顺序的重复/迟到事件；固定小序列，不无界排列。每场景按fixture设置有限完成步数，无真实网络。",
+  "scenarios": [
+    {
+      "id": "XS-01",
+      "name": "恢复后的合法重新添加完成条件写",
+      "findings": [
+        "R2-01"
+      ],
+      "boundaries": [
+        "BackupRestore.restore",
+        "SyncCore.prepareRestoreAdmission",
+        "SyncCore.apply",
+        "CloudCodec/CloudAdapter",
+        "SyncCore.acknowledge"
+      ],
+      "required_sequence": [
+        "服务端保有前代删除D；本地明确重新添加R尚未确认",
+        "备份并恢复到新generation，清除旧transport state",
+        "用当前合法scope准入，fetch并持久处理D",
+        "从被测sender生成请求，条件服务检查当前基准",
+        "保存R成功并走真实ACK reducer",
+        "重建container重开并核验终态"
+      ],
+      "variants": [
+        "正常返回ACK",
+        "保存成功后ACK丢失，通过合法fetch补确认",
+        "已有更晚远端状态的迟到旧D不得覆盖基准"
+      ],
+      "safety": [
+        "R的当前业务值不被D覆盖",
+        "无无条件写或旧备份tag重用",
+        "较晚观察与scope/生命周期不被回退"
+      ],
+      "terminal": [
+        "条件请求被测试服务实际接受",
+        "当前合法R已确认且无需人工处理伪冲突",
+        "活动pending可解释并收敛",
+        "重启保持同一业务身份"
+      ],
+      "negative_control": "删掉/错用被测sender的基准，条件服务必须拒绝。非nil断言不足。",
+      "reuse": "扩展现有restore/re-add用例，配对实际codec/systemFields传递断言；不重新做全量生产备份。"
+    },
+    {
+      "id": "XS-02",
+      "name": "自回传与连续编辑因果链",
+      "findings": [
+        "R2-02"
+      ],
+      "boundaries": [
+        "SyncCore.stageWrite/nextBatch",
+        "send snapshot/base persistence",
+        "SyncCore.apply",
+        "SyncCore.acknowledge"
+      ],
+      "required_sequence": [
+        "有或无旧ancestor",
+        "写7并持久准备发送",
+        "同字段编辑为8",
+        "服务保存7但不送ACK7",
+        "fetch准确7并处理",
+        "发送8，服务保存并确认",
+        "重复合法回传/迟到ACK7，重开"
+      ],
+      "variants": [
+        "已有ancestor6",
+        "初建记录无ancestor",
+        "接收7后、发送8前重开"
+      ],
+      "safety": [
+        "8内容/意图不丢",
+        "仅充分证明的自己发送结果可补确认",
+        "迟到ACK不回退已观察更晚状态"
+      ],
+      "terminal": [
+        "服务端语义为8",
+        "无伪冲突",
+        "8已确认、旧7不再活动",
+        "重开仍收敛"
+      ],
+      "negative_control": "不同operation的另一端同字段修改转到XS-03，不能认成自回传。",
+      "reuse": "从ReviewSource/NativeFollowupTests.swift草案改成当前原生回归，不能仅运行Linux探针。"
+    },
+    {
+      "id": "XS-03",
+      "name": "真实冲突与未充分证明的回传不被放过",
+      "findings": [
+        "R2-02",
+        "R2-01"
+      ],
+      "boundaries": [
+        "conditional service",
+        "SyncCore.apply/merge",
+        "ConflictCandidate",
+        "BackupRestore"
+      ],
+      "required_sequence": [
+        "两端从同一基准产生不同operation并修改同字段",
+        "交付当前服务记录",
+        "保留本地/远端冲突及准确阻塞原因",
+        "重开；如冲突存储/恢复相关输入改变，再做现有小backup/restore"
+      ],
+      "variants": [
+        "相同本地revision也不能视为同operation",
+        "同operationID但不同payload必须拒绝/隔离",
+        "旧scope回调不能补确认新scope"
+      ],
+      "safety": [
+        "不伪造ACK",
+        "不静默选赢家",
+        "原文/未知字段保留或写保护",
+        "冲突备份状态不丢"
+      ],
+      "terminal": [
+        "明确的可恢复真实冲突，而不是误报同步完成",
+        "重启后阻塞原因仍存在"
+      ],
+      "negative_control": "这个场景不要求pending归零；不得拿其不能自动完成来削弱安全规则。",
+      "reuse": "复用已有same-field/unknown-field/scope用例，仅补被新自回传识别触及的边界。"
+    },
+    {
+      "id": "XS-04",
+      "name": "父重新添加后的旧子意图终态",
+      "findings": [
+        "R2-03"
+      ],
+      "boundaries": [
+        "lifecycle admission",
+        "DurableIntent/SentSnapshot",
+        "SyncCore.nextBatch/acknowledge",
+        "restore/reopen"
+      ],
+      "required_sequence": [
+        "P存在，子C1旧parentIncarnation待发送",
+        "应用父删除D，明确重新添加R",
+        "用户明确更新子关联产生C2",
+        "发送R/C2并确认",
+        "检查C1退出活动工作且终态有原因",
+        "重启，处理旧C1的合法迟到ACK/回传"
+      ],
+      "variants": [
+        "C1从未发送",
+        "C1已持久在途",
+        "可复用小备份验证终态不被恢复重激活"
+      ],
+      "safety": [
+        "旧C1不被当新代子项发送",
+        "不丢C2或独立合法操作",
+        "有必要的历史保留不伪造云确认"
+      ],
+      "terminal": [
+        "R/C2已确认",
+        "没有只有旧C1且无出口的活动pending",
+        "迟到结果不重新激活C1或更改C2基准"
+      ],
+      "negative_control": "未知parent等待项仍保留；父随后到达后按原规则可继续，不能一起退休。",
+      "reuse": "继续上轮testActualOldChildSnapshotCannotCrossReAddAndNewIntentAdvances，补到ACK与重开后。"
+    },
+    {
+      "id": "XS-05",
+      "name": "恢复、重新添加与自己的丢ACK回传组合",
+      "findings": [
+        "R2-01",
+        "R2-02"
+      ],
+      "boundaries": [
+        "BackupRestore",
+        "restore admission",
+        "outbox causality",
+        "server-base update",
+        "ACK"
+      ],
+      "required_sequence": [
+        "已知D后本地形成R7并发送，服务保存但ACK缺失",
+        "本地继续编辑成R8",
+        "在待确认意图存在时创建备份并恢复",
+        "重新准入fetch当前服务R7",
+        "利用合法持久来源重建适用基准，保留R8",
+        "条件保存/确认R8并重开"
+      ],
+      "variants": [
+        "备份发生在自回传前",
+        "如果已有等价组合用例，则复用而不新增同义用例"
+      ],
+      "safety": [
+        "清除旧engine/ticket不清掉继续恢复所需的业务因果信息",
+        "不从备份移植未经验证的服务tag",
+        "不把两项修复组合成新的假冲突"
+      ],
+      "terminal": [
+        "R8条件写成功并在目标可读",
+        "队列、冲突与当前值一致",
+        "新generation重开后成立"
+      ],
+      "negative_control": "远端不是准确自己的R7而是独立并发操作时，必须回到真实冲突策略。",
+      "reuse": "这是两项R2修复必须相容的组合验证，不是要求保留所有device-local engine快照进生产备份。"
+    },
+    {
+      "id": "XS-06",
+      "name": "OFF/账号epoch之后迟到结果隔离",
+      "findings": [
+        "R2-01",
+        "R2-02",
+        "R2-03"
+      ],
+      "boundaries": [
+        "SyncScope/session",
+        "outbox/ACK",
+        "cloud error reducer",
+        "restore binding"
+      ],
+      "required_sequence": [
+        "在A/epoch1准备一条发送并捕获回调",
+        "OFF或在合成配置中建立不同绑定epoch",
+        "旧ACK/fetch/state/error各取相关代表重放",
+        "回到获准当前scope后完成必要抓取并继续其合法工作",
+        "重开核验绑定与意图"
+      ],
+      "variants": [
+        "OFF→ON同账号",
+        "A→B→A仅合成scope注入"
+      ],
+      "safety": [
+        "旧回调不跨账号/epoch更新基准、ACK或终态",
+        "不自动把A数据上传到B",
+        "保留必要待处理数据"
+      ],
+      "terminal": [
+        "旧事件无效；当前工作在具备条件后可完成或准确待绑定"
+      ],
+      "negative_control": "不退出真实Apple ID，不联网；不能把合成结果写为真实账号事件PASS。",
+      "reuse": "沿用现有账户/关开测试，仅对新基准/终态逻辑增加有意义的组合断言。"
+    },
+    {
+      "id": "XS-07",
+      "name": "媒体明确引用与冲突终态穿过备份恢复",
+      "findings": [
+        "R2-03",
+        "REGRESSION-IR03-IR05-E01"
+      ],
+      "boundaries": [
+        "MediaTransfers.current/receive",
+        "ConflictCandidate",
+        "BackupRestore",
+        "generation reopen"
+      ],
+      "required_sequence": [
+        "建立两份同revision不同representation，明确选中B，保留历史A",
+        "准备一个已解决冲突与一个真实未解决冲突",
+        "使用现有小目录备份恢复",
+        "重开，旧A传输回调不能覆盖B",
+        "检查已解决历史/退休意图不被scope重绑激活"
+      ],
+      "variants": [
+        "本轮未触及相关输入时，可由已有精确候选证据与最终受影响回归覆盖",
+        "若终态表示扩展了backup/restore，需实际执行小型组合"
+      ],
+      "safety": [
+        "B保持当前且字节可校验",
+        "已解决不复活；未解决不丢失",
+        "保留原件，零Photos写入"
+      ],
+      "terminal": [
+        "媒体、冲突、意图的恢复语义相互一致"
+      ],
+      "negative_control": "当前表示缺失必须如实报不可用，不选历史最大revision凑成功。",
+      "reuse": "直接扩展已有testEqualRevisionCurrentChoiceSurvivesRestoreAndLateTransfers和冲突恢复测试。"
+    },
+    {
+      "id": "XS-08",
+      "name": "批次有界且混合确认后真正排空活动工作",
+      "findings": [
+        "R2-02",
+        "R2-03",
+        "REGRESSION-IR04"
+      ],
+      "boundaries": [
+        "SyncCore.nextBatch",
+        "CloudAdapter batch reducer",
+        "ACK/fetch receipts",
+        "pending summary"
+      ],
+      "required_sequence": [
+        "小型101条结构意图跨越默认批次边界",
+        "准备多次批次，无ACK时保持上限",
+        "部分使用ACK，部分模拟合法丢ACK后的自回传",
+        "包含可证已替代旧意图和一个独立有效操作",
+        "在成功服务条件下继续至有限终态并重开"
+      ],
+      "variants": [
+        "已有300条纯批次回归直接复用",
+        "保留现有limitExceeded缩批对照；本轮不进行真实流量"
+      ],
+      "safety": [
+        "批次上限有效",
+        "旧精确ACK不能清新意图",
+        "不通过清空outbox制造结束"
+      ],
+      "terminal": [
+        "所有应完成操作已确认",
+        "所有不活动历史有明确终态",
+        "有意保留的blocked项单列，不误报完成"
+      ],
+      "negative_control": "不把ready=0当pending=0或Program通过；不可只限制次数然后吞错退出。",
+      "reuse": "复用真实nextBatch和adapter reducers；不要为此新增压力测试基础设施。"
+    }
+  ]
+}

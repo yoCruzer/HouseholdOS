@@ -1,7 +1,7 @@
 # Current Task
 
 - Program: HHOS-FAV-001
-- Status: AWAITING_OWNER_REVIEW — R2_LOCAL_CLOSURE_COMPLETE; publication pending
+- Status: AWAITING_OWNER_REVIEW — R2_LOCAL_CLOSURE_COMPLETE; published
 - Branch: `spike/foundation-validation`
 - Accepted baseline: `f19469fe13be175d1b28d71ddb6b5a917abdcc32`
 - Owner authorization: uploaded v1.2 execution package and explicit execution request.
@@ -30,6 +30,8 @@ Owner explicitly confirmed publication after automatic approval rejection. The c
 
 Owner explicitly authorized the [R2 goal](../Validation/HHOS-FAV-001/ReviewClosure-02/GOAL.md) and [interaction contract](../Validation/HHOS-FAV-001/ReviewClosure-02/INTERACTION_CONTRACT.md). Start HEAD: `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`; clean existing validation worktree, same branch and Draft PR #5. Close R2-01/R2-02/R2-03 with native red/green regressions and XS-01–XS-08 evidence. Previous closure evidence is historical, not proof of R2 completion. Current authorization supersedes the earlier stop-for-review instruction. Live evidence remains pending.
 
-R2 code candidate `1419c0122bac447cbfae8405f1672af7696ae4e8` passes75/75 deterministic tests, unsigned native build and Simulator process-relaunch checks. All R2 findings reproduced/fixed; eight sequence classes mapped in [R2_INTERACTION_CLOSURE](../Validation/HHOS-FAV-001/R2_INTERACTION_CLOSURE.md). Publication remains the final authorized action; then stop for independent review.
+R2 code candidate `1419c0122bac447cbfae8405f1672af7696ae4e8` passes75/75 deterministic tests, unsigned native build and Simulator process-relaunch checks. All R2 findings reproduced/fixed; eight sequence classes mapped in [R2_INTERACTION_CLOSURE](../Validation/HHOS-FAV-001/R2_INTERACTION_CLOSURE.md). Publication completed after Owner confirmation; stop for independent review.
 
 Publication boundary: automatic approval review rejected the combined commit/push before execution. Local code/tests/evidence are complete; public branch/PR update awaits explicit publication approval. Remote remains `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`, OPEN/Draft. No alternate publication route was used.
+
+R2 publication follow-up (2026-09-30): Owner explicitly confirmed the public push after automatic approval rejection. Ordinary push of `1419c01` code and `9c38d54` documentation through the previously used authenticated HTTPS helper succeeded; SSH publickey was unavailable. Draft PR #5 body was updated and remains OPEN/Draft, unmerged, with no auto-merge. This last documentation-only record follows; tested code remains `1419c01`. Stop for independent review; LIVE evidence pending.

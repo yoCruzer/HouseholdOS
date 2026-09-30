@@ -4,7 +4,7 @@
   "baseline": "f19469fe13be175d1b28d71ddb6b5a917abdcc32",
   "branch": "spike/foundation-validation",
   "worktree": ".",
-  "status": "R2_LOCAL_CLOSURE_COMPLETE_PUBLICATION_APPROVAL_REQUIRED",
+  "status": "READY_FOR_INDEPENDENT_REVIEW_R2_LOCAL_CLOSURE_COMPLETE_LIVE_EVIDENCE_PENDING",
   "last_good_commit": "1419c0122bac447cbfae8405f1672af7696ae4e8",
   "gates": {
     "G0": {
@@ -107,7 +107,7 @@
     "No available physical test device; second device/Photos library not verified",
     "iOS 17 runtime unavailable"
   ],
-  "next_safe_action": "Obtain explicit approval for publishing the reviewed synthetic code/tests and redacted validation documents to the public yoCruzer/HouseholdOS branch and existing Draft PR #5; do not bypass rejection.",
+  "next_safe_action": "Stop for independent review; live CloudKit/Photos/device evidence remains pending. No merge/ready/Freeze.",
   "live_budget": {
     "limit_bytes": 104857600,
     "estimated_transferred_bytes": 0,
@@ -116,13 +116,13 @@
   "active_operations": [],
   "publication": {
     "draft_pr": "https://github.com/yoCruzer/HouseholdOS/pull/5",
-    "status": "R2_APPROVAL_REJECTED",
+    "status": "R2_DRAFT_PR_UPDATED",
     "transport": "SSH key unavailable; normal authenticated HTTPS fetch via existing gh credential helper succeeds; no credential export or persistent config change.",
     "local_handoff_head": "c8e7d40852c324f02382ddfbff67c847434c596b",
-    "remote_head_last_verified": "449328ea87b40f773c4dcfa957f3ae00bf43e7ef",
-    "push_executed": false,
-    "pr_body_updated": false,
-    "reason": "Automatic approval review rejected the combined documentation commit/push before execution: destination is public and specific data-publication authorization was not accepted. Local work continues; no alternate publication channel used.",
+    "remote_head_last_verified": "9c38d54c5e7f32e3b8aaeb67f51ca726f155f5c1",
+    "push_executed": true,
+    "pr_body_updated": true,
+    "reason": "Owner explicitly confirmed public publication; ordinary HTTPS push via existing authenticated GitHub helper succeeded after SSH publickey failure; same OPEN/Draft PR #5 body updated. Final documentation-only publication record follows.",
     "published_closure_head": "310eeae6565aa2bee06abe81e34870133808a206",
     "historical_pre_r2": {
       "draft_pr": "https://github.com/yoCruzer/HouseholdOS/pull/5",
@@ -134,7 +134,9 @@
       "pr_body_updated": true,
       "reason": "After the approval rejection, Owner explicitly replied 明确允许. Ordinary push and existing Draft PR #5 body update succeeded. This documentation-only publication record follows; final branch alignment is checked after its push. No merge, ready or auto-merge.",
       "published_closure_head": "310eeae6565aa2bee06abe81e34870133808a206"
-    }
+    },
+    "published_code_and_docs_head": "9c38d54c5e7f32e3b8aaeb67f51ca726f155f5c1",
+    "owner_explicit_publication_confirmation": "2026-09-30; user stated 明确授权 after automatic approval rejection"
   },
   "toolchain": {
     "xcode": "26.6 (17F113)",
@@ -1337,7 +1339,7 @@
         "scope": "LOGIC+LOCAL_PLATFORM, not LIVE_SERVICE"
       }
     },
-    "next_safe_action": "Obtain explicit approval for publishing the reviewed synthetic code/tests and redacted validation documents to the public yoCruzer/HouseholdOS branch and existing Draft PR #5; do not bypass rejection.",
+    "next_safe_action": "Stop for independent review; live CloudKit/Photos/device evidence remains pending. No merge/ready/Freeze.",
     "live_evidence": "PENDING",
     "red_run": {
       "command": "swift test --filter IndependentReviewRound2Tests",
@@ -1392,6 +1394,6 @@
       "limitations": "Opaque conditional token fixture does not prove real CloudKit ordering/change tags. No exhaustive interleaving claim."
     },
     "local_acceptance_satisfied": true,
-    "publication": "APPROVAL_REQUIRED"
+    "publication": "PUBLISHED_FOR_INDEPENDENT_REVIEW"
   }
 }

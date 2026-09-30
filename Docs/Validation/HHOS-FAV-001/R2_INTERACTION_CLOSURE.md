@@ -1,6 +1,6 @@
 # PR5-IR-Closure-02 — interaction closure
 
-Status: R2_LOCAL_CLOSURE_COMPLETE; publication pending; LIVE_EVIDENCE_PENDING.
+Status: READY_FOR_INDEPENDENT_REVIEW — R2_LOCAL_CLOSURE_COMPLETE; LIVE_EVIDENCE_PENDING.
 Start: `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`.
 Code candidate: `1419c0122bac447cbfae8405f1672af7696ae4e8`.
 Branch: `spike/foundation-validation`; sole Draft PR: #5.
@@ -48,6 +48,6 @@ Old migration fixture/generator/schema inputs are unchanged: reuse prior separat
 
 Final current-code verification: **75/75 deterministic tests**, unsigned native Simulator build, and App initial-chain/terminated-process-relaunch **PASS**. Toolchain: Xcode26.6 / Swift6.3.3 / iOS26.5 Simulator. No failures/skips; the read-only-store diagnostic is an intentional existing fault test.
 
-Input fingerprint: `610606e16d629c5ae7fadbd57367ed1a90077ac16d362c930c75052b03ef3532`. Exact file/artifact hashes and named cases are in VALIDATION_STATE. Source/contract self-review completed; independent external acceptance is not claimed. Original workspace protected-file hashes match the start snapshot. Remaining action: authorized publication. Live CloudKit/Photos/device/iOS17-runtime evidence stays pending. No Foundation Freeze, production-readiness claim, merge, ready or auto-merge.
+Input fingerprint: `610606e16d629c5ae7fadbd57367ed1a90077ac16d362c930c75052b03ef3532`. Exact file/artifact hashes and named cases are in VALIDATION_STATE. Source/contract self-review completed; independent external acceptance is not claimed. Original workspace protected-file hashes match the start snapshot. Owner explicitly confirmed public publication on 2026-09-30. Code and first handoff commit were pushed, and the same Draft PR #5 body was updated. The final documentation-only record follows; tested code is unchanged. Await independent review. Live CloudKit/Photos/device/iOS17-runtime evidence stays pending. No Foundation Freeze, production-readiness claim, merge, ready or auto-merge.
 
 Publication boundary: automatic approval review rejected the combined commit/push before execution. Local code/tests/evidence are complete; public branch/PR update awaits explicit publication approval. Remote remains `449328ea87b40f773c4dcfa957f3ae00bf43e7ef`, OPEN/Draft. No alternate publication route was used.
